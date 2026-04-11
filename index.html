@@ -3,109 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEMO Workforce - Space Edition</title>
+    <title>MEMO Workforce - Ultimate Pro</title>
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/912/912214.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #fdf2f8; }
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; overflow-x: hidden; }
         .hidden { display: none !important; }
-        .sidebar { background: linear-gradient(180deg, #4776e6 0%, #8e54e9 100%); }
+        .sidebar { background: linear-gradient(180deg, #1e3a8a 0%, #3b82f6 100%); }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        .active-link { background: rgba(255,255,255,0.2); border-left: 4px solid #fff; }
     </style>
 </head>
 <body class="min-h-screen">
 
-    <div id="loginSection" class="flex items-center justify-center min-h-screen p-4 md:p-10">
-        <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-6xl flex overflow-hidden min-h-[600px] border border-slate-100">
-            <div class="w-full md:w-1/2 p-10 md:p-16 flex flex-col justify-center">
-                <div class="mb-10 text-center md:text-left">
-                    <span class="text-4xl">⚡</span>
-                    <h1 class="text-4xl font-extrabold text-slate-900 mt-4 mb-2">Welcome Back</h1>
-                    <p class="text-slate-500 font-medium text-sm">Sign in to access your account</p>
+    <div id="loginSection" class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-[2.5rem] shadow-2xl flex w-full max-w-5xl overflow-hidden min-h-[550px]">
+            <div class="w-full md:w-1/2 p-12 flex flex-col justify-center">
+                <div class="flex items-center gap-2 mb-8">
+                    <span class="text-4xl font-black text-blue-900 italic tracking-tighter">MEMO</span>
+                    <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-2">Workforce</span>
                 </div>
-                <button onclick="alert('Google Login coming soon!')" class="w-full flex items-center justify-center gap-3 border border-slate-200 py-3.5 rounded-xl hover:bg-slate-50 transition mb-6">
-                    <img src="https://authjs.dev/img/providers/google.svg" class="w-5 h-5" alt="Google">
-                    <span class="text-slate-600 font-semibold text-sm">Sign in with Google</span>
-                </button>
-                <div class="relative flex items-center mb-8">
-                    <div class="flex-grow border-t border-slate-100"></div>
-                    <span class="flex-shrink mx-4 text-xs font-medium text-slate-300 uppercase">or Sign in with Email</span>
-                    <div class="flex-grow border-t border-slate-100"></div>
-                </div>
-                <form id="loginForm" class="space-y-5 text-left">
-                    <div class="space-y-1">
-                        <label class="text-xs font-semibold text-slate-700 ml-1">Agent ID</label>
-                        <input type="text" id="agentId" required autocomplete="username" class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold uppercase focus:border-indigo-500 transition" placeholder="MAV-015">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">Welcome Back</h2>
+                <form id="loginForm" class="space-y-4">
+                    <input type="text" id="agentId" required class="w-full px-6 py-4 bg-slate-50 border rounded-2xl outline-none focus:border-blue-600 font-bold uppercase" placeholder="AGENT ID">
+                    <input type="password" id="password" required class="w-full px-6 py-4 bg-slate-50 border rounded-2xl outline-none font-bold focus:border-blue-600" placeholder="PASSWORD">
+                    <div class="flex justify-between items-center text-xs font-semibold px-2">
+                        <label class="flex items-center gap-2"><input type="checkbox" checked> Remember me</label>
+                        <a href="#" class="text-blue-600">Forgot Password?</a>
                     </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-semibold text-slate-700 ml-1">Password</label>
-                        <input type="password" id="password" required autocomplete="current-password" class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold focus:border-indigo-500 transition" placeholder="••••••••">
-                    </div>
-                    <div class="flex justify-between items-center text-xs font-medium px-1">
-                        <label class="flex items-center gap-2 text-slate-600 cursor-pointer">
-                            <input type="checkbox" class="accent-indigo-600 w-4 h-4"> Remember me
-                        </label>
-                        <a href="#" class="text-indigo-600 hover:underline">Forgot Password?</a>
-                    </div>
-                    <button type="submit" class="w-full bg-[#bf8fbf] text-white py-5 rounded-xl font-bold text-lg hover:bg-[#a67ba6] shadow-xl transition transform active:scale-95">Login</button>
+                    <button type="submit" class="w-full bg-blue-900 text-white py-5 rounded-2xl font-black text-lg shadow-xl hover:bg-blue-800 transition transform active:scale-95 uppercase">Log In</button>
                 </form>
             </div>
-            <div class="hidden md:flex w-1/2 p-10 flex flex-col justify-end bg-slate-900 text-center relative overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=1000" class="absolute inset-0 object-cover opacity-60 w-full h-full" alt="Background">
-                <div class="z-10 bg-white/20 backdrop-blur-md p-8 rounded-3xl border border-white/30 mb-4">
-                    <h2 class="text-2xl font-extrabold text-white mb-3 tracking-tight">Turn your ideas into reality.</h2>
-                    <p class="text-xs font-semibold text-indigo-100 leading-relaxed opacity-90">Consistent quality and experience across all platforms and devices.</p>
+            <div class="hidden md:flex w-1/2 sidebar p-12 flex-col justify-end text-white relative">
+                <div class="absolute inset-0 opacity-20" style="background-image: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');"></div>
+                <div class="z-10">
+                    <h2 class="text-4xl font-black mb-4 italic leading-tight">Turn your ideas into reality.</h2>
+                    <p class="text-blue-100 font-bold opacity-80 uppercase text-xs tracking-widest">Mavin Operational Command Dashboard</p>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="mainDashboard" class="hidden flex min-h-screen">
-        <div class="w-64 sidebar text-white flex flex-col p-6 fixed h-full shadow-2xl">
-            <h1 class="text-2xl font-black italic mb-10 tracking-tighter uppercase">MEMO HR</h1>
-            <nav class="space-y-4 flex-grow">
-                <div onclick="location.reload()" class="p-3 rounded-lg bg-white/20 font-bold cursor-pointer">🏠 Dashboard</div>
-                <div onclick="alert('Opening Users...')" class="p-3 rounded-lg hover:bg-white/10 font-bold cursor-pointer">👥 Users</div>
+        <aside class="w-64 sidebar text-white flex flex-col p-6 fixed h-full z-50">
+            <div class="flex items-center gap-2 mb-10">
+                <div class="w-8 h-8 bg-white rounded flex items-center justify-center text-blue-900 font-black italic text-xl">M</div>
+                <h1 class="text-lg font-black italic tracking-tighter uppercase">MEMO Admin</h1>
+            </div>
+            <nav class="space-y-2 flex-grow font-bold text-xs uppercase italic tracking-widest">
+                <div onclick="showTab('dashboard')" id="nav-dashboard" class="sidebar-link p-4 rounded-xl cursor-pointer active-link transition">🏠 Dashboard</div>
+                <div onclick="showTab('schedule')" id="nav-schedule" class="sidebar-link p-4 rounded-xl cursor-pointer hover:bg-white/10 transition">📅 Upload Schedule</div>
+                <div onclick="showTab('reports')" id="nav-reports" class="sidebar-link p-4 rounded-xl cursor-pointer hover:bg-white/10 transition">📊 Detailed Reports</div>
             </nav>
-            <button onclick="location.reload()" class="p-3 rounded-lg bg-red-500/20 text-red-200 font-bold uppercase text-xs"> Logout</button>
-        </div>
-        <div class="flex-grow ml-64 p-10">
-            <h2 id="welcomeUser" class="text-3xl font-black text-slate-800 uppercase italic mb-8">Welcome Back!</h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-                <div class="bg-white p-6 rounded-3xl shadow-sm border-l-8 border-indigo-500">
-                    <p class="text-[10px] font-black text-slate-400 uppercase">Total Schedule</p>
-                    <h4 class="text-3xl font-black text-indigo-700">346</h4>
+            <button onclick="logout()" class="p-4 rounded-xl bg-red-600/20 text-red-100 font-bold uppercase text-xs hover:bg-red-600 transition">🚪 Exit Session</button>
+        </aside>
+
+        <main class="flex-grow ml-64 p-8">
+            <header class="flex justify-between items-center mb-10 glass-card p-6 rounded-3xl">
+                <div>
+                    <h2 id="headerTitle" class="text-2xl font-black text-slate-800 uppercase italic tracking-tighter">Command Center</h2>
+                    <p id="userRole" class="text-[10px] text-blue-500 font-black uppercase tracking-[0.3em]"></p>
                 </div>
+                <div class="flex items-center gap-6">
+                    <div id="liveTimer" class="bg-blue-50 px-6 py-2 rounded-2xl border border-blue-100 font-mono font-black text-blue-700 hidden">00:00:00</div>
+                    <img id="userAvatar" src="https://ui-avatars.com/api/?background=1e3a8a&color=fff&name=User" class="w-12 h-12 rounded-full border-2 border-blue-500" alt="Avatar">
                 </div>
-        </div>
+            </header>
+
+            <div id="view-dashboard" class="space-y-8 animate-fade-in">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
+                    <div class="glass-card p-6 rounded-[2.5rem] border-b-8 border-blue-600">
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Total Schedule</p>
+                        <h4 id="statTotal" class="text-3xl font-black text-blue-900">0</h4>
+                    </div>
+                    <div class="glass-card p-6 rounded-[2.5rem] border-b-8 border-red-500">
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Absent Agents</p>
+                        <h4 id="statAbsent" class="text-3xl font-black text-red-600">0</h4>
+                    </div>
+                    <div class="glass-card p-6 rounded-[2.5rem] border-b-8 border-amber-500">
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-2">On Break</p>
+                        <h4 id="statBreak" class="text-3xl font-black text-amber-600">0</h4>
+                    </div>
+                    <div class="glass-card p-6 rounded-[2.5rem] border-b-8 border-emerald-500">
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Online Now</p>
+                        <h4 id="statOnline" class="text-3xl font-black text-emerald-600">0</h4>
+                    </div>
+                </div>
+
+                <div class="glass-card p-10 rounded-[3.5rem]">
+                    <h3 class="text-xl font-black text-slate-800 mb-6 uppercase italic">Quick Agent Tracker</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left font-bold italic text-sm">
+                            <thead class="text-[10px] text-slate-300 uppercase border-b border-slate-50"><tr class="h-10"><th>Agent Name</th><th>Shift</th><th>Login</th><th>Status</th></tr></thead>
+                            <tbody id="quickTable" class="text-slate-600"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-schedule" class="hidden space-y-8">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-black text-slate-800 uppercase italic">Schedule Upload Center</h2>
+                    <button onclick="downloadTemplate()" class="bg-blue-50 text-blue-700 px-6 py-2 rounded-xl font-black text-[10px] uppercase border border-blue-100">📥 Get Excel Template</button>
+                </div>
+                <div class="glass-card p-20 rounded-[4rem] border-4 border-dashed border-blue-100 text-center">
+                    <div class="text-7xl mb-6">📁</div>
+                    <p class="text-slate-400 font-black text-sm uppercase mb-8">Drop your team schedule file here (Excel or CSV)</p>
+                    <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleBulkUpload(event)">
+                    <button onclick="document.getElementById('fileInput').click()" class="bg-blue-900 text-white px-16 py-5 rounded-2xl font-black shadow-2xl hover:scale-105 transition">SELECT FILE</button>
+                </div>
+            </div>
+
+            <div id="view-reports" class="hidden">
+                <div class="glass-card p-10 rounded-[3rem]">
+                    <h3 class="text-2xl font-black text-slate-800 mb-8 uppercase italic">Agent Database & History</h3>
+                    <div id="reportTableContainer" class="overflow-x-auto">
+                         <p class="text-center text-slate-300 font-bold italic py-10">Upload a schedule to view data.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
     <script>
-        // داتا الموظفين - اتأكدي إنك بتكتبي الباسورد بالظبط
-        const agents = {
-            "MAV-015": { name: "Asmaa Hassan", pass: "Welcome@123", role: "ADMIN" },
-            "MAV-002": { name: "Ahmed Zahran", pass: "Welcome@123", role: "ADMIN" },
-            "MAV-001": { name: "Marwa Elatabany", pass: "Welcome@123", role: "AGENT" }
+        // 1. DATA RECOVERY (Anti-Refresh System)
+        let db = JSON.parse(localStorage.getItem('memo_pro_db')) || {
+            agents: {
+                "MAV-015": { name: "Asmaa Hassan", role: "ADMIN", shift: "10:00 AM", active: true, login: null, working: 0 },
+                "MAV-002": { name: "Ahmed Zahran", role: "ADMIN", shift: "10:00 AM", active: true, login: null, working: 0 }
+            }
         };
 
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const id = document.getElementById('agentId').value.toUpperCase().trim();
-            const pw = document.getElementById('password').value;
+        let currentId = sessionStorage.getItem('memo_session');
+        let timerInt;
 
-            console.log("Attempting Login:", id, pw);
-
-            if (agents[id]) {
-                if (agents[id].pass === pw) {
-                    document.getElementById('loginSection').classList.add('hidden');
-                    document.getElementById('mainDashboard').classList.remove('hidden');
-                    document.getElementById('welcomeUser').innerText = "Welcome Back, " + agents[id].name;
-                } else {
-                    alert("❌ Wrong Password! (Make sure W is capital)");
-                }
-            } else {
-                alert("❌ Agent ID Not Found!");
-            }
-        });
-    </script>
-</body>
-</html>
+        window
