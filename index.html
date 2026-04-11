@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEMO Workforce - Final Fix</title>
+    <title>MEMO Workforce - FIXED</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background: #f0f4f8; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -16,61 +16,72 @@
     <div id="loginSection" class="flex items-center justify-center min-h-screen p-4">
         <div class="bg-white p-12 rounded-[3.5rem] shadow-2xl w-full max-w-md border-b-[15px] border-indigo-600 text-center">
             <h1 class="text-4xl font-black text-indigo-700 italic tracking-tighter mb-2 uppercase">MEMO</h1>
-            <p class="text-gray-400 font-bold text-[10px] uppercase mb-8">Workforce Dashboard</p>
+            <p class="text-gray-400 font-bold text-[10px] uppercase mb-8">Mavin Dashboard</p>
             <form id="loginForm" class="space-y-4 text-left">
-                <input type="text" id="agentId" required class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none font-bold uppercase focus:border-indigo-500 transition" placeholder="AGENT ID">
-                <input type="password" id="password" required class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none font-bold focus:border-indigo-500 transition" placeholder="PASSWORD">
-                <button type="submit" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg hover:bg-indigo-700 shadow-xl transition uppercase">Enter Dashboard</button>
+                <input type="text" id="agentId" required class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none font-bold uppercase focus:border-indigo-500" placeholder="AGENT ID (MAV-015)">
+                <input type="password" id="password" required class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none font-bold focus:border-indigo-500" placeholder="PASSWORD">
+                <button type="submit" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg hover:bg-indigo-700 shadow-xl transition uppercase">Log In</button>
             </form>
-            <button onclick="localStorage.clear(); location.reload();" class="mt-4 text-[10px] text-gray-300 font-bold hover:text-indigo-400">RESET SYSTEM MEMORY</button>
+            <p class="mt-4 text-[10px] text-red-400 font-bold uppercase">Check Caps Lock / Uppercase</p>
         </div>
     </div>
 
     <div id="mainDashboard" class="hidden min-h-screen p-8">
-        <div class="max-w-7xl mx-auto flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm mb-10">
-            <h1 class="text-2xl font-black text-indigo-600">MEMO</h1>
-            <button onclick="localStorage.clear(); location.reload();" class="text-red-500 font-bold text-sm">Logout</button>
+        <div class="max-w-7xl mx-auto flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm mb-10 border border-white">
+            <h1 class="text-2xl font-black text-indigo-600 italic">MEMO WORKFORCE</h1>
+            <button onclick="location.reload()" class="bg-red-50 text-red-500 px-6 py-2 rounded-xl font-bold text-xs uppercase">Logout</button>
         </div>
-        
-        <div id="homeView" class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div onclick="alert('Tracker Opening...')" class="bg-white p-10 rounded-[3rem] shadow-xl border-b-8 border-indigo-500 cursor-pointer">
-                <h3 class="text-2xl font-black mb-2 uppercase">Live Tracker</h3>
-                <p class="text-gray-400 text-xs font-bold uppercase">Track your shift live</p>
-            </div>
-            <div onclick="alert('Logs Opening...')" class="bg-white p-10 rounded-[3rem] shadow-xl border-b-8 border-emerald-500 cursor-pointer">
-                <h3 class="text-2xl font-black mb-2 uppercase">Attendance Log</h3>
-                <p class="text-gray-400 text-xs font-bold uppercase">Daily team reports</p>
-            </div>
-            <div onclick="alert('Database Opening...')" class="bg-white p-10 rounded-[3rem] shadow-xl border-b-8 border-amber-500 cursor-pointer">
-                <h3 class="text-2xl font-black mb-2 uppercase">Master Database</h3>
-                <p class="text-gray-400 text-xs font-bold uppercase">Admin controls</p>
+
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-2xl font-black text-slate-800 mb-8 uppercase italic ml-4">Main Menu</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-12 rounded-[4rem] shadow-xl border-b-[12px] border-indigo-500 hover:scale-105 transition cursor-pointer">
+                    <div class="text-5xl mb-6">⏱️</div>
+                    <h3 class="text-3xl font-black text-slate-800 uppercase mb-2 italic">Tracker</h3>
+                    <p class="text-slate-400 font-bold text-xs">Start your shift and monitor hours.</p>
+                </div>
+
+                <div class="bg-white p-12 rounded-[4rem] shadow-xl border-b-[12px] border-emerald-500 hover:scale-105 transition cursor-pointer">
+                    <div class="text-5xl mb-6">📝</div>
+                    <h3 class="text-3xl font-black text-slate-800 uppercase mb-2 italic">Report</h3>
+                    <p class="text-slate-400 font-bold text-xs">Check daily attendance logs.</p>
+                </div>
+
+                <div id="adminCard" class="bg-white p-12 rounded-[4rem] shadow-xl border-b-[12px] border-amber-500 hover:scale-105 transition cursor-pointer">
+                    <div class="text-5xl mb-6">📂</div>
+                    <h3 class="text-3xl font-black text-slate-800 uppercase mb-2 italic">Database</h3>
+                    <p class="text-slate-400 font-bold text-xs">Admin controls & user management.</p>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        const agents = {
-            "MAV-015": { name: "Asmaa Hassan", pass: "Welcome@123", role: "OWNER" },
-            "MAV-001": { name: "Marwa Elatabany", pass: "Welcome@123", role: "OWNER" },
-            "MAV-002": { name: "Ahmed Zahran", pass: "Welcome@123", role: "OWNER" }
+        // الداتا بيز المباشرة للتأكد من الدخول
+        const users = {
+            "MAV-015": "Welcome@123", // أسماء
+            "MAV-001": "Welcome@123", // مروة
+            "MAV-002": "Welcome@123", // أحمد زهران
+            "MAV-023": "Welcome@123"  // محمد شاهين
         };
 
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const id = document.getElementById('agentId').value.toUpperCase().trim();
+            const id = document.getElementById('agentId').value.trim().toUpperCase();
             const pw = document.getElementById('password').value.trim();
-            
-            console.log("Attempting login with:", id, pw); // لعمل Debug في المتصفح
 
-            if (agents[id]) {
-                if (agents[id].pass === pw) {
+            console.log("Login Trial:", id, pw); // هنشوف النتيجة في الـ Console
+
+            if (users[id]) {
+                if (users[id] === pw) {
+                    // نجاح الدخول
                     document.getElementById('loginSection').classList.add('hidden');
                     document.getElementById('mainDashboard').classList.remove('hidden');
                 } else {
-                    alert("❌ Wrong Password for " + id);
+                    alert("❌ Password Incorrect!");
                 }
             } else {
-                alert("❌ Agent ID not found in database!");
+                alert("❌ Agent ID '" + id + "' not found!");
             }
         });
     </script>
