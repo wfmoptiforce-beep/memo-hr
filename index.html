@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEMO Workforce - Ultimate Dashboard</title>
+    <title>MEMO Workforce - Icon Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; background: #f0f4f8; overflow-x: hidden; }
         .hidden { display: none; }
-        .tab-active { border-bottom: 4px solid #4f46e5; color: #4f46e5; }
+        .card-shadow { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02); }
+        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
     </style>
 </head>
 <body class="min-h-screen">
@@ -17,218 +18,133 @@
     <div id="loginSection" class="flex items-center justify-center min-h-screen p-4">
         <div class="bg-white p-12 rounded-[3.5rem] shadow-2xl w-full max-w-md border-b-[15px] border-indigo-600 text-center">
             <h1 class="text-4xl font-black text-indigo-700 italic tracking-tighter mb-2">MEMO</h1>
-            <p class="text-gray-400 font-bold text-xs uppercase mb-8">Workforce Dashboard</p>
-            <h2 class="text-xl font-bold text-slate-700 mb-6">Welcome back! Please login</h2>
+            <p class="text-gray-400 font-bold text-[10px] uppercase mb-8 tracking-[0.2em]">Mavin Workforce Dashboard</p>
             <form id="loginForm" class="space-y-4 text-left">
-                <input type="text" id="agentId" required class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none font-bold focus:border-indigo-500 transition" placeholder="AGENT ID">
+                <input type="text" id="agentId" required class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none font-bold focus:border-indigo-500 transition uppercase" placeholder="AGENT ID">
                 <input type="password" id="password" required class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none font-bold focus:border-indigo-500 transition" placeholder="PASSWORD">
-                <button type="submit" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg hover:bg-indigo-700 shadow-xl transition">ENTER DASHBOARD</button>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg hover:bg-indigo-700 shadow-xl transition">LOG IN</button>
             </form>
         </div>
     </div>
 
-    <div id="mainDashboard" class="hidden animate-fade-in">
-        <nav class="bg-white border-b border-slate-100 p-6 sticky top-0 z-40 shadow-sm">
+    <div id="mainDashboard" class="hidden">
+        <nav class="bg-white/80 backdrop-blur-md border-b border-slate-100 p-6 sticky top-0 z-40">
             <div class="max-w-7xl mx-auto flex justify-between items-center">
                 <div class="flex items-center gap-4">
-                    <span class="text-2xl font-black text-indigo-600 italic tracking-tighter">MEMO</span>
-                    <div class="h-6 w-[1px] bg-slate-200"></div>
-                    <span id="welcomeMsg" class="text-slate-500 font-bold text-sm"></span>
+                    <span class="text-2xl font-black text-indigo-600 italic tracking-tighter cursor-pointer" onclick="showHome()">MEMO</span>
+                    <span id="welcomeMsg" class="text-slate-500 font-bold text-xs border-l pl-4 border-slate-200"></span>
                 </div>
-                <button onclick="location.reload()" class="bg-red-50 text-red-500 px-6 py-2 rounded-xl font-bold text-xs">LOGOUT</button>
+                <button onclick="logout()" class="bg-red-50 text-red-500 px-5 py-2 rounded-xl font-bold text-[10px] hover:bg-red-100 transition">LOGOUT</button>
             </div>
         </nav>
 
-        <div class="max-w-7xl mx-auto mt-8 px-4">
-            <div class="flex gap-8 border-b border-slate-200 mb-8 overflow-x-auto">
-                <button onclick="switchTab('tracker')" id="tab-tracker" class="pb-4 font-black text-sm uppercase tracking-widest tab-active">Live Tracker</button>
-                <button onclick="switchTab('attendance')" id="tab-attendance" class="pb-4 font-black text-sm uppercase tracking-widest text-slate-400 hover:text-indigo-500">Attendance Report</button>
-                <button id="adminTabBtn" onclick="switchTab('database')" class="hidden pb-4 font-black text-sm uppercase tracking-widest text-slate-400 hover:text-indigo-500">Agent Database</button>
+        <div class="max-w-7xl mx-auto mt-10 px-6">
+            
+            <div id="homeView" class="grid grid-cols-1 md:grid-cols-3 gap-8 py-10">
+                <button onclick="switchTab('tracker')" class="bg-white p-10 rounded-[3.5rem] card-shadow border-b-[12px] border-indigo-500 hover:scale-105 transition transform text-left group">
+                    <div class="w-16 h-16 bg-indigo-100 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-indigo-600 transition">
+                        <span class="text-3xl group-hover:grayscale group-hover:invert">⏱️</span>
+                    </div>
+                    <h3 class="text-2xl font-black text-slate-800 mb-2 uppercase">Live Tracker</h3>
+                    <p class="text-slate-400 text-xs font-bold leading-relaxed">Login to shift, take breaks, and track your missing hours live.</p>
+                </button>
+
+                <button onclick="switchTab('attendance')" class="bg-white p-10 rounded-[3.5rem] card-shadow border-b-[12px] border-emerald-500 hover:scale-105 transition transform text-left group">
+                    <div class="w-16 h-16 bg-emerald-100 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-emerald-600 transition">
+                        <span class="text-3xl group-hover:grayscale group-hover:invert">📊</span>
+                    </div>
+                    <h3 class="text-2xl font-black text-slate-800 mb-2 uppercase">Attendance Log</h3>
+                    <p class="text-slate-400 text-xs font-bold leading-relaxed">View daily login reports, late statuses, and export data to CSV.</p>
+                </button>
+
+                <button id="adminCard" onclick="switchTab('database')" class="hidden bg-white p-10 rounded-[3.5rem] card-shadow border-b-[12px] border-amber-500 hover:scale-105 transition transform text-left group">
+                    <div class="w-16 h-16 bg-amber-100 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-amber-600 transition">
+                        <span class="text-3xl group-hover:grayscale group-hover:invert">🗂️</span>
+                    </div>
+                    <h3 class="text-2xl font-black text-slate-800 mb-2 uppercase">Master Database</h3>
+                    <p class="text-slate-400 text-xs font-bold leading-relaxed">Manage agents, change status, and delete or add new staff members.</p>
+                </button>
             </div>
 
-            <div id="content-tracker" class="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
-                <div class="lg:col-span-2 space-y-8">
-                    <div class="bg-white p-12 rounded-[3rem] shadow-xl text-center relative overflow-hidden">
-                        <p class="text-slate-400 font-black text-[10px] uppercase tracking-[0.3em] mb-4">Total Session Time</p>
-                        <h3 id="timer" class="text-8xl font-black text-slate-800 tracking-tighter mb-8">00:00:00</h3>
+            <div id="content-tracker" class="hidden pb-20">
+                <div class="flex items-center gap-4 mb-8">
+                    <button onclick="showHome()" class="bg-white p-4 rounded-2xl shadow-sm hover:bg-slate-50">⬅️</button>
+                    <h2 class="text-3xl font-black text-slate-800 uppercase italic">Shift Tracker</h2>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 text-center">
+                    <div class="lg:col-span-2 bg-white p-16 rounded-[4rem] shadow-xl border border-white">
+                        <p id="roleTitle" class="text-indigo-400 font-black text-[10px] uppercase tracking-widest mb-4 italic"></p>
+                        <h3 id="timer" class="text-9xl font-black text-slate-800 tracking-tighter mb-10">00:00:00</h3>
                         <div class="flex justify-center gap-4">
-                            <button id="logInBtn" onclick="startWork()" class="bg-indigo-600 text-white px-12 py-5 rounded-3xl font-black shadow-xl hover:scale-105 transition">LOGIN TO SHIFT</button>
-                            <button id="breakBtn" onclick="toggleBreak()" class="hidden bg-amber-500 text-white px-12 py-5 rounded-3xl font-black shadow-xl hover:scale-105 transition">TAKE BREAK</button>
+                            <button id="logInBtn" onclick="startWork()" class="bg-indigo-600 text-white px-14 py-6 rounded-[2rem] font-black shadow-2xl hover:bg-indigo-700 transition">LOGIN TO SHIFT</button>
+                            <button id="breakBtn" onclick="toggleBreak()" class="hidden bg-amber-500 text-white px-14 py-6 rounded-[2rem] font-black shadow-2xl transition">TAKE BREAK</button>
+                        </div>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="bg-indigo-900 p-10 rounded-[3rem] text-white shadow-2xl">
+                            <p class="text-[10px] font-black opacity-40 uppercase tracking-widest mb-4">Actual Login</p>
+                            <h4 id="loginTimeDisplay" class="text-3xl font-black italic">---</h4>
+                        </div>
+                        <div class="bg-white p-10 rounded-[3rem] shadow-xl border-b-[15px] border-red-500">
+                            <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4">Missing Hrs</p>
+                            <h4 id="missingHrs" class="text-5xl font-black text-red-600 italic">9h</h4>
                         </div>
                     </div>
                 </div>
-                <div class="space-y-6">
-                    <div class="bg-indigo-900 p-8 rounded-[3rem] text-white shadow-2xl">
-                        <p class="text-[10px] font-black opacity-50 uppercase mb-2">My Shift</p>
-                        <h4 id="userShift" class="text-4xl font-black italic">---</h4>
-                    </div>
-                    <div class="bg-white p-8 rounded-[3rem] shadow-xl border-b-[10px] border-red-500">
-                        <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Missing Hours</p>
-                        <h4 id="missingHrs" class="text-4xl font-black text-red-600 italic">9h</h4>
-                    </div>
+            </div>
+
+            <div id="content-attendance" class="hidden pb-20">
+                <div class="flex items-center gap-4 mb-8">
+                    <button onclick="showHome()" class="bg-white p-4 rounded-2xl shadow-sm hover:bg-slate-50">⬅️</button>
+                    <h2 class="text-3xl font-black text-slate-800 uppercase italic">Attendance Report</h2>
+                </div>
+                <div class="bg-white rounded-[3.5rem] p-10 shadow-xl border border-white">
+                    <div class="overflow-x-auto"><table class="w-full text-left">
+                        <thead class="text-[10px] font-black text-slate-400 uppercase border-b border-slate-50">
+                            <tr><th class="pb-6">Agent Name</th><th class="pb-6">ID</th><th class="pb-6">Login Time</th><th class="pb-6">Status</th><th class="pb-6 text-right">Missing</th></tr>
+                        </thead>
+                        <tbody id="attendanceTable" class="text-sm font-bold text-slate-600 italic"></tbody>
+                    </table></div>
                 </div>
             </div>
 
-            <div id="content-attendance" class="hidden pb-10">
-                <div class="bg-white rounded-[3rem] p-10 shadow-xl border border-slate-100">
-                    <div class="flex justify-between items-center mb-8">
-                        <h3 class="text-2xl font-black text-slate-800">DAILY LOGS</h3>
-                        <button onclick="exportCSV()" class="bg-indigo-50 text-indigo-600 px-6 py-2 rounded-xl font-bold text-xs hover:bg-indigo-100">EXPORT CSV</button>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left">
-                            <thead class="text-[10px] font-black text-slate-400 uppercase border-b border-slate-50">
-                                <tr>
-                                    <th class="pb-4">Date</th>
-                                    <th class="pb-4">Agent</th>
-                                    <th class="pb-4">Login Time</th>
-                                    <th class="pb-4">Late Status</th>
-                                    <th class="pb-4">Total Missing</th>
-                                </tr>
-                            </thead>
-                            <tbody id="attendanceTable" class="text-sm font-bold text-slate-600 italic"></tbody>
-                        </table>
-                    </div>
+            <div id="content-database" class="hidden pb-20">
+                <div class="flex items-center gap-4 mb-8">
+                    <button onclick="showHome()" class="bg-white p-4 rounded-2xl shadow-sm hover:bg-slate-50">⬅️</button>
+                    <h2 class="text-3xl font-black text-slate-800 uppercase italic">Master Database</h2>
                 </div>
-            </div>
-
-            <div id="content-database" class="hidden pb-10">
-                <div class="bg-white rounded-[3rem] p-10 shadow-xl border border-slate-100">
+                <div class="bg-white rounded-[3.5rem] p-10 shadow-xl border border-white">
                     <div class="flex justify-between items-center mb-10">
-                        <h3 class="text-2xl font-black text-indigo-900">SYSTEM AGENTS</h3>
-                        <div class="flex gap-2">
-                             <button onclick="addNewAgent()" class="bg-emerald-500 text-white px-6 py-2 rounded-xl font-bold text-xs shadow-md">+ ADD NEW</button>
-                             <div class="bg-indigo-50 p-2 rounded-xl text-[10px] font-black">ATTRITION: <span id="attrRate" class="text-indigo-600">0%</span></div>
-                        </div>
+                        <h3 class="text-xl font-black text-indigo-900 uppercase italic">Staff Directory</h3>
+                        <button onclick="addNewAgent()" class="bg-emerald-500 text-white px-8 py-3 rounded-2xl font-black text-xs shadow-lg hover:bg-emerald-600 transition">+ ADD AGENT</button>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead class="text-[10px] font-black text-slate-400 uppercase border-b">
-                                <tr>
-                                    <th class="pb-4">Agent Detail</th>
-                                    <th class="pb-4">ID</th>
-                                    <th class="pb-4">Shift</th>
-                                    <th class="pb-4">Status</th>
-                                    <th class="pb-4 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="databaseTable" class="text-sm font-bold text-slate-700"></tbody>
-                        </table>
-                    </div>
+                    <div class="overflow-x-auto"><table class="w-full text-left">
+                        <thead class="text-[10px] font-black text-slate-400 uppercase border-b border-slate-50">
+                            <tr><th class="pb-6">Staff Info</th><th class="pb-6">ID</th><th class="pb-6">Status</th><th class="pb-6 text-right">Action</th></tr>
+                        </thead>
+                        <tbody id="databaseTable" class="text-sm font-bold text-slate-700 uppercase"></tbody>
+                    </table></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        let agents = {
-            "MAV-015": { name: "Asmaa Hassan", pass: "Welcome@123", role: "OWNER", shift: "10:00", active: true, login: null, missing: 9, date: "2026-04-11" },
-            "MAV-000": { name: "Ahmed Zahran", pass: "Zahran@Admin", role: "OWNER", shift: "10:00", active: true, login: null, missing: 9, date: "2026-04-11" },
-            "MAV-001": { name: "Marwa Elatabany", pass: "123456", role: "MEMBER", shift: "OFF", active: true, login: null, missing: 0, date: "2026-04-11" }
+        const INITIAL_AGENTS = {
+            "MAV-001": { name: "Marwa Elatabany", pass: "Welcome@123", title: "General Manager", role: "OWNER", shift: "10:00", active: true },
+            "MAV-002": { name: "Ahmed Zahran", pass: "Welcome@123", title: "Ops & Fulfillment manager", role: "OWNER", shift: "10:00", active: true },
+            "MAV-003": { name: "Ahmed Osama", pass: "Welcome@123", title: "Ops manager", role: "MEMBER", shift: "10:00", active: false },
+            "MAV-004": { name: "Hana Hazem", pass: "Welcome@123", title: "Ops & Fulfillment assistant mngr", role: "MEMBER", shift: "10:00", active: true },
+            "MAV-006": { name: "masa tharwat", pass: "Welcome@123", title: "QA & Compliance team leader", role: "MEMBER", shift: "10:00", active: true },
+            "MAV-007": { name: "nour tamer", pass: "Welcome@123", title: "Fulfillment & delivery team leader", role: "MEMBER", shift: "10:00", active: true },
+            "MAV-015": { name: "Asmaa Hassan", pass: "Welcome@123", title: "CS agent", role: "OWNER", shift: "10:00", active: true },
+            "MAV-023": { name: "Mohamed Shaheen", pass: "Welcome@123", title: "HR Business Partner", role: "MEMBER", shift: "10:00", active: true }
         };
 
-        let currentId = "", workingSecs = 0, isOnBreak = false, deletedCount = 0;
+        let agents = JSON.parse(localStorage.getItem('memo_agents')) || INITIAL_AGENTS;
+        let currentId = localStorage.getItem('memo_currentId') || "";
+        let workingSecs = parseInt(localStorage.getItem('memo_workingSecs')) || 0;
+        let isOnBreak = false;
+        let timerInterval;
 
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const id = document.getElementById('agentId').value.toUpperCase().trim();
-            const pw = document.getElementById('password').value.trim();
-            if (agents[id] && agents[id].pass === pw) {
-                if(!agents[id].active) return alert("Account Deactivated!");
-                currentId = id;
-                document.getElementById('loginSection').classList.add('hidden');
-                document.getElementById('mainDashboard').classList.remove('hidden');
-                document.getElementById('welcomeMsg').innerText = "Hello, " + agents[id].name;
-                document.getElementById('userShift').innerText = agents[id].shift;
-                if(agents[id].role === 'OWNER') document.getElementById('adminTabBtn').classList.remove('hidden');
-                renderTables();
-            } else { alert("Access Denied!"); }
-        });
-
-        function switchTab(tab) {
-            ['tracker', 'attendance', 'database'].forEach(t => {
-                document.getElementById('content-'+t).classList.add('hidden');
-                document.getElementById('tab-'+t).classList.remove('tab-active', 'text-indigo-500');
-            });
-            document.getElementById('content-'+tab).classList.remove('hidden');
-            document.getElementById('tab-'+tab).classList.add('tab-active');
-        }
-
-        function startWork() {
-            if (agents[currentId].login) return;
-            agents[currentId].login = new Date().toLocaleTimeString();
-            document.getElementById('logInBtn').classList.add('hidden');
-            document.getElementById('breakBtn').classList.remove('hidden');
-            setInterval(() => { if(!isOnBreak && agents[currentId].shift !== 'OFF') { workingSecs++; updateUI(); } }, 1000);
-            renderTables();
-        }
-
-        function updateUI() {
-            let h = Math.floor(workingSecs/3600).toString().padStart(2,'0');
-            let m = Math.floor((workingSecs%3600)/60).toString().padStart(2,'0');
-            let s = (workingSecs%60).toString().padStart(2,'0');
-            document.getElementById('timer').innerText = `${h}:${m}:${s}`;
-            let miss = Math.max(0, 9 - (workingSecs/3600));
-            document.getElementById('missingHrs').innerText = Math.round(miss) + "h";
-            agents[currentId].missing = Math.round(miss);
-        }
-
-        function toggleBreak() { 
-            isOnBreak = !isOnBreak; 
-            document.getElementById('breakBtn').innerText = isOnBreak ? "RESUME WORK" : "TAKE BREAK";
-            document.getElementById('breakBtn').classList.toggle('bg-emerald-500');
-        }
-
-        function calculateLate(id) {
-            if(!agents[id].login) return "---";
-            let shiftHour = parseInt(agents[id].shift.split(":")[0]);
-            let loginHour = parseInt(agents[id].login.split(":")[0]);
-            let loginMin = parseInt(agents[id].login.split(":")[1]);
-            if(loginHour > shiftHour || (loginHour === shiftHour && loginMin > 5)) {
-                return `<span class="text-red-500">Late (${loginHour - shiftHour}h ${loginMin}m)</span>`;
-            }
-            return `<span class="text-green-500">On Time</span>`;
-        }
-
-        function renderTables() {
-            const att = document.getElementById('attendanceTable');
-            const db = document.getElementById('databaseTable');
-            att.innerHTML = ""; db.innerHTML = "";
-            let activeCount = 0;
-
-            for (let id in agents) {
-                if(agents[id].active) activeCount++;
-                att.innerHTML += `<tr>
-                    <td class="py-4 px-2 text-[10px] text-slate-400">${agents[id].date}</td>
-                    <td class="py-4 px-2">${agents[id].name}</td>
-                    <td class="py-4 px-2 font-mono text-indigo-500">${agents[id].login || 'NOT LOGGED'}</td>
-                    <td class="py-4 px-2 italic">${calculateLate(id)}</td>
-                    <td class="py-4 px-2 text-red-400">${agents[id].missing}h</td>
-                </tr>`;
-
-                db.innerHTML += `<tr class="border-b border-slate-50 h-16">
-                    <td class="px-2"><div>${agents[id].name}</div><div class="text-[10px] text-slate-300 italic">User Role: ${agents[id].role}</div></td>
-                    <td class="px-2 font-mono text-xs">${id}</td>
-                    <td class="px-2 italic">${agents[id].shift}</td>
-                    <td class="px-2"><span onclick="toggleStatus('${id}')" class="cursor-pointer px-3 py-1 rounded-full text-[10px] ${agents[id].active ? 'bg-green-100 text-green-600':'bg-red-100 text-red-600'}">${agents[id].active?'ACTIVE':'INACTIVE'}</span></td>
-                    <td class="px-2 text-right"><button onclick="delAgent('${id}')" class="text-red-400 text-[10px] font-black">DELETE</button></td>
-                </tr>`;
-            }
-            document.getElementById('attrRate').innerText = Math.round((deletedCount / ((activeCount+deletedCount)||1))*100) + "%";
-        }
-
-        function toggleStatus(id) { agents[id].active = !agents[id].active; renderTables(); }
-        function delAgent(id) { if(id==='MAV-015') return alert("Master Admin can't be deleted!"); if(confirm("Delete Agent?")) { delete agents[id]; deletedCount++; renderTables(); } }
-        function addNewAgent() {
-            let n = prompt("Name:"), i = prompt("ID:").toUpperCase(), s = prompt("Shift (10:00):");
-            if(n && i) { agents[i] = { name:n, pass:"123456", role:"MEMBER", shift:s||"10:00", active:true, login:null, missing:9, date:"2026-04-11" }; renderTables(); }
-        }
-
-        function exportCSV() {
-            let c = "Date,Agent,Login,Missing\n";
-            for(let i in agents) c += `${agents[i].date},${agents[i].name},${agents[i].login||'N/A'},${agents[i].missing}\n`;
-            const b = new Blob([c], {type:'text/csv'}); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href=u; a.download='Report.csv'; a.click();
-        }
-    </script>
-</body>
-</html>
+        window.onload = () => { if
