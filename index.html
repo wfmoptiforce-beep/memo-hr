@@ -3,79 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEMO Workforce - Command Center</title>
+    <title>MEMO Workforce - Executive Dashboard</title>
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/912/912214.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #f4f7fa; }
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; }
         .hidden { display: none !important; }
-        .glass-card { background: white; border-radius: 2.5rem; box-shadow: 0 15px 35px rgba(0,0,0,0.05); border: 1px solid #fff; }
-        .stat-card { @apply p-6 rounded-[2rem] bg-white border-b-4 shadow-sm; }
+        .glass { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
     </style>
 </head>
 <body class="min-h-screen">
 
     <div id="loginSection" class="flex items-center justify-center min-h-screen p-4">
         <div class="bg-white p-12 rounded-[3.5rem] shadow-2xl w-full max-w-md border-b-[15px] border-indigo-600 text-center">
-            <h1 class="text-4xl font-black text-indigo-700 italic mb-2">MEMO</h1>
-            <p class="text-gray-400 font-bold text-[10px] uppercase mb-8">Executive Workforce Dashboard</p>
+            <h1 class="text-4xl font-black text-indigo-700 italic mb-2 tracking-tighter">MEMO</h1>
+            <p class="text-gray-400 font-bold text-[10px] uppercase mb-8 italic">Management & Operations</p>
             <form id="loginForm" class="space-y-4 text-left">
-                <input type="text" id="agentId" required autocomplete="username" class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none font-bold uppercase focus:border-indigo-500" placeholder="AGENT ID">
-                <input type="password" id="password" required autocomplete="current-password" class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none font-bold focus:border-indigo-500" placeholder="PASSWORD">
-                <button type="submit" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl hover:bg-indigo-700 transition">ENTRANCE</button>
+                <input type="text" id="agentId" required autocomplete="username" class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none font-bold uppercase focus:border-indigo-500 transition" placeholder="AGENT ID">
+                <input type="password" id="password" required autocomplete="current-password" class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none font-bold focus:border-indigo-500 transition" placeholder="PASSWORD">
+                <button type="submit" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg hover:bg-indigo-700 shadow-xl transition">ACCESS SYSTEM</button>
             </form>
         </div>
     </div>
 
     <div id="mainDashboard" class="hidden">
-        <nav class="bg-white p-6 shadow-sm flex justify-between items-center sticky top-0 z-50">
-            <h1 class="text-2xl font-black text-indigo-600 italic tracking-tighter" onclick="showView('home')">MEMO</h1>
-            <div class="flex items-center gap-4">
-                <span id="welcomeMsg" class="text-xs font-bold text-slate-400 italic uppercase"></span>
-                <button onclick="location.reload()" class="bg-red-50 text-red-500 px-4 py-2 rounded-xl font-bold text-[10px]">LOGOUT</button>
+        <nav class="bg-white p-6 shadow-sm border-b sticky top-0 z-50 flex justify-between items-center">
+            <div class="flex items-center gap-6">
+                <h1 class="text-2xl font-black text-indigo-600 italic tracking-tighter cursor-pointer" onclick="showHome()">MEMO 🏠</h1>
+                <div id="navTimerContainer" class="hidden bg-indigo-50 px-4 py-2 rounded-2xl border border-indigo-100">
+                    <span id="navTimer" class="font-mono font-black text-indigo-700">00:00:00</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-4 italic font-bold text-xs text-slate-400 uppercase">
+                <span id="userDisplayName"></span>
+                <button onclick="logout()" class="bg-red-50 text-red-500 px-4 py-2 rounded-xl">Logout</button>
             </div>
         </nav>
 
-        <div class="max-w-7xl mx-auto p-6">
+        <div class="max-w-7xl mx-auto p-6 mt-6">
             
-            <div id="adminStats" class="hidden grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-                <div class="stat-card border-indigo-500">
-                    <p class="text-[9px] font-black text-slate-400 uppercase">Active Agents</p>
-                    <h4 id="activeCount" class="text-2xl font-black text-indigo-600">0</h4>
+            <div id="adminStatsBar" class="hidden grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+                <div class="bg-white p-6 rounded-[2rem] shadow-sm border-b-4 border-indigo-500">
+                    <p class="text-[9px] font-black text-slate-400 uppercase">Active Now</p>
+                    <h4 id="statActive" class="text-2xl font-black text-indigo-600">0</h4>
                 </div>
-                <div class="stat-card border-emerald-500">
+                <div class="bg-white p-6 rounded-[2rem] shadow-sm border-b-4 border-red-500">
                     <p class="text-[9px] font-black text-slate-400 uppercase">Absenteeism %</p>
-                    <h4 id="absentPct" class="text-2xl font-black text-emerald-600">0%</h4>
+                    <h4 id="statAbsent" class="text-2xl font-black text-red-600">0%</h4>
                 </div>
-                <div class="stat-card border-amber-500">
+                <div class="bg-white p-6 rounded-[2rem] shadow-sm border-b-4 border-emerald-500">
                     <p class="text-[9px] font-black text-slate-400 uppercase">Attrition %</p>
-                    <h4 class="text-2xl font-black text-amber-600">1.2%</h4>
+                    <h4 id="statAttrition" class="text-2xl font-black text-emerald-600">0%</h4>
                 </div>
-                <div class="stat-card border-red-500">
-                    <p class="text-[9px] font-black text-slate-400 uppercase">Lateness Cases</p>
-                    <h4 id="lateCases" class="text-2xl font-black text-red-600">0</h4>
+                <div class="bg-white p-6 rounded-[2rem] shadow-sm border-b-4 border-amber-500">
+                    <p class="text-[9px] font-black text-slate-400 uppercase">Inactive Staff</p>
+                    <h4 id="statInactive" class="text-2xl font-black text-amber-600">0</h4>
                 </div>
             </div>
 
             <div id="homeView" class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div onclick="showView('tracker')" class="glass-card p-10 border-b-[10px] border-indigo-500 hover:scale-105 transition cursor-pointer">
-                    <div class="text-4xl mb-4">⏱️</div>
+                <div onclick="showView('tracker')" class="bg-white p-12 rounded-[3.5rem] shadow-xl border-b-[12px] border-indigo-500 hover:scale-105 transition cursor-pointer group">
+                    <div class="text-5xl mb-4 group-hover:animate-bounce">⏱️</div>
                     <h3 class="text-2xl font-black text-slate-800 uppercase italic">My Tracker</h3>
-                    <p class="text-slate-400 font-bold text-[10px] uppercase">Login/Break Control</p>
+                    <p class="text-slate-400 font-bold text-[10px] uppercase italic">Login & Breaks</p>
                 </div>
-                <div id="adminBtn1" onclick="showView('report')" class="hidden glass-card p-10 border-b-[10px] border-emerald-500 hover:scale-105 transition cursor-pointer">
-                    <div class="text-4xl mb-4">📊</div>
+                <div id="adminBtn1" onclick="showView('report')" class="hidden bg-white p-12 rounded-[3.5rem] shadow-xl border-b-[12px] border-emerald-500 hover:scale-105 transition cursor-pointer group">
+                    <div class="text-5xl mb-4 group-hover:animate-bounce">📝</div>
                     <h3 class="text-2xl font-black text-slate-800 uppercase italic">Team Report</h3>
-                    <p class="text-slate-400 font-bold text-[10px] uppercase">Attendance & Late Logs</p>
+                    <p class="text-slate-400 font-bold text-[10px] uppercase italic">Attendance & Lateness</p>
                 </div>
-                <div id="adminBtn2" onclick="showView('database')" class="hidden glass-card p-10 border-b-[10px] border-amber-500 hover:scale-105 transition cursor-pointer">
-                    <div class="text-4xl mb-4">⚙️</div>
-                    <h3 class="text-2xl font-black text-slate-800 uppercase italic">Settings</h3>
-                    <p class="text-slate-400 font-bold text-[10px] uppercase">Staff & System Update</p>
+                <div id="adminBtn2" onclick="showView('database')" class="hidden bg-white p-12 rounded-[3.5rem] shadow-xl border-b-[12px] border-amber-500 hover:scale-105 transition cursor-pointer group">
+                    <div class="text-5xl mb-4 group-hover:animate-bounce">⚙️</div>
+                    <h3 class="text-2xl font-black text-slate-800 uppercase italic">Management</h3>
+                    <p class="text-slate-400 font-bold text-[10px] uppercase italic">Add/Delete Staff</p>
                 </div>
             </div>
 
-            <div id="trackerSection" class="hidden">
-                <button onclick="showView('home')" class="mb-6 text-xs font-black text-indigo-600">⬅ BACK</button>
-                <div class="glass-card p-16 text-center max-w-2xl mx-auto border-b-[15px] border-indigo-
+            <div id="trackerSection" class="hidden py-10">
+                <div class="bg-white p-16 rounded-[4rem] shadow-2xl text-center max-w-2xl mx-auto border-b-[20px] border-indigo-600">
+                    <h3 id="timerDisplay" class="text-9xl font-black text-slate-800 tracking-tighter mb-10 font-mono">00:00:00</h3>
+                    <div class="flex justify-center gap-4">
+                        <button id="logInBtn" onclick="startWork()" class="bg-indigo-600 text-white px-12 py-5 rounded-3xl font-black shadow-xl
