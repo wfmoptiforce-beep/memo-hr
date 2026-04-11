@@ -3,114 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEMO Workforce - Rescue Edition</title>
+    <title>MEMO Workforce - High Access</title>
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/912/912214.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #f0f4f8; }
+        body { font-family: 'Inter', sans-serif; background: #f4f7fa; }
         .hidden { display: none !important; }
+        .admin-only { display: none; }
+        .is-admin .admin-only { display: block; }
     </style>
 </head>
 <body class="min-h-screen">
 
     <div id="loginSection" class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white p-12 rounded-[3.5rem] shadow-2xl w-full max-w-md border-b-[15px] border-indigo-600 text-center">
-            <h1 class="text-4xl font-black text-indigo-700 italic mb-2 tracking-tighter">MEMO</h1>
-            <p class="text-gray-400 font-bold text-[10px] uppercase mb-8">System Rescue Mode</p>
+        <div class="bg-white p-10 rounded-[3rem] shadow-2xl w-full max-w-md border-b-[12px] border-indigo-600 text-center">
+            <h1 class="text-4xl font-black text-indigo-700 italic mb-2 tracking-tighter uppercase">MEMO</h1>
+            <p class="text-gray-400 font-bold text-[10px] uppercase mb-8 italic">Workforce Command Center</p>
+            
             <form id="loginForm" class="space-y-4 text-left">
                 <input type="text" id="agentId" required autocomplete="username" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none font-bold uppercase focus:border-indigo-500" placeholder="AGENT ID">
                 <input type="password" id="password" required autocomplete="current-password" class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none font-bold focus:border-indigo-500" placeholder="PASSWORD">
                 <button type="submit" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg hover:bg-indigo-700 shadow-xl transition uppercase">Log In</button>
             </form>
-            <button onclick="localStorage.clear(); location.reload();" class="mt-6 text-[10px] text-red-400 font-bold uppercase hover:underline">Reset System Memory</button>
+
+            <button onclick="localStorage.clear(); location.reload();" class="mt-6 text-[10px] text-red-400 font-bold uppercase hover:underline">Clear Cache & Reset System</button>
         </div>
     </div>
 
     <div id="mainDashboard" class="hidden">
-        <nav class="bg-white p-6 shadow-sm border-b sticky top-0 z-50 flex justify-between items-center">
-            <h1 class="text-2xl font-black text-indigo-600 italic tracking-tighter cursor-pointer" onclick="showView('home')">MEMO 🏠</h1>
-            <div id="timerNav" class="bg-indigo-50 px-4 py-2 rounded-2xl border border-indigo-100 hidden">
-                <span id="globalTimer" class="font-mono font-black text-indigo-700">00:00:00</span>
+        <nav class="bg-white p-5 shadow-sm border-b sticky top-0 z-50 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <h1 class="text-2xl font-black text-indigo-600 italic tracking-tighter cursor-pointer" onclick="showView('home')">MEMO 🏠</h1>
+                <div id="persistentTimer" class="hidden bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100 font-mono font-black text-indigo-700">00:00:00</div>
             </div>
-            <button onclick="localStorage.clear(); location.reload();" class="bg-red-50 text-red-500 px-4 py-2 rounded-xl font-bold text-[10px]">LOGOUT</button>
+            <div class="flex items-center gap-3">
+                <span id="userNameDisplay" class="text-xs font-black text-slate-400 uppercase italic"></span>
+                <button onclick="location.reload()" class="bg-red-50 text-red-500 px-4 py-2 rounded-xl font-bold text-[10px] uppercase">Logout</button>
+            </div>
         </nav>
 
-        <div class="max-w-7xl mx-auto p-6 mt-6">
-            <div id="homeView" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="max-w-7xl mx-auto p-6">
+            <div id="homeView" class="grid grid-cols-1 md:grid-cols-3 gap-8 py-10">
                 <div onclick="showView('tracker')" class="bg-white p-10 rounded-[3rem] shadow-xl border-b-8 border-indigo-500 hover:scale-105 transition cursor-pointer">
-                    <h3 class="text-2xl font-black text-slate-800 uppercase italic">⏱️ Tracker</h3>
+                    <div class="text-4xl mb-4">⏱️</div>
+                    <h3 class="text-2xl font-black text-slate-800 uppercase italic">Tracker</h3>
+                    <p class="text-slate-400 font-bold text-[10px] uppercase">My Active Shift</p>
                 </div>
-                <div id="adminBtn1" onclick="showView('report')" class="hidden bg-white p-10 rounded-[3rem] shadow-xl border-b-8 border-emerald-500 hover:scale-105 transition cursor-pointer">
-                    <h3 class="text-2xl font-black text-slate-800 uppercase italic">📊 Team Report</h3>
+
+                <div id="adminBtn1" class="admin-only bg-white p-10 rounded-[3rem] shadow-xl border-b-8 border-emerald-500 hover:scale-105 transition cursor-pointer" onclick="showView('report')">
+                    <div class="text-4xl mb-4">📊</div>
+                    <h3 class="text-2xl font-black text-slate-800 uppercase italic">Team Report</h3>
+                    <p class="text-slate-400 font-bold text-[10px] uppercase">Lateness & Attendance</p>
                 </div>
-                <div id="adminBtn2" onclick="showView('database')" class="hidden bg-white p-10 rounded-[3rem] shadow-xl border-b-8 border-amber-500 hover:scale-105 transition cursor-pointer">
-                    <h3 class="text-2xl font-black text-slate-800 uppercase italic">⚙️ Management</h3>
+
+                <div id="adminBtn2" class="admin-only bg-white p-10 rounded-[3rem] shadow-xl border-b-8 border-amber-500 hover:scale-105 transition cursor-pointer" onclick="showView('database')">
+                    <div class="text-4xl mb-4">⚙️</div>
+                    <h3 class="text-2xl font-black text-slate-800 uppercase italic">Management</h3>
+                    <p class="text-slate-400 font-bold text-[10px] uppercase">Add/Delete Agents</p>
                 </div>
             </div>
 
-            <div id="trackerSection" class="hidden text-center py-20">
-                <div class="bg-white p-16 rounded-[4rem] shadow-2xl max-w-xl mx-auto border-b-[15px] border-indigo-600">
-                    <h3 id="mainTimer" class="text-8xl font-black text-slate-800 mb-10 font-mono">00:00:00</h3>
-                    <button id="startBtn" onclick="startShift()" class="bg-indigo-600 text-white px-12 py-5 rounded-3xl font-black">START SHIFT</button>
+            <div id="trackerSection" class="hidden py-10 text-center">
+                <div class="bg-white p-16 rounded-[4rem] shadow-2xl max-w-xl mx-auto border-b-[20px] border-indigo-600">
+                    <h3 id="mainTimer" class="text-8xl font-black text-slate-800 mb-10 font-mono tracking-tighter">00:00:00</h3>
+                    <div class="flex justify-center gap-4">
+                        <button id="startBtn" onclick="startShift()" class="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black shadow-lg">START SHIFT</button>
+                        <button id="breakBtn" onclick="toggleBreak()" class="hidden bg-amber-500 text-white px-10 py-4 rounded-2xl font-black shadow-lg">TAKE BREAK</button>
+                    </div>
                 </div>
             </div>
 
             <div id="reportSection" class="hidden bg-white p-10 rounded-[3rem] shadow-xl">
-                <h3 class="text-2xl font-black mb-8 italic">Attendance Report</h3>
-                <div id="reportContent" class="text-sm font-bold text-slate-600">تحميل البيانات...</div>
+                <div class="flex justify-between items-center mb-8">
+                    <h3 class="text-2xl font-black italic uppercase">Attendance & Late Logs</h3>
+                    <button onclick="alert('Exporting to CSV...')" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase">Export CSV</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left font-bold italic">
+                        <thead><tr class="text-[10px] text-slate-300 uppercase border-b"><th class="pb-4">Agent Name</th><th class="pb-4">Login</th><th class="pb-4">Missing</th></tr></thead>
+                        <tbody id="reportTable"></tbody>
+                    </table>
+                </div>
             </div>
 
             <div id="databaseSection" class="hidden bg-white p-10 rounded-[3rem] shadow-xl">
-                <h3 class="text-2xl font-black mb-8 italic">User Database</h3>
-                <div id="dbContent" class="text-sm font-bold text-slate-600 italic uppercase">أسماء، مروة، أحمد زهران، وباقي الفريق مسجلين بنجاح.</div>
+                <h3 class="text-2xl font-black mb-8 italic uppercase text-indigo-900">User Management</h3>
+                <div id="dbContent" class="text-sm font-bold uppercase italic text-slate-500">Only Asmaa and Ahmed can manage the team here.</div>
             </div>
         </div>
     </div>
 
     <script>
-        // داتا أساسية
+        const admins = ["MAV-015", "MAV-002"];
         const users = {
-            "MAV-015": { name: "Asmaa Hassan", role: "ADMIN" },
-            "MAV-002": { name: "Ahmed Zahran", role: "ADMIN" },
-            "MAV-001": { name: "Marwa Elatabany", role: "AGENT" }
+            "MAV-015": "Asmaa Hassan",
+            "MAV-002": "Ahmed Zahran",
+            "MAV-001": "Marwa Elatabany"
         };
 
-        let currentId = "", seconds = 0;
+        let currentId = "", seconds = 0, isOnBreak = false;
 
         document.getElementById('loginForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const id = document.getElementById('agentId').value.toUpperCase().trim();
             const pw = document.getElementById('password').value;
-            
+
             if (users[id] && pw === "Welcome@123") {
                 currentId = id;
                 document.getElementById('loginSection').classList.add('hidden');
                 document.getElementById('mainDashboard').classList.remove('hidden');
-                if (users[id].role === "ADMIN") {
-                    document.getElementById('adminBtn1').classList.remove('hidden');
-                    document.getElementById('adminBtn2').classList.remove('hidden');
+                document.getElementById('userNameDisplay').innerText = users[id];
+                
+                if (admins.includes(id)) {
+                    document.body.classList.add('is-admin');
                 }
                 showView('home');
             } else {
-                alert("ID or Password Incorrect!");
+                alert("Invalid ID or Password!");
             }
         });
 
         function showView(v) {
             ['homeView', 'trackerSection', 'reportSection', 'databaseSection'].forEach(s => document.getElementById(s).classList.add('hidden'));
             document.getElementById(v === 'home' ? 'homeView' : v + 'Section').classList.remove('hidden');
+            if(v === 'report') renderReport();
         }
 
         function startShift() {
             document.getElementById('startBtn').classList.add('hidden');
-            document.getElementById('timerNav').classList.remove('hidden');
+            document.getElementById('breakBtn').classList.remove('hidden');
+            document.getElementById('persistentTimer').classList.remove('hidden');
             setInterval(() => {
-                seconds++;
-                let timeStr = new Date(seconds * 1000).toISOString().substr(11, 8);
-                document.getElementById('mainTimer').innerText = timeStr;
-                document.getElementById('globalTimer').innerText = timeStr;
+                if(!isOnBreak) {
+                    seconds++;
+                    let timeStr = new Date(seconds * 1000).toISOString().substr(11, 8);
+                    document.getElementById('mainTimer').innerText = timeStr;
+                    document.getElementById('persistentTimer').innerText = timeStr;
+                }
             }, 1000);
+        }
+
+        function toggleBreak() {
+            isOnBreak = !isOnBreak;
+            document.getElementById('breakBtn').innerText = isOnBreak ? "RESUME" : "TAKE BREAK";
+            document.getElementById('breakBtn').classList.toggle('bg-emerald-500');
+        }
+
+        function renderReport() {
+            const table = document.getElementById('reportTable');
+            table.innerHTML = `<tr><td class="py-4">Asmaa Hassan</td><td>10:00 AM</td><td class="text-red-500">9.0h</td></tr>`;
         }
     </script>
 </body>
