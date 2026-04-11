@@ -3,148 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEMO Workforce - Icon Dashboard</title>
+    <title>MEMO Workforce - Final Fix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #f0f4f8; overflow-x: hidden; }
+        body { font-family: 'Inter', sans-serif; background: #f0f4f8; }
         .hidden { display: none; }
-        .card-shadow { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02); }
-        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
     </style>
 </head>
-<body class="min-h-screen">
+<body>
 
     <div id="loginSection" class="flex items-center justify-center min-h-screen p-4">
         <div class="bg-white p-12 rounded-[3.5rem] shadow-2xl w-full max-w-md border-b-[15px] border-indigo-600 text-center">
-            <h1 class="text-4xl font-black text-indigo-700 italic tracking-tighter mb-2">MEMO</h1>
-            <p class="text-gray-400 font-bold text-[10px] uppercase mb-8 tracking-[0.2em]">Mavin Workforce Dashboard</p>
+            <h1 class="text-4xl font-black text-indigo-700 italic tracking-tighter mb-2 uppercase">MEMO</h1>
+            <p class="text-gray-400 font-bold text-[10px] uppercase mb-8">Workforce Dashboard</p>
             <form id="loginForm" class="space-y-4 text-left">
-                <input type="text" id="agentId" required class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none font-bold focus:border-indigo-500 transition uppercase" placeholder="AGENT ID">
+                <input type="text" id="agentId" required class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none font-bold uppercase focus:border-indigo-500 transition" placeholder="AGENT ID">
                 <input type="password" id="password" required class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none font-bold focus:border-indigo-500 transition" placeholder="PASSWORD">
-                <button type="submit" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg hover:bg-indigo-700 shadow-xl transition">LOG IN</button>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg hover:bg-indigo-700 shadow-xl transition uppercase">Enter Dashboard</button>
             </form>
+            <button onclick="localStorage.clear(); location.reload();" class="mt-4 text-[10px] text-gray-300 font-bold hover:text-indigo-400">RESET SYSTEM MEMORY</button>
         </div>
     </div>
 
-    <div id="mainDashboard" class="hidden">
-        <nav class="bg-white/80 backdrop-blur-md border-b border-slate-100 p-6 sticky top-0 z-40">
-            <div class="max-w-7xl mx-auto flex justify-between items-center">
-                <div class="flex items-center gap-4">
-                    <span class="text-2xl font-black text-indigo-600 italic tracking-tighter cursor-pointer" onclick="showHome()">MEMO</span>
-                    <span id="welcomeMsg" class="text-slate-500 font-bold text-xs border-l pl-4 border-slate-200"></span>
-                </div>
-                <button onclick="logout()" class="bg-red-50 text-red-500 px-5 py-2 rounded-xl font-bold text-[10px] hover:bg-red-100 transition">LOGOUT</button>
+    <div id="mainDashboard" class="hidden min-h-screen p-8">
+        <div class="max-w-7xl mx-auto flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm mb-10">
+            <h1 class="text-2xl font-black text-indigo-600">MEMO</h1>
+            <button onclick="localStorage.clear(); location.reload();" class="text-red-500 font-bold text-sm">Logout</button>
+        </div>
+        
+        <div id="homeView" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div onclick="alert('Tracker Opening...')" class="bg-white p-10 rounded-[3rem] shadow-xl border-b-8 border-indigo-500 cursor-pointer">
+                <h3 class="text-2xl font-black mb-2 uppercase">Live Tracker</h3>
+                <p class="text-gray-400 text-xs font-bold uppercase">Track your shift live</p>
             </div>
-        </nav>
-
-        <div class="max-w-7xl mx-auto mt-10 px-6">
-            
-            <div id="homeView" class="grid grid-cols-1 md:grid-cols-3 gap-8 py-10">
-                <button onclick="switchTab('tracker')" class="bg-white p-10 rounded-[3.5rem] card-shadow border-b-[12px] border-indigo-500 hover:scale-105 transition transform text-left group">
-                    <div class="w-16 h-16 bg-indigo-100 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-indigo-600 transition">
-                        <span class="text-3xl group-hover:grayscale group-hover:invert">⏱️</span>
-                    </div>
-                    <h3 class="text-2xl font-black text-slate-800 mb-2 uppercase">Live Tracker</h3>
-                    <p class="text-slate-400 text-xs font-bold leading-relaxed">Login to shift, take breaks, and track your missing hours live.</p>
-                </button>
-
-                <button onclick="switchTab('attendance')" class="bg-white p-10 rounded-[3.5rem] card-shadow border-b-[12px] border-emerald-500 hover:scale-105 transition transform text-left group">
-                    <div class="w-16 h-16 bg-emerald-100 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-emerald-600 transition">
-                        <span class="text-3xl group-hover:grayscale group-hover:invert">📊</span>
-                    </div>
-                    <h3 class="text-2xl font-black text-slate-800 mb-2 uppercase">Attendance Log</h3>
-                    <p class="text-slate-400 text-xs font-bold leading-relaxed">View daily login reports, late statuses, and export data to CSV.</p>
-                </button>
-
-                <button id="adminCard" onclick="switchTab('database')" class="hidden bg-white p-10 rounded-[3.5rem] card-shadow border-b-[12px] border-amber-500 hover:scale-105 transition transform text-left group">
-                    <div class="w-16 h-16 bg-amber-100 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-amber-600 transition">
-                        <span class="text-3xl group-hover:grayscale group-hover:invert">🗂️</span>
-                    </div>
-                    <h3 class="text-2xl font-black text-slate-800 mb-2 uppercase">Master Database</h3>
-                    <p class="text-slate-400 text-xs font-bold leading-relaxed">Manage agents, change status, and delete or add new staff members.</p>
-                </button>
+            <div onclick="alert('Logs Opening...')" class="bg-white p-10 rounded-[3rem] shadow-xl border-b-8 border-emerald-500 cursor-pointer">
+                <h3 class="text-2xl font-black mb-2 uppercase">Attendance Log</h3>
+                <p class="text-gray-400 text-xs font-bold uppercase">Daily team reports</p>
             </div>
-
-            <div id="content-tracker" class="hidden pb-20">
-                <div class="flex items-center gap-4 mb-8">
-                    <button onclick="showHome()" class="bg-white p-4 rounded-2xl shadow-sm hover:bg-slate-50">⬅️</button>
-                    <h2 class="text-3xl font-black text-slate-800 uppercase italic">Shift Tracker</h2>
-                </div>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 text-center">
-                    <div class="lg:col-span-2 bg-white p-16 rounded-[4rem] shadow-xl border border-white">
-                        <p id="roleTitle" class="text-indigo-400 font-black text-[10px] uppercase tracking-widest mb-4 italic"></p>
-                        <h3 id="timer" class="text-9xl font-black text-slate-800 tracking-tighter mb-10">00:00:00</h3>
-                        <div class="flex justify-center gap-4">
-                            <button id="logInBtn" onclick="startWork()" class="bg-indigo-600 text-white px-14 py-6 rounded-[2rem] font-black shadow-2xl hover:bg-indigo-700 transition">LOGIN TO SHIFT</button>
-                            <button id="breakBtn" onclick="toggleBreak()" class="hidden bg-amber-500 text-white px-14 py-6 rounded-[2rem] font-black shadow-2xl transition">TAKE BREAK</button>
-                        </div>
-                    </div>
-                    <div class="space-y-6">
-                        <div class="bg-indigo-900 p-10 rounded-[3rem] text-white shadow-2xl">
-                            <p class="text-[10px] font-black opacity-40 uppercase tracking-widest mb-4">Actual Login</p>
-                            <h4 id="loginTimeDisplay" class="text-3xl font-black italic">---</h4>
-                        </div>
-                        <div class="bg-white p-10 rounded-[3rem] shadow-xl border-b-[15px] border-red-500">
-                            <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4">Missing Hrs</p>
-                            <h4 id="missingHrs" class="text-5xl font-black text-red-600 italic">9h</h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="content-attendance" class="hidden pb-20">
-                <div class="flex items-center gap-4 mb-8">
-                    <button onclick="showHome()" class="bg-white p-4 rounded-2xl shadow-sm hover:bg-slate-50">⬅️</button>
-                    <h2 class="text-3xl font-black text-slate-800 uppercase italic">Attendance Report</h2>
-                </div>
-                <div class="bg-white rounded-[3.5rem] p-10 shadow-xl border border-white">
-                    <div class="overflow-x-auto"><table class="w-full text-left">
-                        <thead class="text-[10px] font-black text-slate-400 uppercase border-b border-slate-50">
-                            <tr><th class="pb-6">Agent Name</th><th class="pb-6">ID</th><th class="pb-6">Login Time</th><th class="pb-6">Status</th><th class="pb-6 text-right">Missing</th></tr>
-                        </thead>
-                        <tbody id="attendanceTable" class="text-sm font-bold text-slate-600 italic"></tbody>
-                    </table></div>
-                </div>
-            </div>
-
-            <div id="content-database" class="hidden pb-20">
-                <div class="flex items-center gap-4 mb-8">
-                    <button onclick="showHome()" class="bg-white p-4 rounded-2xl shadow-sm hover:bg-slate-50">⬅️</button>
-                    <h2 class="text-3xl font-black text-slate-800 uppercase italic">Master Database</h2>
-                </div>
-                <div class="bg-white rounded-[3.5rem] p-10 shadow-xl border border-white">
-                    <div class="flex justify-between items-center mb-10">
-                        <h3 class="text-xl font-black text-indigo-900 uppercase italic">Staff Directory</h3>
-                        <button onclick="addNewAgent()" class="bg-emerald-500 text-white px-8 py-3 rounded-2xl font-black text-xs shadow-lg hover:bg-emerald-600 transition">+ ADD AGENT</button>
-                    </div>
-                    <div class="overflow-x-auto"><table class="w-full text-left">
-                        <thead class="text-[10px] font-black text-slate-400 uppercase border-b border-slate-50">
-                            <tr><th class="pb-6">Staff Info</th><th class="pb-6">ID</th><th class="pb-6">Status</th><th class="pb-6 text-right">Action</th></tr>
-                        </thead>
-                        <tbody id="databaseTable" class="text-sm font-bold text-slate-700 uppercase"></tbody>
-                    </table></div>
-                </div>
+            <div onclick="alert('Database Opening...')" class="bg-white p-10 rounded-[3rem] shadow-xl border-b-8 border-amber-500 cursor-pointer">
+                <h3 class="text-2xl font-black mb-2 uppercase">Master Database</h3>
+                <p class="text-gray-400 text-xs font-bold uppercase">Admin controls</p>
             </div>
         </div>
     </div>
 
     <script>
-        const INITIAL_AGENTS = {
-            "MAV-001": { name: "Marwa Elatabany", pass: "Welcome@123", title: "General Manager", role: "OWNER", shift: "10:00", active: true },
-            "MAV-002": { name: "Ahmed Zahran", pass: "Welcome@123", title: "Ops & Fulfillment manager", role: "OWNER", shift: "10:00", active: true },
-            "MAV-003": { name: "Ahmed Osama", pass: "Welcome@123", title: "Ops manager", role: "MEMBER", shift: "10:00", active: false },
-            "MAV-004": { name: "Hana Hazem", pass: "Welcome@123", title: "Ops & Fulfillment assistant mngr", role: "MEMBER", shift: "10:00", active: true },
-            "MAV-006": { name: "masa tharwat", pass: "Welcome@123", title: "QA & Compliance team leader", role: "MEMBER", shift: "10:00", active: true },
-            "MAV-007": { name: "nour tamer", pass: "Welcome@123", title: "Fulfillment & delivery team leader", role: "MEMBER", shift: "10:00", active: true },
-            "MAV-015": { name: "Asmaa Hassan", pass: "Welcome@123", title: "CS agent", role: "OWNER", shift: "10:00", active: true },
-            "MAV-023": { name: "Mohamed Shaheen", pass: "Welcome@123", title: "HR Business Partner", role: "MEMBER", shift: "10:00", active: true }
+        const agents = {
+            "MAV-015": { name: "Asmaa Hassan", pass: "Welcome@123", role: "OWNER" },
+            "MAV-001": { name: "Marwa Elatabany", pass: "Welcome@123", role: "OWNER" },
+            "MAV-002": { name: "Ahmed Zahran", pass: "Welcome@123", role: "OWNER" }
         };
 
-        let agents = JSON.parse(localStorage.getItem('memo_agents')) || INITIAL_AGENTS;
-        let currentId = localStorage.getItem('memo_currentId') || "";
-        let workingSecs = parseInt(localStorage.getItem('memo_workingSecs')) || 0;
-        let isOnBreak = false;
-        let timerInterval;
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('agentId').value.toUpperCase().trim();
+            const pw = document.getElementById('password').value.trim();
+            
+            console.log("Attempting login with:", id, pw); // لعمل Debug في المتصفح
 
-        window.onload = () => { if
+            if (agents[id]) {
+                if (agents[id].pass === pw) {
+                    document.getElementById('loginSection').classList.add('hidden');
+                    document.getElementById('mainDashboard').classList.remove('hidden');
+                } else {
+                    alert("❌ Wrong Password for " + id);
+                }
+            } else {
+                alert("❌ Agent ID not found in database!");
+            }
+        });
+    </script>
+</body>
+</html>
