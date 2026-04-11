@@ -3,177 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEMO Workforce - Mavin Edition</title>
+    <title>MEMO Workforce - Command Center</title>
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/912/912214.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #f0f4f8; overflow-x: hidden; }
+        body { font-family: 'Inter', sans-serif; background: #f4f7fa; }
         .hidden { display: none !important; }
-        .card-anim:hover { transform: translateY(-10px); cursor: pointer; transition: 0.3s; }
+        .glass-card { background: white; border-radius: 2.5rem; box-shadow: 0 15px 35px rgba(0,0,0,0.05); border: 1px solid #fff; }
+        .stat-card { @apply p-6 rounded-[2rem] bg-white border-b-4 shadow-sm; }
     </style>
 </head>
 <body class="min-h-screen">
 
     <div id="loginSection" class="flex items-center justify-center min-h-screen p-4">
         <div class="bg-white p-12 rounded-[3.5rem] shadow-2xl w-full max-w-md border-b-[15px] border-indigo-600 text-center">
-            <h1 class="text-4xl font-black text-indigo-700 italic mb-2 tracking-tighter uppercase">MEMO</h1>
-            <p class="text-gray-400 font-bold text-[10px] uppercase mb-8 italic tracking-widest">Mavin Workforce Dashboard</p>
+            <h1 class="text-4xl font-black text-indigo-700 italic mb-2">MEMO</h1>
+            <p class="text-gray-400 font-bold text-[10px] uppercase mb-8">Executive Workforce Dashboard</p>
             <form id="loginForm" class="space-y-4 text-left">
-                <div>
-                    <label class="text-[10px] font-black ml-2 text-gray-400 uppercase">Agent ID</label>
-                    <input type="text" id="agentId" name="username" required autocomplete="username" class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none font-bold focus:border-indigo-500 uppercase" placeholder="MAV-015">
-                </div>
-                <div>
-                    <label class="text-[10px] font-black ml-2 text-gray-400 uppercase">Password</label>
-                    <input type="password" id="password" name="password" required autocomplete="current-password" class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none font-bold focus:border-indigo-500" placeholder="••••••••">
-                </div>
-                <button type="submit" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl hover:bg-indigo-700 transition uppercase">Log In</button>
+                <input type="text" id="agentId" required autocomplete="username" class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none font-bold uppercase focus:border-indigo-500" placeholder="AGENT ID">
+                <input type="password" id="password" required autocomplete="current-password" class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none font-bold focus:border-indigo-500" placeholder="PASSWORD">
+                <button type="submit" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl hover:bg-indigo-700 transition">ENTRANCE</button>
             </form>
         </div>
     </div>
 
     <div id="mainDashboard" class="hidden">
         <nav class="bg-white p-6 shadow-sm flex justify-between items-center sticky top-0 z-50">
-            <h1 class="text-2xl font-black text-indigo-600 italic tracking-tighter cursor-pointer" onclick="showView('home')">MEMO</h1>
+            <h1 class="text-2xl font-black text-indigo-600 italic tracking-tighter" onclick="showView('home')">MEMO</h1>
             <div class="flex items-center gap-4">
-                <span id="welcomeMsg" class="text-xs font-bold text-slate-400 italic"></span>
-                <button onclick="location.reload()" class="bg-red-50 text-red-500 px-4 py-2 rounded-xl font-bold text-[10px] uppercase">Logout</button>
+                <span id="welcomeMsg" class="text-xs font-bold text-slate-400 italic uppercase"></span>
+                <button onclick="location.reload()" class="bg-red-50 text-red-500 px-4 py-2 rounded-xl font-bold text-[10px]">LOGOUT</button>
             </div>
         </nav>
 
         <div class="max-w-7xl mx-auto p-6">
-            <button id="backBtn" onclick="showView('home')" class="hidden mb-6 bg-white px-6 py-3 rounded-2xl shadow-sm hover:bg-slate-50 font-black text-[10px] text-indigo-600 uppercase border border-indigo-50 italic">⬅ Back to Menu</button>
-
-            <div id="homeView" class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
-                <div onclick="showView('tracker')" class="bg-white p-12 rounded-[3.5rem] shadow-xl border-b-[12px] border-indigo-500 card-anim">
-                    <div class="text-5xl mb-6">⏱️</div>
-                    <h3 class="text-3xl font-black text-slate-800 uppercase italic">Tracker</h3>
-                    <p class="text-slate-400 font-bold text-xs mt-2 italic uppercase">Live Shift Management</p>
-                </div>
-                <div onclick="showView('attendance')" class="bg-white p-12 rounded-[3.5rem] shadow-xl border-b-[12px] border-emerald-500 card-anim">
-                    <div class="text-5xl mb-6">📝</div>
-                    <h3 class="text-3xl font-black text-slate-800 uppercase italic">Report</h3>
-                    <p class="text-slate-400 font-bold text-xs mt-2 italic uppercase">Team Daily Logs</p>
-                </div>
-                <div id="adminCard" onclick="showView('database')" class="hidden bg-white p-12 rounded-[3.5rem] shadow-xl border-b-[12px] border-amber-500 card-anim">
-                    <div class="text-5xl mb-6">📂</div>
-                    <h3 class="text-3xl font-black text-slate-800 uppercase italic">Database</h3>
-                    <p class="text-slate-400 font-bold text-xs mt-2 italic uppercase">Master Control</p>
-                </div>
-            </div>
-
-            <div id="trackerSection" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2 bg-white p-16 rounded-[4rem] shadow-xl text-center">
-                    <h3 id="timer" class="text-9xl font-black text-slate-800 tracking-tighter mb-10">00:00:00</h3>
-                    <div class="flex justify-center gap-4">
-                        <button id="logInBtn" onclick="startTracker()" class="bg-indigo-600 text-white px-12 py-5 rounded-3xl font-black shadow-xl">START SHIFT</button>
-                        <button id="breakBtn" onclick="toggleBreak()" class="hidden bg-amber-500 text-white px-12 py-5 rounded-3xl font-black shadow-xl">TAKE BREAK</button>
-                    </div>
-                </div>
-                <div class="bg-white p-10 rounded-[3rem] shadow-xl border-b-8 border-red-500 text-center">
-                    <p class="text-[10px] font-black text-slate-300 uppercase mb-2">Missing Hrs</p>
-                    <h4 id="missingHrs" class="text-5xl font-black text-red-600 italic">9h</h4>
-                </div>
-            </div>
-
-            <div id="attendanceSection" class="hidden bg-white p-10 rounded-[3rem] shadow-xl">
-                <h3 class="text-2xl font-black mb-8 italic uppercase text-slate-800">Attendance Report</h3>
-                <div class="overflow-x-auto"><table class="w-full text-left font-bold italic">
-                    <thead class="text-[10px] text-slate-300 uppercase border-b">
-                        <tr><th class="pb-6">Agent</th><th class="pb-6">Login</th><th class="pb-6 text-right">Missing</th></tr>
-                    </thead>
-                    <tbody id="attTable" class="text-slate-600"></tbody>
-                </table></div>
-            </div>
-
-            <div id="databaseSection" class="hidden bg-white p-10 rounded-[3rem] shadow-xl">
-                <h3 class="text-2xl font-black mb-8 italic uppercase text-indigo-900">Agent Directory</h3>
-                <div class="overflow-x-auto"><table class="w-full text-left font-bold italic">
-                    <thead class="text-[10px] text-slate-300 uppercase border-b">
-                        <tr><th class="pb-6">Staff Info</th><th class="pb-6">ID</th><th class="pb-6 text-right">Action</th></tr>
-                    </thead>
-                    <tbody id="dbTable" class="text-slate-700 uppercase"></tbody>
-                </table></div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const agents = {
-            "MAV-015": { name: "Asmaa Hassan", pass: "Welcome@123", role: "OWNER", title: "CS Agent", login: null, missing: 9 },
-            "MAV-001": { name: "Marwa Elatabany", pass: "Welcome@123", role: "OWNER", title: "General Manager", login: null, missing: 0 },
-            "MAV-002": { name: "Ahmed Zahran", pass: "Welcome@123", role: "OWNER", title: "Ops Manager", login: null, missing: 9 },
-            "MAV-012": { name: "Ahmed Amin", pass: "Welcome@123", role: "MEMBER", title: "CS Agent", login: null, missing: 9 },
-            "MAV-023": { name: "Mohamed Shaheen", pass: "Welcome@123", role: "MEMBER", title: "HR Partner", login: null, missing: 9 }
-            // سيتم عرض باقي الأسماء ديناميكياً
-        };
-
-        let currentId = "", workingSecs = 0, isOnBreak = false;
-
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const id = document.getElementById('agentId').value.toUpperCase().trim();
-            const pw = document.getElementById('password').value.trim();
             
-            if (agents[id] && agents[id].pass === pw) {
-                currentId = id;
-                document.getElementById('loginSection').classList.add('hidden');
-                document.getElementById('mainDashboard').classList.remove('hidden');
-                document.getElementById('welcomeMsg').innerText = "Logged in: " + agents[id].name;
-                if(agents[id].role === 'OWNER') document.getElementById('adminCard').classList.remove('hidden');
-                showView('home');
-            } else {
-                alert("❌ Check ID or Password!");
-            }
-        });
+            <div id="adminStats" class="hidden grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+                <div class="stat-card border-indigo-500">
+                    <p class="text-[9px] font-black text-slate-400 uppercase">Active Agents</p>
+                    <h4 id="activeCount" class="text-2xl font-black text-indigo-600">0</h4>
+                </div>
+                <div class="stat-card border-emerald-500">
+                    <p class="text-[9px] font-black text-slate-400 uppercase">Absenteeism %</p>
+                    <h4 id="absentPct" class="text-2xl font-black text-emerald-600">0%</h4>
+                </div>
+                <div class="stat-card border-amber-500">
+                    <p class="text-[9px] font-black text-slate-400 uppercase">Attrition %</p>
+                    <h4 class="text-2xl font-black text-amber-600">1.2%</h4>
+                </div>
+                <div class="stat-card border-red-500">
+                    <p class="text-[9px] font-black text-slate-400 uppercase">Lateness Cases</p>
+                    <h4 id="lateCases" class="text-2xl font-black text-red-600">0</h4>
+                </div>
+            </div>
 
-        function showView(view) {
-            ['homeView', 'trackerSection', 'attendanceSection', 'databaseSection', 'backBtn'].forEach(v => {
-                document.getElementById(v).classList.add('hidden');
-            });
-            if(view === 'home') {
-                document.getElementById('homeView').classList.remove('hidden');
-            } else {
-                document.getElementById(view + 'Section').classList.remove('hidden');
-                document.getElementById('backBtn').classList.remove('hidden');
-                renderTables();
-            }
-        }
+            <div id="homeView" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div onclick="showView('tracker')" class="glass-card p-10 border-b-[10px] border-indigo-500 hover:scale-105 transition cursor-pointer">
+                    <div class="text-4xl mb-4">⏱️</div>
+                    <h3 class="text-2xl font-black text-slate-800 uppercase italic">My Tracker</h3>
+                    <p class="text-slate-400 font-bold text-[10px] uppercase">Login/Break Control</p>
+                </div>
+                <div id="adminBtn1" onclick="showView('report')" class="hidden glass-card p-10 border-b-[10px] border-emerald-500 hover:scale-105 transition cursor-pointer">
+                    <div class="text-4xl mb-4">📊</div>
+                    <h3 class="text-2xl font-black text-slate-800 uppercase italic">Team Report</h3>
+                    <p class="text-slate-400 font-bold text-[10px] uppercase">Attendance & Late Logs</p>
+                </div>
+                <div id="adminBtn2" onclick="showView('database')" class="hidden glass-card p-10 border-b-[10px] border-amber-500 hover:scale-105 transition cursor-pointer">
+                    <div class="text-4xl mb-4">⚙️</div>
+                    <h3 class="text-2xl font-black text-slate-800 uppercase italic">Settings</h3>
+                    <p class="text-slate-400 font-bold text-[10px] uppercase">Staff & System Update</p>
+                </div>
+            </div>
 
-        function startTracker() {
-            if (agents[currentId].login) return;
-            agents[currentId].login = new Date().toLocaleTimeString();
-            document.getElementById('logInBtn').classList.add('hidden');
-            document.getElementById('breakBtn').classList.remove('hidden');
-            setInterval(() => { if(!isOnBreak) { workingSecs++; updateUI(); } }, 1000);
-        }
-
-        function updateUI() {
-            let h = Math.floor(workingSecs/3600).toString().padStart(2,'0');
-            let m = Math.floor((workingSecs%3600)/60).toString().padStart(2,'0');
-            let s = (workingSecs%60).toString().padStart(2,'0');
-            document.getElementById('timer').innerText = `${h}:${m}:${s}`;
-            let miss = Math.max(0, 9 - (workingSecs/3600));
-            document.getElementById('missingHrs').innerText = Math.round(miss) + "h";
-            agents[currentId].missing = Math.round(miss);
-        }
-
-        function toggleBreak() { 
-            isOnBreak = !isOnBreak; 
-            document.getElementById('breakBtn').innerText = isOnBreak ? "RESUME" : "TAKE BREAK";
-            document.getElementById('breakBtn').classList.toggle('bg-emerald-500');
-        }
-
-        function renderTables() {
-            const att = document.getElementById('attTable');
-            const db = document.getElementById('dbTable');
-            att.innerHTML = ""; db.innerHTML = "";
-            for (let id in agents) {
-                att.innerHTML += `<tr class="border-b h-14"><td>${agents[id].name}</td><td class="text-indigo-500 font-mono">${agents[id].login || '---'}</td><td class="text-right text-red-500">${agents[id].missing}h</td></tr>`;
-                db.innerHTML += `<tr class="border-b h-14"><td><div>${agents[id].name}</div><div class="text-[10px] text-slate-300 italic">${agents[id].title}</div></td><td class="font-mono text-xs">${id}</td><td class="text-right text-green-500 text-[10px] tracking-widest uppercase">Active</td></tr>`;
-            }
-        }
-    </script>
-</body>
-</html>
+            <div id="trackerSection" class="hidden">
+                <button onclick="showView('home')" class="mb-6 text-xs font-black text-indigo-600">⬅ BACK</button>
+                <div class="glass-card p-16 text-center max-w-2xl mx-auto border-b-[15px] border-indigo-
