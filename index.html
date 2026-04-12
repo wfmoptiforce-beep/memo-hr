@@ -3,261 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEMO Workforce - Command Center v5.0</title>
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/912/912214.png" type="image/png">
+    <title>MEMO PRO - Cloud Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #f0f4f8; overflow-x: hidden; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        :root { --bg: #050505; --accent: #00d2ff; --glass: rgba(255, 255, 255, 0.03); }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: #fff; margin: 0; }
+        .glass-panel { background: var(--glass); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 24px; }
+        .sidebar-item:hover, .active-nav { background: rgba(0, 210, 255, 0.1); border-left: 4px solid var(--accent); cursor: pointer; }
         .hidden { display: none !important; }
-        .sidebar { background: #001529; color: white; width: 260px; transition: 0.3s; }
-        .nav-item:hover { background: rgba(255,255,255,0.1); cursor: pointer; }
-        .nav-active { background: #1890ff !important; }
-        .stat-card { background: white; border-radius: 1.5rem; padding: 1.5rem; border-left: 6px solid; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .login-bg { background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=1000'); background-size: cover; }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen flex">
 
-    <div id="loginSection" class="flex items-center justify-center min-h-screen p-6">
-        <div class="bg-white rounded-[2.5rem] shadow-2xl flex w-full max-w-6xl overflow-hidden min-h-[600px]">
-            <div class="w-full md:w-1/2 p-12 flex flex-col justify-center">
-                <div class="mb-8">
-                    <span class="text-4xl">⚡</span>
-                    <h1 class="text-4xl font-black text-slate-800 mt-4">Welcome Back</h1>
-                    <p class="text-slate-400 font-medium italic">Sign in to Mavin Workforce</p>
-                </div>
-                <button class="w-full flex items-center justify-center gap-3 border border-slate-200 py-3 rounded-xl mb-6 hover:bg-slate-50 transition font-bold text-slate-600">
-                    <img src="https://authjs.dev/img/providers/google.svg" class="w-5 h-5"> Sign in with Google
-                </button>
-                <div class="flex items-center gap-4 mb-6"><div class="flex-grow border-t"></div><span class="text-xs text-slate-300 font-bold uppercase">Or Email</span><div class="flex-grow border-t"></div></div>
-                <form id="loginForm" class="space-y-4">
-                    <input type="text" id="agentId" required class="w-full px-6 py-4 bg-slate-50 border rounded-2xl outline-none font-bold uppercase focus:border-blue-600" placeholder="AGENT ID">
-                    <input type="password" id="password" required class="w-full px-6 py-4 bg-slate-50 border rounded-2xl outline-none font-bold focus:border-blue-600" placeholder="PASSWORD">
-                    <div class="flex justify-between items-center text-xs font-bold px-2">
-                        <label class="flex items-center gap-2"><input type="checkbox" checked> Remember me</label>
-                        <a href="#" class="text-blue-600">Forgot Password?</a>
-                    </div>
-                    <button type="submit" class="w-full bg-[#001529] text-white py-5 rounded-2xl font-black text-lg shadow-xl hover:bg-slate-800 transition">LOG IN</button>
-                </form>
-                <button onclick="localStorage.clear(); sessionStorage.clear(); location.reload();" class="mt-6 text-[10px] text-red-300 font-bold uppercase hover:underline">Force System Reset</button>
-            </div>
-            <div class="hidden md:flex w-1/2 login-bg p-12 flex-col justify-end text-white text-center">
-                <div class="z-10 bg-white/10 backdrop-blur-lg p-10 rounded-[2rem] border border-white/20">
-                    <h2 class="text-3xl font-black mb-4">Turn your ideas into reality.</h2>
-                    <p class="opacity-80 text-sm font-bold">Consistent quality and experience across all platforms.</p>
-                </div>
-            </div>
+    <div id="loginSection" class="fixed inset-0 z-[100] flex items-center justify-center bg-[#050505] p-6">
+        <div class="glass-panel p-12 max-w-md w-full text-center">
+            <h1 class="text-3xl font-extrabold italic mb-2 tracking-tighter">MEMO <span class="text-cyan-400">PRO</span></h1>
+            <p class="text-slate-500 text-xs uppercase mb-10 tracking-widest">Cloud Intelligence Center</p>
+            <form id="loginForm" class="space-y-4">
+                <input type="text" id="agentId" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-cyan-400 font-bold uppercase" placeholder="AGENT ID">
+                <input type="password" id="password" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold focus:border-cyan-400" placeholder="PASSWORD">
+                <button type="submit" class="w-full bg-cyan-500 text-black py-5 rounded-2xl font-black text-lg shadow-[0_0_20px_rgba(0,210,255,0.3)] hover:scale-105 transition uppercase">Log In</button>
+            </form>
         </div>
     </div>
 
-    <div id="mainDashboard" class="hidden flex min-h-screen">
-        <aside class="sidebar fixed h-full flex flex-col p-6 z-50">
-            <div class="flex items-center gap-3 mb-12">
-                <div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center font-black italic text-xl">M</div>
-                <h1 class="text-xl font-black italic tracking-tighter">MEMO HR</h1>
+    <aside id="sidebar" class="hidden w-72 border-r border-white/5 flex flex-col p-8 fixed h-full bg-[#050505] z-50">
+        <div class="flex items-center gap-3 mb-12">
+            <div class="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl"></div>
+            <h1 class="text-xl font-extrabold italic tracking-tighter uppercase">Memo Pro</h1>
+        </div>
+        <nav class="space-y-2 flex-grow font-bold text-xs uppercase tracking-widest text-slate-400">
+            <div onclick="showTab('dash')" id="nav-dash" class="sidebar-item p-4 rounded-xl active-nav">📊 Dashboard</div>
+            <div onclick="showTab('track')" id="nav-track" class="sidebar-item p-4 rounded-xl">⏱️ Live Session</div>
+        </nav>
+        <button onclick="logout()" class="p-4 rounded-xl bg-red-500/10 text-red-400 font-bold text-xs uppercase hover:bg-red-500/20 transition">Sign Out</button>
+    </aside>
+
+    <main id="mainDashboard" class="hidden flex-grow ml-72 p-10">
+        <header class="flex justify-between items-center mb-12">
+            <div>
+                <h2 id="pageTitle" class="text-3xl font-extrabold tracking-tight">Cloud Overview</h2>
+                <p id="currentDate" class="text-slate-500 text-sm font-medium"></p>
             </div>
-            <nav class="space-y-2 flex-grow font-bold text-xs uppercase italic tracking-widest">
-                <div id="nav-dash" onclick="showTab('dash')" class="nav-item p-4 rounded-xl nav-active">🏠 Dashboard</div>
-                <div id="nav-track" onclick="showTab('track')" class="nav-item p-4 rounded-xl">⏱️ Live Tracker</div>
-                <div id="nav-users" class="admin-only hidden nav-item p-4 rounded-xl" onclick="showTab('users')">👥 Agent Database</div>
-                <div id="nav-sched" class="admin-only hidden nav-item p-4 rounded-xl" onclick="showTab('sched')">📅 Schedule Upload</div>
-            </nav>
-            <button onclick="logout()" class="p-4 rounded-xl bg-red-500/20 text-red-200 font-bold uppercase text-[10px] hover:bg-red-600">Logout Session</button>
-        </aside>
+            <div class="glass-panel px-6 py-3 shadow-2xl">
+                <span id="globalTimer" class="font-mono text-xl font-bold text-cyan-400">00:00:00</span>
+            </div>
+        </header>
 
-        <main class="flex-grow ml-64 p-10">
-            <header class="flex justify-between items-center mb-10 bg-white p-6 rounded-3xl shadow-sm">
-                <h2 id="viewTitle" class="text-2xl font-black text-slate-800 uppercase italic">Command Center</h2>
-                <div id="persistentTimer" class="bg-blue-50 px-6 py-2 rounded-2xl border border-blue-100 font-mono font-black text-blue-700 hidden">00:00:00</div>
-            </header>
-
-            <div id="view-dash" class="admin-only hidden space-y-8 animate-fade-in">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div class="stat-card border-blue-500">
-                        <p class="text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Total Agents</p>
-                        <h4 id="statTotal" class="text-4xl font-black text-blue-900">0</h4>
-                    </div>
-                    <div class="stat-card border-red-500">
-                        <p class="text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Absenteeism %</p>
-                        <h4 id="statAbsent" class="text-4xl font-black text-red-600">0%</h4>
-                    </div>
-                    <div class="stat-card border-emerald-500">
-                        <p class="text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Active Now</p>
-                        <h4 id="statActive" class="text-4xl font-black text-emerald-600">0</h4>
-                    </div>
-                    <div class="stat-card border-amber-500">
-                        <p class="text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Attrition %</p>
-                        <h4 class="text-4xl font-black text-amber-600">1.2%</h4>
-                    </div>
-                </div>
-                <div class="bg-white p-8 rounded-[3rem] shadow-sm">
-                    <h3 class="text-lg font-black mb-6 uppercase italic">Team Performance Tracking</h3>
-                    <div class="h-40 flex items-end gap-2 px-2"><div class="flex-grow bg-blue-100 h-1/2 rounded-t-lg"></div><div class="flex-grow bg-blue-200 h-3/4 rounded-t-lg"></div><div class="flex-grow bg-blue-500 h-full rounded-t-lg"></div><div class="flex-grow bg-blue-300 h-2/3 rounded-t-lg"></div></div>
+        <div id="view-dash" class="space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="glass-panel p-8 border-b-2 border-cyan-500/30">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase mb-2">Active Agents (Live)</p>
+                    <h3 id="statActive" class="text-4xl font-extrabold text-cyan-400">0</h3>
                 </div>
             </div>
-
-            <div id="view-track" class="hidden py-10 text-center animate-fade-in">
-                <div class="bg-white p-16 rounded-[4rem] shadow-2xl max-w-2xl mx-auto border-b-[20px] border-[#001529]">
-                    <h3 id="mainTimer" class="text-8xl font-black text-slate-800 mb-10 font-mono tracking-tighter">00:00:00</h3>
-                    <div class="flex justify-center gap-4">
-                        <button id="startBtn" onclick="startShift()" class="bg-[#001529] text-white px-14 py-5 rounded-3xl font-black shadow-lg hover:scale-105 transition">START SHIFT</button>
-                        <button id="breakBtn" onclick="toggleBreak()" class="hidden bg-amber-500 text-white px-14 py-5 rounded-3xl font-black shadow-lg transition">TAKE BREAK</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-users" class="hidden animate-fade-in">
-                <div class="bg-white rounded-[3rem] p-10 shadow-xl overflow-hidden">
-                    <div class="flex justify-between items-center mb-8">
-                        <h3 class="text-2xl font-black text-slate-800 uppercase italic">Agent Management</h3>
-                        <button onclick="exportReport()" class="bg-emerald-600 text-white px-6 py-2 rounded-xl font-black text-[10px] uppercase">Export CSV</button>
-                    </div>
-                    <table class="w-full text-left font-bold italic text-sm">
-                        <thead class="text-[10px] text-slate-300 border-b uppercase">
-                            <tr><th class="pb-6">Agent Name</th><th class="pb-6">ID</th><th class="pb-6">Status</th><th class="pb-6">Lateness</th><th class="pb-6 text-right">Action</th></tr>
+            <div class="glass-panel p-10">
+                <h3 class="text-lg font-bold uppercase italic text-slate-300 mb-8 tracking-widest">Live Activity Table</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left font-semibold text-sm">
+                        <thead class="text-[10px] text-slate-500 uppercase border-b border-white/5">
+                            <tr><th class="pb-6">Operator</th><th class="pb-6">ID</th><th class="pb-6">Login Time</th><th class="pb-6 text-right">Status</th></tr>
                         </thead>
-                        <tbody id="dbTable" class="text-slate-600"></tbody>
+                        <tbody id="liveTable"></tbody>
                     </table>
                 </div>
             </div>
+        </div>
 
-            <div id="view-sched" class="hidden animate-fade-in text-center py-20">
-                <div class="bg-white p-20 rounded-[4rem] shadow-xl border-4 border-dashed border-slate-100 max-w-3xl mx-auto">
-                    <div class="text-6xl mb-6">📁</div>
-                    <p class="text-slate-400 font-bold mb-10 uppercase italic">Upload Excel Schedule to Update Team Database</p>
-                    <button onclick="downloadTemplate()" class="text-blue-500 font-black uppercase text-[10px] mb-8 block mx-auto underline italic">1. Download Excel Template</button>
-                    <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden" onchange="handleExcel(event)">
-                    <button onclick="document.getElementById('fileInput').click()" class="bg-[#001529] text-white px-16 py-5 rounded-2xl font-black shadow-2xl hover:scale-105 transition">2. CHOOSE & UPLOAD FILE</button>
-                </div>
+        <div id="view-track" class="hidden h-[60vh] flex items-center justify-center">
+            <div class="glass-panel p-20 text-center max-w-2xl w-full border-t-4 border-cyan-400">
+                <h3 id="sessionTimer" class="text-9xl font-black mb-12 font-mono">00:00:00</h3>
+                <button id="startBtn" onclick="toggleCloudShift()" class="bg-cyan-500 text-black px-16 py-6 rounded-2xl font-black text-xl hover:scale-105 transition shadow-[0_0_30px_rgba(0,210,255,0.3)] uppercase">Start Session</button>
             </div>
-        </main>
-    </div>
+        </div>
+    </main>
 
-    <script>
-        // 1. DATA CORE
-        const adminIds = ["MAV-015", "MAV-002"];
-        let team = JSON.parse(localStorage.getItem('memo_team')) || {
-            "MAV-015": { name: "Asmaa Hassan", shift: "10:00 AM", active: true, login: null, working: 0, lateness: 0 },
-            "MAV-002": { name: "Ahmed Zahran", shift: "10:00 AM", active: true, login: null, working: 0, lateness: 0 }
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBmuXinkGPXzeMtLn5paeESkTPfFrr4Z2s",
+            authDomain: "memo-pro-eb96d.firebaseapp.com",
+            projectId: "memo-pro-eb96d",
+            storageBucket: "memo-pro-eb96d.firebasestorage.app",
+            messagingSenderId: "973840698231",
+            appId: "1:973840698231:web:b364a71587f2ff98b66f72",
+            databaseURL: "https://memo-pro-eb96d-default-rtdb.firebaseio.com/"
         };
 
-        let currentId = sessionStorage.getItem('memo_active_id');
-        let shiftSeconds = 0, isBreak = false;
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-        window.onload = () => { if(currentId) loginSuccess(currentId); };
+        let currentId = sessionStorage.getItem('memo_id');
+        let workSeconds = 0;
+        let timer;
 
-        // 2. AUTHENTICATION
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
+        // إظهار التاريخ
+        document.getElementById('currentDate').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+        // تسجيل الدخول
+        document.getElementById('loginForm').onsubmit = (e) => {
             e.preventDefault();
             const id = document.getElementById('agentId').value.toUpperCase().trim();
             const pw = document.getElementById('password').value;
-            if (team[id] && pw === "Welcome@123") {
-                if(!team[id].active) return alert("❌ ACCOUNT INACTIVE");
-                currentId = id; sessionStorage.setItem('memo_active_id', id); loginSuccess(id);
-            } else { alert("❌ WRONG CREDENTIALS"); }
-        });
+            if(pw === "Welcome@123") {
+                sessionStorage.setItem('memo_id', id);
+                location.reload();
+            } else { alert("Wrong Password!"); }
+        };
 
-        function loginSuccess(id) {
-            document.getElementById('loginSection').classList.add('hidden');
-            document.getElementById('mainDashboard').classList.remove('hidden');
-            if(adminIds.includes(id)) {
-                document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-                updateStats();
+        // وظيفة العداد والربط بالسيرفر (زي اللي في صورتك)
+        window.toggleCloudShift = function() {
+            const btn = document.getElementById('startBtn');
+            if(btn.innerText === "START SESSION") {
+                update(ref(db, 'live_status/' + currentId), {
+                    name: currentId === "MAV-015" ? "Asmaa Hassan" : "Agent " + currentId,
+                    startTime: new Date().toLocaleTimeString(),
+                    status: "Online"
+                });
+                startTimer();
             } else {
-                showTab('track');
+                set(ref(db, 'live_status/' + currentId), null);
+                location.reload();
             }
-        }
+        };
 
-        function showTab(t) {
-            ['dash', 'track', 'users', 'sched'].forEach(id => {
-                const el = document.getElementById('view-' + id);
-                if(el) el.classList.add('hidden');
-                document.getElementById('nav-' + id).classList.remove('nav-active');
-            });
-            document.getElementById('view-' + t).classList.remove('hidden');
-            document.getElementById('nav-' + t).classList.add('nav-active');
-            if(t === 'users') renderTable();
-        }
-
-        // 3. TRACKER ENGINE
-        function startShift() {
-            if(team[currentId].login) return;
-            const now = new Date();
-            team[currentId].login = now.toLocaleTimeString();
-            // Lateness calculation (compared to 10:05 AM)
-            const shiftTime = new Date(); shiftTime.setHours(10, 5, 0);
-            if(now > shiftTime) team[currentId].lateness = Math.floor((now - shiftTime) / 60000);
-            
-            document.getElementById('startBtn').classList.add('hidden');
-            document.getElementById('breakBtn').classList.remove('hidden');
-            document.getElementById('persistentTimer').classList.remove('hidden');
-            
-            setInterval(() => {
-                if(!isBreak) {
-                    team[currentId].working++;
-                    updateTimerUI();
-                    if(team[currentId].working % 10 === 0) save();
-                }
+        function startTimer() {
+            document.getElementById('startBtn').innerText = "END SESSION";
+            document.getElementById('startBtn').classList.replace('bg-cyan-500', 'bg-red-500');
+            timer = setInterval(() => {
+                workSeconds++;
+                const t = new Date(workSeconds * 1000).toISOString().substr(11, 8);
+                document.getElementById('sessionTimer').innerText = t;
+                document.getElementById('globalTimer').innerText = t;
             }, 1000);
         }
 
-        function updateTimerUI() {
-            let t = new Date(team[currentId].working * 1000).toISOString().substr(11, 8);
-            document.getElementById('mainTimer').innerText = t;
-            document.getElementById('persistentTimer').innerText = t;
-        }
-
-        function toggleBreak() { isBreak = !isBreak; document.getElementById('breakBtn').innerText = isBreak ? "RESUME" : "TAKE BREAK"; document.getElementById('breakBtn').classList.toggle('bg-emerald-500'); }
-
-        // 4. ADMIN ENGINE (Excel & Management)
-        function handleExcel(e) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const data = new Uint8Array(event.target.result);
-                const workbook = XLSX.read(data, {type: 'array'});
-                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-                rows.forEach(r => {
-                    if(r.ID) team[r.ID.toString().toUpperCase()] = { name: r.Name, shift: r.Shift || "10:00 AM", active: true, login: null, working: 0, lateness: 0 };
-                });
-                save(); alert("✅ Team Updated!"); showTab('dash'); updateStats();
-            };
-            reader.readAsArrayBuffer(e.target.files[0]);
-        }
-
-        function renderTable() {
-            const table = document.getElementById('dbTable'); table.innerHTML = "";
-            for (let id in team) {
-                table.innerHTML += `<tr class="border-b h-16 hover:bg-slate-50 transition">
-                    <td>${team[id].name}</td><td class="font-mono text-xs text-slate-400">${id}</td>
-                    <td><span onclick="toggleStatus('${id}')" class="cursor-pointer px-4 py-1 rounded-full text-[10px] uppercase font-black ${team[id].active ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}">${team[id].active ? 'Active' : 'Inactive'}</span></td>
-                    <td class="${team[id].lateness > 0 ? 'text-red-500' : 'text-slate-400'}">${team[id].lateness}m delay</td>
-                    <td class="text-right"><button onclick="deleteAgent('${id}')" class="text-red-400 text-xs font-black uppercase hover:underline">Remove</button></td></tr>`;
+        // مراقبة السيرفر لحظياً (Live Monitoring)
+        onValue(ref(db, 'live_status'), (snap) => {
+            const data = snap.val() || {};
+            document.getElementById('statActive').innerText = Object.keys(data).length;
+            const table = document.getElementById('liveTable');
+            table.innerHTML = "";
+            for(let id in data) {
+                table.innerHTML += `
+                <tr class="border-b border-white/5 h-16 hover:bg-white/5 transition">
+                    <td class="px-4 text-white">${data[id].name}</td>
+                    <td class="px-4 text-slate-500 font-mono text-xs">${id}</td>
+                    <td class="px-4 text-slate-400">${data[id].startTime}</td>
+                    <td class="px-4 text-right text-cyan-400 font-bold">● LIVE</td>
+                </tr>`;
             }
-        }
+        });
 
-        function updateStats() {
-            const total = Object.keys(team).length;
-            const active = Object.values(team).filter(a => a.login).length;
-            document.getElementById('statTotal').innerText = total;
-            document.getElementById('statActive').innerText = active;
-            document.getElementById('statAbsent').innerText = Math.round(((total-active)/total)*100) + "%";
-        }
+        // التنقل بين الصفحات
+        window.showTab = (t) => {
+            ['dash', 'track'].forEach(v => document.getElementById('view-' + v)?.classList.add('hidden'));
+            document.getElementById('view-' + t).classList.remove('hidden');
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active-nav'));
+            document.getElementById('nav-' + t).classList.add('active-nav');
+        };
 
-        function toggleStatus(id) { team[id].active = !team[id].active; save(); renderTable(); }
-        function deleteAgent(id) { if(id === currentId) return; if(confirm("Confirm deletion?")) { delete team[id]; save(); renderTable(); updateStats(); } }
-        function save() { localStorage.setItem('memo_team', JSON.stringify(team)); }
-        function logout() { sessionStorage.clear(); location.reload(); }
-        function downloadTemplate() {
-            const ws = XLSX.utils.aoa_to_sheet([["Name", "ID", "Shift"]]);
-            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Team");
-            XLSX.writeFile(wb, "MEMO_WFM_Template.xlsx");
-        }
-        function exportReport() {
-            let csv = "Name,ID,Login,Lateness(min),WorkedSecs\n";
-            for(let id in team) csv += `${team[id].name},${id},${team[id].login || 'ABSENT'},${team[id].lateness},${team[id].working}\n`;
-            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv'})); a.download = 'MEMO_Daily_Report.csv'; a.click();
+        window.logout = () => { sessionStorage.clear(); location.reload(); };
+
+        // التحقق من حالة تسجيل الدخول عند الفتح
+        if(currentId) {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('sidebar').classList.remove('hidden');
+            document.getElementById('mainDashboard').classList.remove('hidden');
+            if(currentId !== "MAV-015") showTab('track');
         }
     </script>
 </body>
