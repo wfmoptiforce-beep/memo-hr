@@ -1,180 +1,323 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEMO PRO - Cloud Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
-        :root { --bg: #050505; --accent: #00d2ff; --glass: rgba(255, 255, 255, 0.03); }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: #fff; margin: 0; }
-        .glass-panel { background: var(--glass); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 24px; }
-        .sidebar-item:hover, .active-nav { background: rgba(0, 210, 255, 0.1); border-left: 4px solid var(--accent); cursor: pointer; }
-        .hidden { display: none !important; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memo HR</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:'Segoe UI',sans-serif;
+  overflow:hidden;
+  background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+}
+.wave-container{position:fixed;bottom:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+svg.waves{position:absolute;bottom:0;width:100%;height:35vh;min-height:150px;}
+.parallax>use{animation:move-forever 20s cubic-bezier(.55,.5,.45,.5) infinite;}
+.parallax>use:nth-child(1){animation-duration:7s;animation-delay:-2s;}
+.parallax>use:nth-child(2){animation-duration:10s;animation-delay:-3s;}
+.parallax>use:nth-child(3){animation-duration:13s;animation-delay:-4s;}
+.parallax>use:nth-child(4){animation-duration:20s;animation-delay:-5s;}
+@keyframes move-forever{
+  0%{transform:translate3d(-90px,0,0);}
+  100%{transform:translate3d(85px,0,0);}
+}
+.bubbles{position:fixed;width:100%;height:100%;z-index:0;pointer-events:none;}
+.bubble{
+  position:absolute;bottom:-100px;border-radius:50%;opacity:0.15;
+  animation:rise linear infinite;
+  background:radial-gradient(circle at 30% 30%,rgba(100,200,255,0.8),rgba(0,100,255,0.2));
+}
+@keyframes rise{
+  0%{transform:translateY(0) scale(1);opacity:0.15;}
+  50%{opacity:0.25;}
+  100%{transform:translateY(-110vh) scale(1.2);opacity:0;}
+}
+.stars{position:fixed;width:100%;height:100%;z-index:0;pointer-events:none;}
+.star{
+  position:absolute;width:2px;height:2px;
+  background:white;border-radius:50%;
+  animation:twinkle ease-in-out infinite;
+}
+@keyframes twinkle{
+  0%,100%{opacity:0.2;transform:scale(1);}
+  50%{opacity:1;transform:scale(1.5);}
+}
+.card{
+  position:relative;z-index:10;
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(25px);
+  -webkit-backdrop-filter:blur(25px);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:28px;
+  padding:50px 44px;
+  width:440px;
+  box-shadow:0 30px 60px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.1);
+  animation:fadeInUp 0.8s ease;
+}
+@keyframes fadeInUp{
+  from{opacity:0;transform:translateY(40px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.logo{text-align:center;margin-bottom:36px;}
+.logo-ring{
+  width:80px;height:80px;margin:0 auto 16px;
+  position:relative;display:flex;align-items:center;justify-content:center;
+}
+.logo-ring::before{
+  content:'';position:absolute;inset:0;border-radius:50%;padding:3px;
+  background:linear-gradient(135deg,#00d4ff,#0066ff,#7b00ff);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  animation:spin-ring 4s linear infinite;
+}
+@keyframes spin-ring{to{transform:rotate(360deg);}}
+.logo-inner{
+  width:66px;height:66px;
+  background:linear-gradient(135deg,#00d4ff22,#0066ff44);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:30px;border:1px solid rgba(255,255,255,0.1);
+}
+.logo h1{
+  color:white;font-size:26px;font-weight:700;letter-spacing:3px;
+  background:linear-gradient(135deg,#00d4ff,#ffffff,#7b00ff);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.logo p{color:rgba(255,255,255,0.4);font-size:12px;margin-top:5px;letter-spacing:1px;}
+.form-group{margin-bottom:18px;}
+.form-group label{
+  display:block;color:rgba(255,255,255,0.6);font-size:12px;
+  font-weight:600;margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;
+}
+.input-wrap{position:relative;}
+.input-wrap span{
+  position:absolute;left:16px;top:50%;
+  transform:translateY(-50%);font-size:16px;opacity:0.5;
+}
+.input-wrap input{
+  width:100%;padding:14px 18px 14px 44px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:14px;color:white;font-size:15px;
+  transition:all 0.3s;outline:none;
+}
+.input-wrap input:focus{
+  border-color:#00d4ff;
+  background:rgba(0,212,255,0.08);
+  box-shadow:0 0 0 3px rgba(0,212,255,0.15);
+}
+.input-wrap input::placeholder{color:rgba(255,255,255,0.25);}
+.eye-btn{
+  position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:rgba(255,255,255,0.3);
+  cursor:pointer;font-size:16px;transition:color 0.3s;
+}
+.eye-btn:hover{color:rgba(255,255,255,0.7);}
+.login-btn{
+  width:100%;padding:16px;
+  background:linear-gradient(135deg,#00d4ff,#0066ff);
+  border:none;border-radius:14px;color:white;
+  font-size:15px;font-weight:700;cursor:pointer;
+  transition:all 0.3s;margin-top:8px;
+  letter-spacing:1.5px;text-transform:uppercase;
+  position:relative;overflow:hidden;
+}
+.login-btn::before{
+  content:'';position:absolute;top:0;left:-100%;
+  width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);
+  transition:left 0.5s;
+}
+.login-btn:hover::before{left:100%;}
+.login-btn:hover{transform:translateY(-2px);box-shadow:0 12px 35px rgba(0,102,255,0.5);}
+.login-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+.alert{
+  padding:13px 16px;border-radius:12px;margin-bottom:18px;
+  font-size:13px;display:none;align-items:center;gap:8px;
+}
+.alert-error{background:rgba(255,60,60,0.15);border:1px solid rgba(255,60,60,0.3);color:#ff8080;}
+.alert-success{background:rgba(0,255,120,0.1);border:1px solid rgba(0,255,120,0.2);color:#69ffb0;}
+.divider{text-align:center;margin-top:24px;color:rgba(255,255,255,0.25);font-size:12px;}
+.divider a{color:rgba(0,212,255,0.7);text-decoration:none;transition:color 0.3s;}
+.divider a:hover{color:#00d4ff;}
+.spinner{
+  display:inline-block;width:16px;height:16px;
+  border:2px solid rgba(255,255,255,0.3);border-top-color:white;
+  border-radius:50%;animation:spin 0.7s linear infinite;
+  vertical-align:middle;margin-right:6px;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
 </head>
-<body class="min-h-screen flex">
+<body>
 
-    <div id="loginSection" class="fixed inset-0 z-[100] flex items-center justify-center bg-[#050505] p-6">
-        <div class="glass-panel p-12 max-w-md w-full text-center">
-            <h1 class="text-3xl font-extrabold italic mb-2 tracking-tighter">MEMO <span class="text-cyan-400">PRO</span></h1>
-            <p class="text-slate-500 text-xs uppercase mb-10 tracking-widest">Cloud Intelligence Center</p>
-            <form id="loginForm" class="space-y-4">
-                <input type="text" id="agentId" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-cyan-400 font-bold uppercase" placeholder="AGENT ID">
-                <input type="password" id="password" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none font-bold focus:border-cyan-400" placeholder="PASSWORD">
-                <button type="submit" class="w-full bg-cyan-500 text-black py-5 rounded-2xl font-black text-lg shadow-[0_0_20px_rgba(0,210,255,0.3)] hover:scale-105 transition uppercase">Log In</button>
-            </form>
-        </div>
+<div class="stars" id="stars"></div>
+<div class="bubbles" id="bubbles"></div>
+
+<div class="wave-container">
+<svg class="waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+  <defs>
+    <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"/>
+  </defs>
+  <g class="parallax">
+    <use xlink:href="#gentle-wave" x="48" y="0" fill="rgba(0,212,255,0.07)"/>
+    <use xlink:href="#gentle-wave" x="48" y="3" fill="rgba(0,100,255,0.07)"/>
+    <use xlink:href="#gentle-wave" x="48" y="5" fill="rgba(123,0,255,0.07)"/>
+    <use xlink:href="#gentle-wave" x="48" y="7" fill="rgba(0,50,150,0.15)"/>
+  </g>
+</svg>
+</div>
+
+<div class="card">
+  <div class="logo">
+    <div class="logo-ring">
+      <div class="logo-inner">🏢</div>
     </div>
+    <h1>MEMO HR</h1>
+    <p>WORKFORCE MANAGEMENT SYSTEM</p>
+  </div>
 
-    <aside id="sidebar" class="hidden w-72 border-r border-white/5 flex flex-col p-8 fixed h-full bg-[#050505] z-50">
-        <div class="flex items-center gap-3 mb-12">
-            <div class="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl"></div>
-            <h1 class="text-xl font-extrabold italic tracking-tighter uppercase">Memo Pro</h1>
-        </div>
-        <nav class="space-y-2 flex-grow font-bold text-xs uppercase tracking-widest text-slate-400">
-            <div onclick="showTab('dash')" id="nav-dash" class="sidebar-item p-4 rounded-xl active-nav">📊 Dashboard</div>
-            <div onclick="showTab('track')" id="nav-track" class="sidebar-item p-4 rounded-xl">⏱️ Live Session</div>
-        </nav>
-        <button onclick="logout()" class="p-4 rounded-xl bg-red-500/10 text-red-400 font-bold text-xs uppercase hover:bg-red-500/20 transition">Sign Out</button>
-    </aside>
+  <div class="alert alert-error" id="errorAlert"></div>
+  <div class="alert alert-success" id="successAlert"></div>
 
-    <main id="mainDashboard" class="hidden flex-grow ml-72 p-10">
-        <header class="flex justify-between items-center mb-12">
-            <div>
-                <h2 id="pageTitle" class="text-3xl font-extrabold tracking-tight">Cloud Overview</h2>
-                <p id="currentDate" class="text-slate-500 text-sm font-medium"></p>
-            </div>
-            <div class="glass-panel px-6 py-3 shadow-2xl">
-                <span id="globalTimer" class="font-mono text-xl font-bold text-cyan-400">00:00:00</span>
-            </div>
-        </header>
+  <form id="loginForm">
+    <div class="form-group">
+      <label>Email Address</label>
+      <div class="input-wrap">
+        <span>✉️</span>
+        <input type="email" id="email" placeholder="your@email.com" required/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <div class="input-wrap">
+        <span>🔒</span>
+        <input type="password" id="password" placeholder="••••••••" required/>
+        <button type="button" class="eye-btn" id="eyeBtn">👁️</button>
+      </div>
+    </div>
+    <button type="submit" class="login-btn" id="loginBtn">Sign In</button>
+  </form>
 
-        <div id="view-dash" class="space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="glass-panel p-8 border-b-2 border-cyan-500/30">
-                    <p class="text-[10px] font-bold text-slate-500 uppercase mb-2">Active Agents (Live)</p>
-                    <h3 id="statActive" class="text-4xl font-extrabold text-cyan-400">0</h3>
-                </div>
-            </div>
-            <div class="glass-panel p-10">
-                <h3 class="text-lg font-bold uppercase italic text-slate-300 mb-8 tracking-widest">Live Activity Table</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left font-semibold text-sm">
-                        <thead class="text-[10px] text-slate-500 uppercase border-b border-white/5">
-                            <tr><th class="pb-6">Operator</th><th class="pb-6">ID</th><th class="pb-6">Login Time</th><th class="pb-6 text-right">Status</th></tr>
-                        </thead>
-                        <tbody id="liveTable"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+  <div class="divider">
+    <a href="#" id="forgotLink">Forgot password?</a>
+    &nbsp;·&nbsp;
+    <a href="mailto:support@memo-hr.com">IT Support</a>
+  </div>
+</div>
 
-        <div id="view-track" class="hidden h-[60vh] flex items-center justify-center">
-            <div class="glass-panel p-20 text-center max-w-2xl w-full border-t-4 border-cyan-400">
-                <h3 id="sessionTimer" class="text-9xl font-black mb-12 font-mono">00:00:00</h3>
-                <button id="startBtn" onclick="toggleCloudShift()" class="bg-cyan-500 text-black px-16 py-6 rounded-2xl font-black text-xl hover:scale-105 transition shadow-[0_0_30px_rgba(0,210,255,0.3)] uppercase">Start Session</button>
-            </div>
-        </div>
-    </main>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyC9sFAYFZeGPMNpFAp4p_8e7jWWqm9ZSSI",
+  authDomain: "memo-pro-eb96d.firebaseapp.com",
+  databaseURL: "https://memo-pro-eb96d-default-rtdb.firebaseio.com",
+  projectId: "memo-pro-eb96d",
+  storageBucket: "memo-pro-eb96d.appspot.com",
+  messagingSenderId: "968461149514",
+  appId: "1:968461149514:web:dd8f8f8f8f8f8f"
+};
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBmuXinkGPXzeMtLn5paeESkTPfFrr4Z2s",
-            authDomain: "memo-pro-eb96d.firebaseapp.com",
-            projectId: "memo-pro-eb96d",
-            storageBucket: "memo-pro-eb96d.firebasestorage.app",
-            messagingSenderId: "973840698231",
-            appId: "1:973840698231:web:b364a71587f2ff98b66f72",
-            databaseURL: "https://memo-pro-eb96d-default-rtdb.firebaseio.com/"
-        };
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+// Stars
+const starsEl = document.getElementById('stars');
+for(let i=0;i<80;i++){
+  const s=document.createElement('div');
+  s.className='star';
+  s.style.left=Math.random()*100+'%';
+  s.style.top=Math.random()*100+'%';
+  s.style.animationDuration=(Math.random()*3+2)+'s';
+  s.style.animationDelay=(Math.random()*5)+'s';
+  starsEl.appendChild(s);
+}
 
-        let currentId = sessionStorage.getItem('memo_id');
-        let workSeconds = 0;
-        let timer;
+// Bubbles
+const bubblesEl = document.getElementById('bubbles');
+const sizes=[20,35,50,65,80,100];
+for(let i=0;i<15;i++){
+  const b=document.createElement('div');
+  b.className='bubble';
+  const sz=sizes[Math.floor(Math.random()*sizes.length)];
+  b.style.width=sz+'px';
+  b.style.height=sz+'px';
+  b.style.left=Math.random()*100+'%';
+  b.style.animationDuration=(Math.random()*15+10)+'s';
+  b.style.animationDelay=(Math.random()*10)+'s';
+  bubblesEl.appendChild(b);
+}
 
-        // إظهار التاريخ
-        document.getElementById('currentDate').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+// Eye toggle
+document.getElementById('eyeBtn').addEventListener('click',()=>{
+  const p=document.getElementById('password');
+  const btn=document.getElementById('eyeBtn');
+  if(p.type==='password'){p.type='text';btn.textContent='🙈';}
+  else{p.type='password';btn.textContent='👁️';}
+});
 
-        // تسجيل الدخول
-        document.getElementById('loginForm').onsubmit = (e) => {
-            e.preventDefault();
-            const id = document.getElementById('agentId').value.toUpperCase().trim();
-            const pw = document.getElementById('password').value;
-            if(pw === "Welcome@123") {
-                sessionStorage.setItem('memo_id', id);
-                location.reload();
-            } else { alert("Wrong Password!"); }
-        };
+function showAlert(type,msg){
+  const err=document.getElementById('errorAlert');
+  const suc=document.getElementById('successAlert');
+  err.style.display='none';
+  suc.style.display='none';
+  if(type==='error'){err.textContent='⚠️ '+msg;err.style.display='flex';}
+  else{suc.textContent='✅ '+msg;suc.style.display='flex';}
+}
 
-        // وظيفة العداد والربط بالسيرفر (زي اللي في صورتك)
-        window.toggleCloudShift = function() {
-            const btn = document.getElementById('startBtn');
-            if(btn.innerText === "START SESSION") {
-                update(ref(db, 'live_status/' + currentId), {
-                    name: currentId === "MAV-015" ? "Asmaa Hassan" : "Agent " + currentId,
-                    startTime: new Date().toLocaleTimeString(),
-                    status: "Online"
-                });
-                startTimer();
-            } else {
-                set(ref(db, 'live_status/' + currentId), null);
-                location.reload();
-            }
-        };
+function setLoading(v){
+  const btn=document.getElementById('loginBtn');
+  btn.disabled=v;
+  btn.innerHTML=v?'<span class="spinner"></span>Signing In...':'Sign In';
+}
 
-        function startTimer() {
-            document.getElementById('startBtn').innerText = "END SESSION";
-            document.getElementById('startBtn').classList.replace('bg-cyan-500', 'bg-red-500');
-            timer = setInterval(() => {
-                workSeconds++;
-                const t = new Date(workSeconds * 1000).toISOString().substr(11, 8);
-                document.getElementById('sessionTimer').innerText = t;
-                document.getElementById('globalTimer').innerText = t;
-            }, 1000);
-        }
+document.getElementById('loginForm').addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  const email=document.getElementById('email').value.trim();
+  const pass=document.getElementById('password').value;
+  setLoading(true);
+  try{
+    const cred=await signInWithEmailAndPassword(auth,email,pass);
+    const uid=cred.user.uid;
+    const snap=await get(ref(db,'users/'+uid));
+    if(!snap.exists()){
+      showAlert('error','User not found. Contact IT Support.');
+      setLoading(false);return;
+    }
+    const user=snap.val();
+    await set(ref(db,'users/'+uid+'/online'),true);
+    await set(ref(db,'users/'+uid+'/lastSeen'),new Date().toISOString());
+    showAlert('success','Welcome back, '+user.name+'!');
+    setTimeout(()=>{
+      window.location.href=(user.role==='owner'||user.role==='admin')?'admin.html':'dashboard.html';
+    },1200);
+  }catch(err){
+    let msg='Login failed. Please try again.';
+    if(err.code==='auth/user-not-found'||err.code==='auth/invalid-credential')msg='Invalid email or password.';
+    if(err.code==='auth/too-many-requests')msg='Too many attempts. Please wait.';
+    showAlert('error',msg);
+    setLoading(false);
+  }
+});
 
-        // مراقبة السيرفر لحظياً (Live Monitoring)
-        onValue(ref(db, 'live_status'), (snap) => {
-            const data = snap.val() || {};
-            document.getElementById('statActive').innerText = Object.keys(data).length;
-            const table = document.getElementById('liveTable');
-            table.innerHTML = "";
-            for(let id in data) {
-                table.innerHTML += `
-                <tr class="border-b border-white/5 h-16 hover:bg-white/5 transition">
-                    <td class="px-4 text-white">${data[id].name}</td>
-                    <td class="px-4 text-slate-500 font-mono text-xs">${id}</td>
-                    <td class="px-4 text-slate-400">${data[id].startTime}</td>
-                    <td class="px-4 text-right text-cyan-400 font-bold">● LIVE</td>
-                </tr>`;
-            }
-        });
-
-        // التنقل بين الصفحات
-        window.showTab = (t) => {
-            ['dash', 'track'].forEach(v => document.getElementById('view-' + v)?.classList.add('hidden'));
-            document.getElementById('view-' + t).classList.remove('hidden');
-            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active-nav'));
-            document.getElementById('nav-' + t).classList.add('active-nav');
-        };
-
-        window.logout = () => { sessionStorage.clear(); location.reload(); };
-
-        // التحقق من حالة تسجيل الدخول عند الفتح
-        if(currentId) {
-            document.getElementById('loginSection').classList.add('hidden');
-            document.getElementById('sidebar').classList.remove('hidden');
-            document.getElementById('mainDashboard').classList.remove('hidden');
-            if(currentId !== "MAV-015") showTab('track');
-        }
-    </script>
+document.getElementById('forgotLink').addEventListener('click',async(e)=>{
+  e.preventDefault();
+  const email=document.getElementById('email').value.trim();
+  if(!email){showAlert('error','Enter your email first.');return;}
+  try{
+    await sendPasswordResetEmail(auth,email);
+    showAlert('success','Reset email sent! Check your inbox.');
+  }catch{showAlert('error','Could not send reset email.');}
+});
+</script>
 </body>
 </html>
