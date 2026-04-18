@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memo Pro - Admin Panel</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', sans-serif; background: #f0f4ff; color: #1a1a2e; }
+
+/* Sidebar */
+.sidebar {
+  position: fixed; left: 0; top: 0;
+  width: 240px; height: 100vh;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+  padding: 20px 0; z-index: 100;
+  display: flex; flex-direction: column;
+}
+.logo {
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 20px 30px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.logo-icon {
+  width: 42px; height: 42px; background: linear-gradient(135deg, #4361ee, #7209b7);
+  border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.logo-text { color: white; font-size: 18px; font-weight: 700; }
+.logo-text span { color: #4361ee; }
+
+.nav { margin-top: 20px; flex: 1; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 20px; color: rgba(255,255,255,0.6);
+  cursor: pointer; transition: all 0.3s;
+  font-size: 14px; font-weight: 500;
+}
+.nav-item:hover, .nav-item.active {
+  background: rgba(67,97,238,0.2);
+  color: white; border-left: 3px solid #4361ee;
+}
+.nav-item .icon { font-size: 18px; width: 24px; text-align: center; }
+
+.sidebar-footer {
+  padding: 20px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+.user-info { display: flex; align-items: center; gap: 10px; }
+.user-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, #4361ee, #7209b7);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 700; font-size: 14px;
+}
+.user-name { color: white; font-size: 13px; font-weight: 600; }
+.user-role { color: rgba(255,255,255,0.4); font-size: 11px; }
+.logout-btn {
+  margin-top: 12px; width: 100%; padding: 8px;
+  background: rgba(255,59,59,0.15); color: #ff6b6b;
+  border: 1px solid rgba(255,59,59,0.3); border-radius: 8px;
+  cursor: pointer; font-size: 13px; transition: all 0.3s;
+}
+.logout-btn:hover { background: rgba(255,59,59,0.3); }
+
+/* Main Content */
+.main { margin-left: 240px; padding: 30px; min-height: 100vh; }
+
+/* Header */
+.header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 30px;
+}
+.page-title { font-size: 24px; font-weight: 700; color: #1a1a2e; }
+.page-subtitle { font-size: 13px; color: #666; margin-top: 2px; }
+.header-date {
+  background: white; padding: 8px 16px; border-radius: 10px;
+  font-size: 13px; color: #666; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* Stats Cards */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 20px; margin-bottom: 30px;
+}
+.stat-card {
+  background: white; border-radius: 16px; padding: 20px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  display: flex; align-items: center; gap: 16px;
+  transition: transform 0.2s;
+}
+.stat-card:hover { transform: translateY(-3px); }
+.stat-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center; font-size: 24px;
+}
+.stat-icon.blue { background: rgba(67,97,238,0.1); }
+.stat-icon.green { background: rgba(34,197,94,0.1); }
+.stat-icon.red { background: rgba(239,68,68,0.1); }
+.stat-icon.orange { background: rgba(249,115,22,0.1); }
+.stat-number { font-size: 28px; font-weight: 700; color: #1a1a2e; }
+.stat-label { font-size: 12px; color: #888; margin-top: 2px; }
+
+/* Section */
+.section { background: white; border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.section-title { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+
+/* Table */
+.table-wrapper { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f8f9ff; padding: 12px 16px; text-align: left; font-weight: 600; color: #666; border-bottom: 2px solid #eee; }
+td { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; color: #333; }
+tr:hover td { background: #f8f9ff; }
+
+/* Badges */
+.badge {
+  padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+}
+.badge-owner { background: rgba(114,9,183,0.1); color: #7209b7; }
+.badge-admin { background: rgba(67,97,238,0.1); color: #4361ee; }
+.badge-user { background: rgba(107,114,128,0.1); color: #6b7280; }
+.badge-active { background: rgba(34,197,94,0.1); color: #16a34a; }
+.badge-inactive { background: rgba(239,68,68,0.1); color: #dc2626; }
+
+/* Status badges */
+.status-ontime { background: rgba(34,197,94,0.1); color: #16a34a; }
+.status-late { background: rgba(249,115,22,0.1); color: #ea580c; }
+.status-absent { background: rgba(239,68,68,0.1); color: #dc2626; }
+.status-off { background: rgba(107,114,128,0.1); color: #6b7280; }
+.status-holiday { background: rgba(59,130,246,0.1); color: #2563eb; }
+.status-sick { background: rgba(168,85,247,0.1); color: #9333ea; }
+.status-vacation { background: rgba(20,184,166,0.1); color: #0d9488; }
+
+/* Buttons */
+.btn {
+  padding: 8px 16px; border-radius: 8px; border: none;
+  cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s;
+}
+.btn-primary { background: #4361ee; color: white; }
+.btn-primary:hover { background: #3451d1; }
+.btn-success { background: #22c55e; color: white; }
+.btn-success:hover { background: #16a34a; }
+.btn-danger { background: #ef4444; color: white; }
+.btn-danger:hover { background: #dc2626; }
+.btn-warning { background: #f97316; color: white; }
+.btn-warning:hover { background: #ea580c; }
+.btn-outline {
+  background: transparent; border: 1px solid #4361ee; color: #4361ee;
+}
+.btn-outline:hover { background: #4361ee; color: white; }
+
+/* Pages */
+.page { display: none; }
+.page.active { display: block; }
+
+/* Modal */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5); z-index: 1000;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: white; border-radius: 20px; padding: 30px;
+  width: 90%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; }
+.form-control {
+  width: 100%; padding: 10px 14px; border: 1px solid #e0e0e0;
+  border-radius: 10px; font-size: 14px; outline: none; transition: border 0.2s;
+}
+.form-control:focus { border-color: #4361ee; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+/* Schedule Upload */
+.upload-area {
+  border: 2px dashed #4361ee; border-radius: 16px; padding: 40px;
+  text-align: center; cursor: pointer; transition: all 0.3s;
+  background: rgba(67,97,238,0.02);
+}
+.upload-area:hover { background: rgba(67,97,238,0.05); }
+.upload-icon { font-size: 48px; margin-bottom: 12px; }
+.upload-text { font-size: 16px; font-weight: 600; color: #4361ee; }
+.upload-sub { font-size: 13px; color: #888; margin-top: 6px; }
+
+/* Search */
+.search-box {
+  display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;
+}
+.search-input {
+  flex: 1; padding: 10px 14px; border: 1px solid #e0e0e0;
+  border-radius: 10px; font-size: 13px; outline: none; min-width: 200px;
+}
+.search-input:focus { border-color: #4361ee; }
+select.filter {
+  padding: 10px 14px; border: 1px solid #e0e0e0;
+  border-radius: 10px; font-size: 13px; outline: none; background: white;
+}
+
+/* Loading */
+.loading { text-align: center; padding: 40px; color: #888; font-size: 14px; }
+.spinner {
+  width: 32px; height: 32px; border: 3px solid #f0f0f0;
+  border-top-color: #4361ee; border-radius: 50%;
+  animation: spin 0.8s linear infinite; margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 30px; right: 30px;
+  background: #1a1a2e; color: white; padding: 12px 20px;
+  border-radius: 10px; font-size: 13px; z-index: 9999;
+  transform: translateY(100px); transition: transform 0.3s;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+.toast.show { transform: translateY(0); }
+.toast.success { border-left: 4px solid #22c55e; }
+.toast.error { border-left: 4px solid #ef4444; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar { width: 60px; }
+  .sidebar .logo-text, .sidebar .nav-item span, .sidebar-footer .user-name,
+  .sidebar-footer .user-role { display: none; }
+  .main { margin-left: 60px; padding: 20px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">📊</div>
+    <div class="logo-text">Memo <span>Pro</span></div>
+  </div>
+  <nav class="nav">
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <span class="icon">🏠</span><span>Dashboard</span>
+    </div>
+    <div class="nav-item" onclick="showPage('users')">
+      <span class="icon">👥</span><span>Users</span>
+    </div>
+    <div class="nav-item" onclick="showPage('attendance')">
+      <span class="icon">📅</span><span>Attendance</span>
+    </div>
+    <div class="nav-item" onclick="showPage('schedule')">
+      <span class="icon">📋</span><span>Schedule</span>
+    </div>
+    <div class="nav-item" onclick="showPage('reports')">
+      <span class="icon">📈</span><span>Reports</span>
+    </div>
+    <div class="nav-item" onclick="showPage('settings')">
+      <span class="icon">⚙️</span><span>Settings</span>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" id="sidebarAvatar">A</div>
+      <div>
+        <div class="user-name" id="sidebarName">Admin</div>
+        <div class="user-role" id="sidebarRole">Owner</div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Dashboard Page -->
+  <div class="page active" id="page-dashboard">
+    <div class="header">
+      <div>
+        <div class="page-title">Dashboard 🏠</div>
+        <div class="page-subtitle">Welcome back! Here's what's happening today.</div>
+      </div>
+      <div class="header-date" id="currentDate"></div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon blue">👥</div>
+        <div>
+          <div class="stat-number" id="statTotal">0</div>
+          <div class="stat-label">Total Users</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">🟢</div>
+        <div>
+          <div class="stat-number" id="statOnTime">0</div>
+          <div class="stat-label">On Time Today</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon orange">🟡</div>
+        <div>
+          <div class="stat-number" id="statLate">0</div>
+          <div class="stat-label">Late Today</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon red">🔴</div>
+        <div>
+          <div class="stat-number" id="statAbsent">0</div>
+          <div class="stat-label">Absent Today</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">📊 Today's Overview</div>
+        <button class="btn btn-outline" onclick="loadDashboard()">🔄 Refresh</button>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Agent</th>
+              <th>Email</th>
+              <th>Shift</th>
+              <th>Status</th>
+              <th>Login Time</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="dashboardTable">
+            <tr><td colspan="6" class="loading"><div class="spinner"></div>Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users Page -->
+  <div class="page" id="page-users">
+    <div class="header">
+      <div>
+        <div class="page-title">Users Management 👥</div>
+        <div class="page-subtitle">Manage access and roles</div>
+      </div>
+      <button class="btn btn-primary" onclick="showAddUserModal()">➕ Add User</button>
+    </div>
+
+    <div class="section">
+      <div class="search-box">
+        <input type="text" class="search-input" placeholder="🔍 Search by name or email..." oninput="filterUsers(this.value)">
+        <select class="filter" onchange="filterUsersByRole(this.value)">
+          <option value="">All Roles</option>
+          <option value="owner">Owner</option>
+          <option value="admin">Admin</option>
+          <option value="user">User</option>
+        </select>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Last Seen</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTable">
+            <tr><td colspan="6" class="loading"><div class="spinner"></div>Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Attendance Page -->
+  <div class="page" id="page-attendance">
+    <div class="header">
+      <div>
+        <div class="page-title">Attendance 📅</div>
+        <div class="page-subtitle">Track daily attendance</div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <input type="date" id="attendanceDate" class="form-control" style="width:180px;" onchange="loadAttendance()">
+        <button class="btn btn-success" onclick="exportAttendance()">📥 Export</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Agent</th>
+              <th>Email</th>
+              <th>Shift</th>
+              <th>Status</th>
+              <th>Login Time</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="attendanceTable">
+            <tr><td colspan="6" class="loading"><div class="spinner"></div>Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schedule Page -->
+  <div class="page" id="page-schedule">
+    <div class="header">
+      <div>
+        <div class="page-title">Schedule Management 📋</div>
+        <div class="page-subtitle">Upload and manage schedules</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
+      <!-- Download Template -->
+      <div class="section">
+        <div class="section-title" style="margin-bottom:16px;">📥 Download Template</div>
+        <p style="font-size:13px;color:#666;margin-bottom:20px;">
+          Download the Excel template, fill in the schedule data, then upload it back.
+        </p>
+        <div style="background:#f8f9ff;border-radius:12px;padding:16px;margin-bottom:16px;font-size:13px;">
+          <div style="font-weight:600;margin-bottom:8px;">Template columns:</div>
+          <div>📧 Email | 👤 Name | 📅 Date | 🕐 Shift</div>
+          <div style="margin-top:8px;color:#888;">Shift examples: 9:00:00 AM, OFF, Holiday, Sick, Vacation</div>
+        </div>
+        <button class="btn btn-primary" onclick="downloadTemplate()" style="width:100%;">
+          📥 Download Template
+        </button>
+      </div>
+
+      <!-- Upload Schedule -->
+      <div class="section">
+        <div class="section-title" style="margin-bottom:16px;">📤 Upload Schedule</div>
+        <div class="upload-area" onclick="document.getElementById('scheduleFile').click()" 
+             ondrop="handleDrop(event)" ondragover="event.preventDefault()">
+          <div class="upload-icon">📤</div>
+          <div class="upload-text">Click or Drop Excel file here</div>
+          <div class="upload-sub">Supports .xlsx and .csv files</div>
+        </div>
+        <input type="file" id="scheduleFile" accept=".xlsx,.csv" style="display:none" onchange="handleFileUpload(event)">
+        <div id="uploadPreview" style="margin-top:16px;display:none;">
+          <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Preview:</div>
+          <div id="previewCount" style="font-size:13px;color:#666;margin-bottom:12px;"></div>
+          <button class="btn btn-success" onclick="uploadSchedule()" style="width:100%;">
+            ✅ Confirm Upload
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Current Schedule -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">📅 Current Schedule</div>
+        <div style="display:flex;gap:10px;">
+          <input type="date" id="scheduleViewDate" class="form-control" style="width:180px;" onchange="loadScheduleView()">
+          <button class="btn btn-outline" onclick="loadScheduleView()">🔍 View</button>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Agent Email</th>
+              <th>Name</th>
+              <th>Date</th>
+              <th>Shift</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="scheduleTable">
+            <tr><td colspan="5" style="text-align:center;padding:30px;color:#888;">Select a date to view schedule</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reports Page -->
+  <div class="page" id="page-reports">
+    <div class="header">
+      <div>
+        <div class="page-title">Reports 📈</div>
+        <div class="page-subtitle">Analyze attendance and performance</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:24px;">
+      <div class="stat-card">
+        <div class="stat-icon green">✅</div>
+        <div><div class="stat-number" id="repOnTime">0</div><div class="stat-label">On Time This Week</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon orange">⏰</div>
+        <div><div class="stat-number" id="repLate">0</div><div class="stat-label">Late This Week</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon red">❌</div>
+        <div><div class="stat-number" id="repAbsent">0</div><div class="stat-label">Absent This Week</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">📊 Attendance Report</div>
+        <div style="display:flex;gap:10px;">
+          <input type="date" id="reportFrom" class="form-control" style="width:160px;">
+          <input type="date" id="reportTo" class="form-control" style="width:160px;">
+          <button class="btn btn-primary" onclick="generateReport()">🔍 Generate</button>
+          <button class="btn btn-success" onclick="exportReport()">📥 Export</button>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Agent</th>
+              <th>Email</th>
+              <th>Date</th>
+              <th>Shift</th>
+              <th>Status</th>
+              <th>Login Time</th>
+            </tr>
+          </thead>
+          <tbody id="reportTable">
+            <tr><td colspan="6" style="text-align:center;padding:30px;color:#888;">Select date range and click Generate</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Page -->
+  <div class="page" id="page-settings">
+    <div class="header">
+      <div>
+        <div class="page-title">Settings ⚙️</div>
+        <div class="page-subtitle">Configure application settings</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+      <div class="section">
+        <div class="section-title" style="margin-bottom:20px;">⏰ Shift Timing Rules</div>
+        <div class="form-group">
+          <label class="form-label">Grace Period (minutes)</label>
+          <input type="number" class="form-control" id="gracePeriod" value="15" placeholder="e.g. 15">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Late Threshold (minutes)</label>
+          <input type="number" class="form-control" id="lateThreshold" value="30" placeholder="e.g. 30">
+        </div>
+        <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
+      </div>
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:20px;">🔐 Security Rules</div>
+        <div style="background:#fff8e1;border:1px solid #ffd54f;border-radius:12px;padding:16px;font-size:13px;color:#795548;">
+          ⚠️ Your Firebase security rules are currently set to public.
+          <br><br>
+          <strong>Recommendation:</strong> Update your Firebase rules to restrict access.
+        </div>
+        <div style="margin-top:16px;">
+          <div class="section-title" style="margin-bottom:12px;font-size:14px;">Suggested Rules:</div>
+          <pre style="background:#f8f9ff;padding:12px;border-radius:8px;font-size:11px;overflow-x:auto;">{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null"
+  }
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Edit Status Modal -->
+<div class="modal-overlay" id="editStatusModal">
+  <div class="modal">
+    <div class="modal-title">✏️ Edit Attendance Status</div>
+    <div class="form-group">
+      <label class="form-label">Agent Email</label>
+      <input type="text" class="form-control" id="editEmail" readonly>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Date</label>
+      <input type="date" class="form-control" id="editDate" readonly>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Status</label>
+      <select class="form-control" id="editStatus">
+        <option value="OnTime">✅ On Time</option>
+        <option value="Late">⏰ Late</option>
+        <option value="Absent">❌ Absent</option>
+        <option value="Sick">🤒 Sick</option>
+        <option value="Vacation">🏝️ Vacation</option>
+        <option value="OFF">⚫ OFF</option>
+        <option value="Holiday">🏖️ Holiday</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Note (optional)</label>
+      <input type="text" class="form-control" id="editNote" placeholder="Add a note...">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('editStatusModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStatus()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Role Modal -->
+<div class="modal-overlay" id="editRoleModal">
+  <div class="modal">
+    <div class="modal-title">👤 Edit User Role</div>
+    <div class="form-group">
+      <label class="form-label">User</label>
+      <input type="text" class="form-control" id="roleUserName" readonly>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Role</label>
+      <select class="form-control" id="roleSelect">
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+        <option value="owner">Owner</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Access</label>
+      <select class="form-control" id="accessSelect">
+        <option value="true">✅ Active</option>
+        <option value="false">❌ Inactive</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('editRoleModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRole()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// Firebase Config - استبدليها بالكونفيج بتاعتك
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  databaseURL: "https://memo-pro-eb96d-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
+// Global vars
+let allUsers = {};
+let scheduleData = [];
+let currentUserRole = '';
+let settings = { gracePeriod: 15, lateThreshold: 30 };
+
+// ==================== AUTH ====================
+auth.onAuthStateChanged(async (user) => {
+  if (!user) { window.location.href = 'index.html'; return; }
+  
+  const snap = await db.ref('users/' + user.uid).once('value');
+  const userData = snap.val();
+  
+  if (!userData || (userData.role !== 'owner' && userData.role !== 'admin')) {
+    window.location.href = 'dashboard.html'; return;
+  }
+  
+  currentUserRole = userData.role;
+  document.getElementById('sidebarName').textContent = userData.name || 'Admin';
+  document.getElementById('sidebarRole').textContent = userData.role;
+  document.getElementById('sidebarAvatar').textContent = (userData.name || 'A')[0].toUpperCase();
+  
+  // Set today's date
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('attendanceDate').value = today;
+  document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  
+  loadDashboard();
+  loadUsers();
+});
+
+function logout() {
+  auth.signOut().then(() => window.location.href = 'index.html');
+}
+
+// ==================== NAVIGATION ====================
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  
+  if (name === 'attendance') loadAttendance();
+  if (name === 'reports') loadWeeklyStats();
+}
+
+// ==================== HELPERS ====================
+function getDateKey(dateStr) {
+  const d = new Date(dateStr);
+  return `${d.getMonth()+1}-${d.getDate()}-${d.getFullYear()}`;
+}
+
+function getEmailKey(email) {
+  return email.replace(/\./g, '_').replace(/@/g, '_');
+}
+
+function getStatus(loginTime, shiftTime, manualStatus) {
+  if (manualStatus) return manualStatus;
+  if (!shiftTime || shiftTime === 'OFF') return 'OFF';
+  if (shiftTime === 'Holiday') return 'Holiday';
+  if (!loginTime) return 'Absent';
+  
+  const shift = new Date('1970/01/01 ' + shiftTime);
+  const login = new Date(loginTime);
+  const loginOnly = new Date(`1970/01/01 ${login.getHours()}:${login.getMinutes()}:00`);
+  const diffMin = (loginOnly - shift) / 60000;
+  
+  if (diffMin <= settings.gracePeriod) return 'OnTime';
+  return 'Late';
+}
+
+function getStatusBadge(status) {
+  const map = {
+    'OnTime': ['status-ontime', '✅ On Time'],
+    'Late': ['status-late', '⏰ Late'],
+    'Absent': ['status-absent', '❌ Absent'],
+    'OFF': ['status-off', '⚫ OFF'],
+    'Holiday': ['status-holiday', '🏖️ Holiday'],
+    'Sick': ['status-sick', '🤒 Sick'],
+    'Vacation': ['status-vacation', '🏝️ Vacation'],
+  };
+  const [cls, label] = map[status] || ['status-off', status];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+// ==================== DASHBOARD ====================
+async function loadDashboard() {
+  const today = new Date();
+  const dateKey = `${today.getMonth()+1}-${today.getDate()}-${today.getFullYear()}`;
+  
+  const [usersSnap, attSnap, schedSnap] = await Promise.all([
+    db.ref('users').once('value'),
+    db.ref('attendance').once('value'),
+    db.ref('schedules').once('value')
+  ]);
+  
+  const users = usersSnap.val() || {};
+  const att = attSnap.val() || {};
+  const scheds = schedSnap.val() || {};
+  
+  let onTime=0, late=0, absent=0;
+  const rows = [];
+  
+  for (const uid in users) {
+    const u = users[uid];
+    if (!u.email) continue;
+    
+    const emailKey = getEmailKey(u.email);
+    const attData = att[emailKey]?.[dateKey];
+    const schedData = scheds[emailKey]?.[dateKey];
+    const shift = schedData?.shift || '-';
+    const manualStatus = attData?.manualStatus;
+    
+    let loginTime = null;
+    if (attData?.type === 'Login' && attData?.lastUpdate) {
+      loginTime = new Date(attData.lastUpdate);
+    }
+    
+    const status = getStatus(loginTime, shift, manualStatus);
+    if (status === 'OnTime') onTime++;
+    else if (status === 'Late') late++;
+    else if (status === 'Absent') absent++;
+    
+    rows.push({ u, emailKey, shift, status, loginTime, dateKey });
+  }
+  
+  document.getElementById('statTotal').textContent = Object.keys(users).length;
+  document.getElementById('statOnTime').textContent = onTime;
+  document.getElementById('statLate').textContent = late;
+  document.getElementById('statAbsent').textContent = absent;
+  
+  const tbody = document.getElementById('dashboardTable');
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td><strong>${r.u.name || '-'}</strong></td>
+      <td>${r.u.email}</td>
+      <td>${r.shift}</td>
+      <td>${getStatusBadge(r.status)}</td>
+      <td>${r.loginTime ? r.loginTime.toLocaleTimeString() : '-'}</td>
+      <td>
+        <button class="btn btn-warning" style="font-size:11px;padding:5px 10px;" 
+          onclick="openEditStatus('${r.u.email}','${r.dateKey}','${r.status}')">
+          ✏️ Edit
+        </button>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="6" style="text-align:center;padding:20px;color:#888;">No data found</td></tr>';
+}
+
+// ==================== USERS ====================
+async function loadUsers() {
+  const snap = await db.ref('users').once('value');
+  allUsers = snap.val() || {};
+  renderUsers(allUsers);
+}
+
+function renderUsers(users) {
+  const tbody = document.getElementById('usersTable');
+  const rows = Object.entries(users).map(([uid, u]) => `
+    <tr>
+      <td><strong>${u.name || '-'}</strong></td>
+      <td>${u.email || '-'}</td>
+      <td><span class="badge badge-${u.role || 'user'}">${u.role || 'user'}</span></td>
+      <td><span class="badge ${u.active ? 'badge-active' : 'badge-inactive'}">${u.active ? 'Active' : 'Inactive'}</span></td>
+      <td>${u.lastSeen ? new Date(u.lastSeen).toLocaleString() : '-'}</td>
+      <td style="display:flex;gap:6px;">
+        <button class="btn btn-primary" style="font-size:11px;padding:5px 10px;" 
+          onclick="openEditRole('${uid}','${u.name}','${u.role}','${u.active}')">
+          ✏️ Role
+        </button>
+        <button class="btn btn-danger" style="font-size:11px;padding:5px 10px;" 
+          onclick="toggleAccess('${uid}','${u.active}')">
+          ${u.active ? '🚫 Deactivate' : '✅ Activate'}
+        </button>
+      </td>
+    </tr>
+  `).join('');
+  tbody.innerHTML = rows || '<tr><td colspan="6" style="text-align:center;padding:20px;color:#888;">No users found</td></tr>';
+}
+
+function filterUsers(val) {
+  const filtered = {};
+  for (const uid in allUsers) {
+    const u = allUsers[uid];
+    if ((u.name || '').toLowerCase().includes(val.toLowerCase()) ||
+        (u.email || '').toLowerCase().includes(val.toLowerCase())) {
+      filtered[uid] = u;
+    }
+  }
+  renderUsers(filtered);
+}
+
+function filterUsersByRole(role) {
+  if (!role) { renderUsers(allUsers); return; }
+  const filtered = {};
+  for (const uid in allUsers) {
+    if (allUsers[uid].role === role) filtered[uid] = allUsers[uid];
+  }
+  renderUsers(filtered);
+}
+
+let editingUserId = '';
+function openEditRole(uid, name, role, active) {
+  editingUserId = uid;
+  document.getElementById('roleUserName').value = name;
+  document.getElementById('roleSelect').value = role;
+  document.getElementById('accessSelect').value = active;
+  document.getElementById('editRoleModal').classList.add('show');
+}
+
+async function saveRole() {
+  const role = document.getElementById('roleSelect').value;
+  const active = document.getElementById('accessSelect').value === 'true';
+  await db.ref('users/' + editingUserId).update({ role, active });
+  closeModal('editRoleModal');
+  showToast('✅ Role updated successfully!');
+  loadUsers();
+}
+
+async function toggleAccess(uid, current) {
+  await db.ref('users/' + uid).update({ active: !current });
+  showToast(current ? '🚫 User deactivated' : '✅ User activated');
+  loadUsers();
+}
+
+// ==================== ATTENDANCE ====================
+async function loadAttendance() {
+  const dateStr = document.getElementById('attendanceDate').value;
+  if (!dateStr) return;
+  const dateKey = getDateKey(dateStr);
+  
+  const [usersSnap, attSnap, schedSnap] = await Promise.all([
+    db.ref('users').once('value'),
+    db.ref('attendance').once('value'),
+    db.ref('schedules').once('value')
+  ]);
+  
+  const users = usersSnap.val() || {};
+  const att = attSnap.val() || {};
+  const scheds = schedSnap.val() || {};
+  const tbody = document.getElementById('attendanceTable');
+  
+  const rows = [];
+  for (const uid in users) {
+    const u = users[uid];
+    if (!u.email) continue;
+    const emailKey = getEmailKey(u.email);
+    const attData = att[emailKey]?.[dateKey];
+    const schedData = scheds[emailKey]?.[dateKey];
+    const shift = schedData?.shift || '-';
+    const manualStatus = attData?.manualStatus;
+    let loginTime = null;
+    if (attData?.type === 'Login' && attData?.lastUpdate) {
+      loginTime = new Date(attData.lastUpdate);
+    }
+    const status = getStatus(loginTime, shift, manualStatus);
+    rows.push({ u, emailKey, shift, status, loginTime, dateKey });
+  }
+  
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td><strong>${r.u.name || '-'}</strong></td>
+      <td>${r.u.email}</td>
+      <td>${r.shift}</td>
+      <td>${getStatusBadge(r.status)}</td>
+      <td>${r.loginTime ? r.loginTime.toLocaleTimeString() : '-'}</td>
+      <td>
+        <button class="btn btn-warning" style="font-size:11px;padding:5px 10px;" 
+          onclick="openEditStatus('${r.u.email}','${r.dateKey}','${r.status}')">
+          ✏️ Edit
+        </button>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="6" style="text-align:center;padding:20px;color:#888;">No data</td></tr>';
+}
+
+let editingEmail = '', editingDate = '';
+function openEditStatus(email, dateKey, currentStatus) {
+  editingEmail = email;
+  editingDate = dateKey;
+  document.getElementById('editEmail').value = email;
+  document.getElementById('editDate').value = dateKey;
+  document.getElementById('editStatus').value = currentStatus;
+  document.getElementById('editNote').value = '';
+  document.getElementById('editStatusModal').classList.add('show');
+}
+
+async function saveStatus() {
+  const status = document.getElementById('editStatus').value;
+  const note = document.getElementById('editNote').value;
+  const emailKey = getEmailKey(editingEmail);
+  await db.ref(`attendance/${emailKey}/${editingDate}`).update({
+    manualStatus: status,
+    note: note,
+    editedAt: Date.now()
+  });
+  closeModal('editStatusModal');
+  showToast('✅ Status updated!');
+  loadAttendance();
+  loadDashboard();
+}
+
+function exportAttendance() {
+  const table = document.getElementById('attendanceTable');
+  const rows = [['Agent', 'Email', 'Shift', 'Status', 'Login Time']];
+  table.querySelectorAll('tr').forEach(tr => {
+    const cells = tr.querySelectorAll('td');
+    if (cells.length > 1) {
+      rows.push([
+        cells[0].textContent.trim(),
+        cells[1].textContent.trim(),
+        cells[2].textContent.trim(),
+        cells[3].textContent.trim(),
+        cells[4].textContent.trim()
+      ]);
+    }
+  });
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
+  XLSX.writeFile(wb, `attendance_${document.getElementById('attendanceDate').value}.xlsx`);
+  showToast('📥 Exported successfully!');
+}
+
+// ==================== SCHEDULE ====================
+function downloadTemplate() {
+  const rows = [
+    ['email', 'name', 'date', 'shift'],
+    ['agent@example.com', 'Agent Name', '2026-04-18', '9:00:00 AM'],
+    ['agent2@example.com', 'Agent 2', '2026-04-18', 'OFF'],
+    ['agent3@example.com', 'Agent 3', '2026-04-18', 'Holiday'],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Schedule');
+  XLSX.writeFile(wb, 'schedule_template.xlsx');
+  showToast('📥 Template downloaded!');
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+  if (file) processFile(file);
+}
+
+function handleFileUpload(e) {
+  const file = e.target.files[0];
+  if (file) processFile(file);
+}
+
+function processFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const wb = XLSX.read(e.target.result, { type: 'binary' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const data = XLSX.utils.sheet_to_json(ws);
+    scheduleData = data;
+    document.getElementById('uploadPreview').style.display = 'block';
+    document.getElementById('previewCount').textContent = `✅ ${data.length} rows ready to upload`;
+    showToast(`📋 ${data.length} rows loaded!`);
+  };
+  reader.readAsBinaryString(file);
+}
+
+async function uploadSchedule() {
+  if (!scheduleData.length) return;
+  let count = 0;
+  for (const row of scheduleData) {
+    if (!row.email || !row.date || !row.shift) continue;
+    const emailKey = getEmailKey(row.email);
+    const d = new Date(row.date);
+    const dateKey = `${d.getMonth()+1}-${d.getDate()}-${d.getFullYear()}`;
+    await db.ref(`schedules/${emailKey}/${dateKey}`).set({ shift: row.shift });
+    count++;
+  }
+  showToast(`✅ ${count} schedules uploaded!`);
+  document.getElementById('uploadPreview').style.display = 'none';
+  scheduleData = [];
+  document.getElementById('scheduleFile').value = '';
+  loadScheduleView();
+}
+
+async function loadScheduleView() {
+  const dateStr = document.getElementById('scheduleViewDate').value;
+  if (!dateStr) return;
+  const dateKey = getDateKey(dateStr);
+  
+  const [usersSnap, schedSnap] = await Promise.all([
+    db.ref('users').once('value'),
+    db.ref('schedules').once('value')
+  ]);
+  
+  const users = usersSnap.val() || {};
+  const scheds = schedSnap.val() || {};
+  const tbody = document.getElementById('scheduleTable');
+  const rows = [];
+  
+  for (const uid in users) {
+    const u = users[uid];
+    if (!u.email) continue;
+    const emailKey = getEmailKey(u.email);
+    const schedData = scheds[emailKey]?.[dateKey];
+    rows.push({ u, emailKey, dateKey, shift: schedData?.shift || '-' });
+  }
+  
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.u.email}</td>
+      <td>${r.u.name || '-'}</td>
+      <td>${r.dateKey}</td>
+      <td>${getStatusBadge(r.shift === 'OFF' ? 'OFF' : r.shift === 'Holiday' ? 'Holiday' : r.shift !== '-' ? 'OnTime' : 'Absent')} ${r.shift}</td>
+      <td>
+        <button class="btn btn-warning" style="font-size:11px;padding:5px 10px;" 
+          onclick="editShift('${r.u.email}','${r.dateKey}','${r.shift}')">
+          ✏️ Edit
+        </button>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" style="text-align:center;padding:20px;color:#888;">No schedule found</td></tr>';
+}
+
+function editShift(email, dateKey, currentShift) {
+  const newShift = prompt(`Edit shift for ${email}\nCurrent: ${currentShift}\n\nEnter new shift (e.g. 9:00:00 AM, OFF, Holiday, Sick, Vacation):`, currentShift);
+  if (newShift !== null) {
+    const emailKey = getEmailKey(email);
+    db.ref(`schedules/${emailKey}/${dateKey}`).set({ shift: newShift })
+      .then(() => { showToast('✅ Shift updated!'); loadScheduleView(); });
+  }
+}
+
+// ==================== REPORTS ====================
+async function loadWeeklyStats() {
+  const today = new Date();
+  let onTime=0, late=0, absent=0;
+  
+  for (let i=0; i<7; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const dateKey = `${d.getMonth()+1}-${d.getDate()}-${d.getFullYear()}`;
+    
+    const [usersSnap, attSnap, schedSnap] = await Promise.all([
+      db.ref('users').once('value'),
+      db.ref('attendance').once('value'),
+      db.ref('schedules').once('value')
+    ]);
+    
+    const users = usersSnap.val() || {};
+    const att = attSnap.val() || {};
+    const scheds = schedSnap.val() || {};
+    
+    for (const uid in users) {
+      const u = users[uid];
+      if (!u.email) continue;
+      const emailKey = getEmailKey(u.email);
+      const attData = att[emailKey]?.[dateKey];
+      const schedData = scheds[emailKey]?.[dateKey];
+      const shift = schedData?.shift;
+      if (!shift || shift === 'OFF' || shift === 'Holiday') continue;
+      let loginTime = attData?.type === 'Login' && attData?.lastUpdate ? new Date(attData.lastUpdate) : null;
+      const status = getStatus(loginTime, shift, attData?.manualStatus);
+      if (status === 'OnTime') onTime++;
+      else if (status === 'Late') late++;
+      else if (status === 'Absent') absent++;
+    }
+  }
+  
+  document.getElementById('repOnTime').textContent = onTime;
+  document.getElementById('repLate').textContent = late;
+  document.getElementById('repAbsent').textContent = absent;
+}
+
+async function generateReport() {
+  const from = document.getElementById('reportFrom').value;
+  const to = document.getElementById('reportTo').value;
+  if (!from || !to) { showToast('⚠️ Please select date range', 'error'); return; }
+  
+  const [usersSnap, attSnap, schedSnap] = await Promise.all([
+    db.ref('users').once('value'),
+    db.ref('attendance').once('value'),
+    db.ref('schedules').once('value')
+  ]);
+  
+  const users = usersSnap.val() || {};
+  const att = attSnap.val() || {};
+  const scheds = schedSnap.val() || {};
+  const rows = [];
+  
+  const start = new Date(from), end = new Date(to);
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
+    const dateKey = `${d.getMonth()+1}-${d.getDate()}-${d.getFullYear()}`;
+    for (const uid in users) {
+      const u = users[uid];
+      if (!u.email) continue;
+      const emailKey = getEmailKey(u.email);
+      const attData = att[emailKey]?.[dateKey];
+      const schedData = scheds[emailKey]?.[dateKey];
+      const shift = schedData?.shift || '-';
+      let loginTime = attData?.type === 'Login' && attData?.lastUpdate ? new Date(attData.lastUpdate) : null;
+      const status = getStatus(loginTime, shift, attData?.manualStatus);
+      rows.push({ name: u.name, email: u.email, dateKey, shift, status, loginTime });
+    }
+  }
+  
+  const tbody = document.getElementById('reportTable');
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.name || '-'}</td>
+      <td>${r.email}</td>
+      <td>${r.dateKey}</td>
+      <td>${r.shift}</td>
+      <td>${getStatusBadge(r.status)}</td>
+      <td>${r.loginTime ? r.loginTime.toLocaleTimeString() : '-'}</td>
+    </tr>
+  `).join('');
+  
+  window._reportRows = rows;
+  showToast(`✅ ${rows.length} records generated!`);
+}
+
+function exportReport() {
+  if (!window._reportRows?.length) { showToast('⚠️ Generate report first', 'error'); return; }
+  const rows = [['Name','Email','Date','Shift','Status','Login Time']];
+  window._reportRows.forEach(r => rows.push([r.name, r.email, r.dateKey, r.shift, r.status, r.loginTime ? r.loginTime.toLocaleTimeString() : '-']));
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Report');
+  XLSX.writeFile(wb, `report_${document.getElementById('reportFrom').value}_${document.getElementById('reportTo').value}.xlsx`);
+  showToast('📥 Report exported!');
+}
+
+// ==================== SETTINGS ====================
+function saveSettings() {
+  settings.gracePeriod = parseInt(document.getElementById('gracePeriod').value) || 15;
+  settings.lateThreshold = parseInt(document.getElementById('lateThreshold').value) || 30;
+  localStorage.setItem('adminSettings', JSON.stringify(settings));
+  showToast('✅ Settings saved!');
+}
+
+// Load settings from localStorage
+const savedSettings = localStorage.getItem('adminSettings');
+if (savedSettings) settings = JSON.parse(savedSettings);
+</script>
+</body>
+</html>
