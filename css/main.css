@@ -11,14 +11,22 @@ body {
   color: #111827;
 }
 
-/* ===== APP WRAPPER ===== */
-.app {
-  min-height: 100vh;
-}
+/* ===== LOADING SCREEN ===== */
+#loading-screen { display: none; }
 
-/* ===== LOGIN SCREEN ===== */
+/* ===== VISIBILITY SYSTEM (class .show) ===== */
+#login-screen { display: none; min-height: 100vh; }
+#login-screen.show { display: flex !important; }
+
+#app { display: none; min-height: 100vh; }
+#app.show { display: block !important; }
+
+/* panels */
+.panel { display: none; }
+.panel.show { display: block !important; }
+
+/* ===== LOGIN LAYOUT ===== */
 #login-screen {
-  display: flex;
   min-height: 100vh;
 }
 
@@ -87,6 +95,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 24px;
 }
 
 .login-box {
@@ -166,9 +175,21 @@ body {
   font-size: 13px;
 }
 
-/* ===== HIDE APP BY DEFAULT ===== */
+/* ===== APP CENTERING ===== */
+/* خلي محتوى التطبيق كله في النص بدل ما يبقى لازق */
 #app {
-  display: none;
+  padding: 24px;
+}
+
+.app-wrap {
+  max-width: 1200px;
+  margin: 0 auto;          /* ده اللي بيخلّي كل حاجة في النص */
+}
+
+/* لو عندك توب بار */
+#topbar, .topbar {
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 /* ===== RESPONSIVE ===== */
@@ -184,5 +205,10 @@ body {
 
   .login-left {
     padding: 40px;
+  }
+
+  .login-box {
+    width: 100%;
+    max-width: 420px;
   }
 }
