@@ -4,22 +4,25 @@
 
 function showLogin() {
   const loading = document.getElementById('loading-screen');
-  const login = document.getElementById('login-screen');
-  const app = document.getElementById('app');
+  const login   = document.getElementById('login-screen');
+  const app     = document.getElementById('app');
 
   if (loading) loading.style.display = 'none';
-  if (app) app.classList.remove('show');
-  if (login) login.classList.add('show');
+  if (login)   login.style.display   = 'flex';
+  if (app)     app.style.display     = 'none';
+
+  const btn = document.getElementById('login-btn');
+  if (btn) { btn.textContent = 'Sign In'; btn.disabled = false; }
 }
 
 function showApp() {
   const loading = document.getElementById('loading-screen');
-  const login = document.getElementById('login-screen');
-  const app = document.getElementById('app');
+  const login   = document.getElementById('login-screen');
+  const app     = document.getElementById('app');
 
   if (loading) loading.style.display = 'none';
-  if (login) login.classList.remove('show');
-  if (app) app.classList.add('show');
+  if (login)   login.style.display   = 'none';
+  if (app)     app.style.display     = 'block';
 
   setupTopbar();
   loadPanel(APP.userRole);
@@ -83,26 +86,33 @@ function setupTopbar() {
   }
 
   const navItems = {
-    agent:      [{ id: 'agent', label: '🏠 Dashboard' }],
-    quality:    [{ id: 'agent', label: '🏠 Home' }, { id: 'quality', label: '⭐ Quality' }],
-    supervisor: [{ id: 'agent', label: '🏠 Home' }, { id: 'supervisor', label: '👥 Team' }, { id: 'quality', label: '⭐ Quality' }],
-    admin:      [{ id: 'admin', label: '⚙️ Admin' }, { id: 'supervisor', label: '👥 Team' }],
-    owner:      [{ id: 'admin', label: '⚙️ Admin' }, { id: 'supervisor', label: '👥 Team' }, { id: 'quality', label: '⭐ Quality' }]
+    agent:      [{ id: 'agent',      label: '🏠 Dashboard' }],
+    quality:    [{ id: 'agent',      label: '🏠 Home' },
+                 { id: 'quality',    label: '⭐ Quality' }],
+    supervisor: [{ id: 'agent',      label: '🏠 Home' },
+                 { id: 'supervisor', label: '👥 Team' },
+                 { id: 'quality',    label: '⭐ Quality' }],
+    admin:      [{ id: 'admin',      label: '⚙️ Admin' },
+                 { id: 'supervisor', label: '👥 Team' }],
+    owner:      [{ id: 'admin',      label: '⚙️ Admin' },
+                 { id: 'supervisor', label: '👥 Team' },
+                 { id: 'quality',    label: '⭐ Quality' }]
   };
 
-  const activeRole = ['owner','admin','supervisor','quality'].includes(role) ? role : 'agent';
+  const activeRole = ['owner','admin','supervisor','quality'].includes(role)
+    ? role : 'agent';
 
   const nav = document.getElementById('topbar-nav');
   if (nav) {
     nav.innerHTML = (navItems[activeRole] || navItems.agent).map(n =>
-      '<button class="nav-btn" onclick="switchPanel(\'' + n.id + '\')" id="nav-' + n.id + '">' + n.label + '</button>'
+      `<button class="nav-btn" onclick="switchPanel('${n.id}')" id="nav-${n.id}">${n.label}</button>`
     ).join('');
   }
 
   window.loadNotifications?.();
 }
 
-// Notifications toggle
+// ===== NOTIFICATIONS =====
 function toggleNotif() {
   const p = document.getElementById('notif-panel');
   if (!p) return;
@@ -110,7 +120,6 @@ function toggleNotif() {
   if (p.classList.contains('show')) window.loadNotifications?.();
 }
 
-// Close notifications when clicking outside
 document.addEventListener('click', (e) => {
   const p = document.getElementById('notif-panel');
   const b = document.getElementById('notif-btn');
@@ -118,15 +127,19 @@ document.addEventListener('click', (e) => {
   if (!p.contains(e.target) && !b.contains(e.target)) p.classList.remove('show');
 });
 
-// Modals
+// ===== MODALS =====
 function openModal(name) {
   const el = document.getElementById('modal-' + name);
   if (el) el.classList.add('show');
 }
+
 function closeModal(name) {
   const el = document.getElementById('modal-' + name);
   if (el) el.classList.remove('show');
 }
+
 document.querySelectorAll('.modal-ov').forEach(o => {
-  o.addEventListener('click', (e) => { if (e.target === o) o.classList.remove('show'); });
+  o.addEventListener('click', (e) => {
+    if (e.target === o) o.classList.remove('show');
+  });
 });
