@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memo Pro - Admin Panel</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4ff;
+      color: #1a1f3a;
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: 240px;
+      background: #1a1f3a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 0; top: 0;
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 24px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: #3b5bdb;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .logo-text {
+      font-size: 17px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .nav-section {
+      padding: 16px 12px;
+      flex: 1;
+    }
+
+    .nav-label {
+      font-size: 10px;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 0 8px;
+      margin: 16px 0 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: rgba(255,255,255,0.55);
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 3px;
+    }
+
+    .nav-item:hover {
+      background: rgba(255,255,255,0.08);
+      color: #ffffff;
+    }
+
+    .nav-item.active {
+      background: #3b5bdb;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .nav-item .icon { font-size: 16px; }
+
+    .owner-only {
+      border-left: 2px solid gold;
+    }
+
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-avatar {
+      width: 34px; height: 34px;
+      background: #3b5bdb;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .user-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .user-role {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      text-transform: capitalize;
+    }
+
+    .logout-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.4);
+      cursor: pointer;
+      font-size: 16px;
+      transition: color 0.2s;
+    }
+
+    .logout-btn:hover { color: #e03131; }
+
+    /* ===== MAIN ===== */
+    .main {
+      margin-left: 240px;
+      flex: 1;
+      padding: 28px;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ===== TOPBAR ===== */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #1a1f3a;
+    }
+
+    .page-sub {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .date-badge {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      padding: 9px 18px;
+      border-radius: 10px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: #3b5bdb;
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: #2f4cc0;
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: #ffffff;
+      color: #1a1f3a;
+      border: 1px solid #e5e7eb;
+    }
+
+    .btn-outline:hover { background: #f0f4ff; }
+
+    .btn-danger {
+      background: rgba(224,49,49,0.1);
+      color: #e03131;
+      border: 1px solid rgba(224,49,49,0.2);
+    }
+
+    .btn-danger:hover { background: rgba(224,49,49,0.2); }
+
+    .btn-sm {
+      padding: 5px 12px;
+      font-size: 11px;
+      border-radius: 8px;
+    }
+
+    /* ===== STATS ===== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+
+    .stat-icon-box {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .icon-blue { background: rgba(59,91,219,0.1); }
+    .icon-green { background: rgba(47,158,68,0.1); }
+    .icon-orange { background: rgba(240,140,0,0.1); }
+    .icon-red { background: rgba(224,49,49,0.1); }
+
+    .stat-value {
+      font-size: 26px;
+      font-weight: 800;
+      color: #1a1f3a;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    /* ===== CARD ===== */
+    .card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 22px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1a1f3a;
+    }
+
+    /* ===== TABLE ===== */
+    table { width: 100%; border-collapse: collapse; }
+
+    th {
+      text-align: left;
+      font-size: 11px;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 8px 12px;
+      border-bottom: 1px solid #e5e7eb;
+      font-weight: 600;
+    }
+
+    td {
+      padding: 12px;
+      font-size: 13px;
+      color: #1a1f3a;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f9fafb; }
+
+    /* ===== BADGES ===== */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-owner { background: rgba(255,215,0,0.15); color: #b8860b; }
+    .badge-admin { background: rgba(59,91,219,0.1); color: #3b5bdb; }
+    .badge-supervisor { background: rgba(130,80,255,0.1); color: #8250ff; }
+    .badge-agent { background: rgba(107,114,128,0.1); color: #6b7280; }
+    .badge-success { background: rgba(47,158,68,0.1); color: #2f9e44; }
+    .badge-warning { background: rgba(240,140,0,0.1); color: #f08c00; }
+    .badge-danger { background: rgba(224,49,49,0.1); color: #e03131; }
+
+    /* ===== SEARCH ===== */
+    .search-wrap {
+      position: relative;
+      flex: 1;
+    }
+
+    .search-wrap input {
+      width: 100%;
+      padding: 9px 14px 9px 36px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 13px;
+      color: #1a1f3a;
+      outline: none;
+      background: #f9fafb;
+      transition: border 0.2s;
+    }
+
+    .search-wrap input:focus {
+      border-color: #3b5bdb;
+      background: #ffffff;
+    }
+
+    .search-wrap::before {
+      content: '🔍';
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+
+    /* ===== OWNER BANNER ===== */
+    .owner-banner {
+      background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(59,91,219,0.08));
+      border: 1px solid rgba(255,215,0,0.3);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .owner-banner strong { color: #b8860b; font-size: 14px; }
+    .owner-banner p { font-size: 12px; color: #6b7280; margin-top: 2px; }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(26,31,58,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.show { display: flex; }
+
+    .modal {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 30px;
+      width: 420px;
+      max-width: 90vw;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+
+    .modal-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #1a1f3a;
+      margin-bottom: 22px;
+    }
+
+    .form-group { margin-bottom: 14px; }
+
+    .form-group label {
+      font-size: 11px;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      color: #1a1f3a;
+      font-size: 13px;
+      outline: none;
+      transition: border 0.2s;
+      background: #f9fafb;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: #3b5bdb;
+      background: #ffffff;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 22px;
+    }
+
+    /* ===== EMPTY ===== */
+    .empty {
+      text-align: center;
+      padding: 40px;
+      color: #6b7280;
+    }
+
+    .empty-icon { font-size: 40px; margin-bottom: 10px; }
+    .empty p { font-size: 13px; }
+
+    /* ===== FORM MSG ===== */
+    .form-msg {
+      margin-top: 12px;
+      font-size: 13px;
+      text-align: center;
+      font-weight: 500;
+      min-height: 20px;
+    }
+
+    /* ===== REPORTS GRID ===== */
+    .reports-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">🎯</div>
+    <div>
+      <div class="logo-text">Memo Pro</div>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Main</div>
+
+    <div class="nav-item active" onclick="showPage('overview', this)">
+      <span class="icon">📊</span> Overview
+    </div>
+    <div class="nav-item" onclick="showPage('employees', this)">
+      <span class="icon">👥</span> Employees
+    </div>
+    <div class="nav-item" onclick="showPage('schedules', this)">
+      <span class="icon">📅</span> Schedules
+    </div>
+    <div class="nav-item" onclick="showPage('attendance', this)">
+      <span class="icon">✅</span> Attendance
+    </div>
+    <div class="nav-item" onclick="showPage('reports', this)">
+      <span class="icon">📈</span> Reports
+    </div>
+
+    <div class="nav-label">Owner Only</div>
+
+    <div class="nav-item owner-only" onclick="showPage('users', this)">
+      <span class="icon">👑</span> Manage Users
+    </div>
+    <div class="nav-item owner-only" onclick="showPage('settings', this)">
+      <span class="icon">⚙️</span> Settings
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar" id="avatarLetter">O</div>
+      <div>
+        <div class="user-name" id="sidebarName">Loading...</div>
+        <div class="user-role" id="sidebarRole">...</div>
+      </div>
+      <button class="logout-btn" onclick="logout()" title="Logout">⏻</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- OVERVIEW -->
+  <div class="page active" id="page-overview">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Overview 📊</div>
+        <div class="page-sub">Welcome back! Here's what's happening today.</div>
+      </div>
+      <div class="topbar-right">
+        <div class="date-badge" id="todayDate">—</div>
+        <button class="btn btn-outline" onclick="loadAll()">🔄 Refresh</button>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon-box icon-blue">👥</div>
+        <div>
+          <div class="stat-value" id="stat-employees">0</div>
+          <div class="stat-label">Total Employees</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-box icon-green">✅</div>
+        <div>
+          <div class="stat-value" id="stat-present">0</div>
+          <div class="stat-label">On Time Today</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-box icon-orange">⚠️</div>
+        <div>
+          <div class="stat-value" id="stat-late">0</div>
+          <div class="stat-label">Late Today</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-box icon-red">🚫</div>
+        <div>
+          <div class="stat-value" id="stat-absent">0</div>
+          <div class="stat-label">Absent Today</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📋 Today's Overview</div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Agent</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="overview-table">
+          <tr><td colspan="4"><div class="empty"><div class="empty-icon">📋</div><p>Loading...</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- EMPLOYEES -->
+  <div class="page" id="page-employees">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Employees 👥</div>
+        <div class="page-sub">Manage your team members</div>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('addEmployee')">➕ Add Employee</button>
+    </div>
+
+    <div class="card">
+      <div class="search-bar">
+        <div class="search-wrap">
+          <input type="text" placeholder="Search employees..." oninput="searchEmployees(this.value)">
+        </div>
+        <select onchange="filterByRole(this.value)" style="padding:9px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:13px;color:#1a1f3a;outline:none;background:#f9fafb">
+          <option value="">All Roles</option>
+          <option value="agent">Agent</option>
+          <option value="supervisor">Supervisor</option>
+          <option value="admin">Admin</option>
+          <option value="owner">Owner</option>
+        </select>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Employee ID</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="employees-table">
+          <tr><td colspan="5"><div class="empty"><div class="empty-icon">👥</div><p>Loading...</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SCHEDULES -->
+  <div class="page" id="page-schedules">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Schedules 📅</div>
+        <div class="page-sub">Manage shifts and schedules</div>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('addSchedule')">➕ Add Schedule</button>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Employee</th>
+            <th>Date</th>
+            <th>Shift Start</th>
+            <th>Shift End</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="schedules-table">
+          <tr><td colspan="6"><div class="empty"><div class="empty-icon">📅</div><p>Loading...</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ATTENDANCE -->
+  <div class="page" id="page-attendance">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Attendance ✅</div>
+        <div class="page-sub">Track daily attendance</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Employee</th>
+            <th>Date</th>
+            <th>Check In</th>
+            <th>Check Out</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="attendance-table">
+          <tr><td colspan="5"><div class="empty"><div class="empty-icon">✅</div><p>Loading...</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="page" id="page-reports">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Reports 📈</div>
+        <div class="page-sub">Analytics and insights</div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon-box icon-red">📉</div>
+        <div>
+          <div class="stat-value" id="rep-attrition">0%</div>
+          <div class="stat-label">Attrition Rate</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-box icon-orange">🚫</div>
+        <div>
+          <div class="stat-value" id="rep-absenteeism">0%</div>
+          <div class="stat-label">Absenteeism Rate</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-box icon-green">⭐</div>
+        <div>
+          <div class="stat-value" id="rep-quality">0%</div>
+          <div class="stat-label">Quality Score</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-box icon-blue">⏱️</div>
+        <div>
+          <div class="stat-value" id="rep-hours">0h</div>
+          <div class="stat-label">Total Hours</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Detailed Reports</div>
+      </div>
+      <div class="empty">
+        <div class="empty-icon">📊</div>
+        <p>Reports will appear here</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MANAGE USERS (OWNER) -->
+  <div class="page" id="page-users">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Manage Users 👑</div>
+        <div class="page-sub">Owner access only</div>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('addUser')">➕ Add User</button>
+    </div>
+
+    <div class="owner-banner">
+      <span style="font-size:24px">👑</span>
+      <div>
+        <strong>Owner Section</strong>
+        <p>Only you can see and manage this section</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="users-table">
+          <tr><td colspan="4"><div class="empty"><div class="empty-icon">👑</div><p>Loading...</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SETTINGS (OWNER) -->
+  <div class="page" id="page-settings">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Settings ⚙️</div>
+        <div class="page-sub">System configuration</div>
+      </div>
+    </div>
+
+    <div class="owner-banner">
+      <span style="font-size:24px">👑</span>
+      <div>
+        <strong>Owner Section</strong>
+        <p>Only you can access system settings</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">General Settings</div>
+      </div>
+      <div class="form-group">
+        <label>App Name</label>
+        <input type="text" value="Memo Pro" style="max-width:300px">
+      </div>
+      <div class="form-group">
+        <label>Default Timezone</label>
+        <select style="max-width:300px">
+          <option>Africa/Cairo (GMT+2)</option>
+          <option>UTC</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" style="margin-top:8px">💾 Save Settings</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL: Add Employee -->
+<div class="modal-overlay" id="modal-addEmployee">
+  <div class="modal">
+    <div class="modal-title">➕ Add Employee</div>
+    <div class="form-group">
+      <label>Full Name</label>
+      <input type="text" id="emp-name" placeholder="Ahmed Mohamed">
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="emp-email" placeholder="ahmed@example.com">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="emp-password" placeholder="••••••••">
+    </div>
+    <div class="form-group">
+      <label>Role</label>
+      <select id="emp-role">
+        <option value="agent">Agent</option>
+        <option value="supervisor">Supervisor</option>
+        <option value="admin">Admin (Team Leader)</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('addEmployee')">Cancel</button>
+      <button class="btn btn-primary" onclick="addEmployee()">➕ Add</button>
+    </div>
+    <div class="form-msg" id="emp-msg"></div>
+  </div>
+</div>
+
+<!-- MODAL: Add Schedule -->
+<div class="modal-overlay" id="modal-addSchedule">
+  <div class="modal">
+    <div class="modal-title">📅 Add Schedule</div>
+    <div class="form-group">
+      <label>Employee ID</label>
+      <input type="text" id="sch-agent" placeholder="MAV-001">
+    </div>
+    <div class="form-group">
+      <label>Employee Name</label>
+      <input type="text" id="sch-name" placeholder="Ahmed Mohamed">
+    </div>
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" id="sch-date">
+    </div>
+    <div class="form-group">
+      <label>Shift Start</label>
+      <input type="time" id="sch-start">
+    </div>
+    <div class="form-group">
+      <label>Shift End</label>
+      <input type="time" id="sch-end">
+    </div>
+    <div class="form-group">
+      <label>Day Off?</label>
+      <select id="sch-off">
+        <option value="false">Working</option>
+        <option value="true">Day Off</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('addSchedule')">Cancel</button>
+      <button class="btn btn-primary" onclick="addSchedule()">➕ Add</button>
+    </div>
+    <div class="form-msg" id="sch-msg"></div>
+  </div>
+</div>
+
+<!-- MODAL: Add User (Owner) -->
+<div class="modal-overlay" id="modal-addUser">
+  <div class="modal">
+    <div class="modal-title">👑 Add User</div>
+    <div class="form-group">
+      <label>Full Name</label>
+      <input type="text" id="user-name" placeholder="Full Name">
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="user-email" placeholder="user@example.com">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="user-password" placeholder="••••••••">
+    </div>
+    <div class="form-group">
+      <label>Role</label>
+      <select id="user-role">
+        <option value="admin">Admin (Team Leader)</option>
+        <option value="supervisor">Supervisor</option>
+        <option value="agent">Agent</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('addUser')">Cancel</button>
+      <button class="btn btn-primary" onclick="addUser()">➕ Add User</button>
+    </div>
+    <div class="form-msg" id="user-msg"></div>
+  </div>
+</div>
+
+<script>
+  const sb = window.supabase;
+  let currentUser = null;
+  let currentRole = null;
+  let allEmployees = [];
+
+  // ===== DATE =====
+  document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
+
+  // ===== INIT =====
+  async function init() {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return window.location.href = 'index.html';
+    currentUser = user;
+
+    const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+
+    if (profile) {
+      currentRole = profile.role;
+      const name = profile.full_name || user.email;
+      document.getElementById('sidebarName').textContent = name;
+      document.getElementById('sidebarRole').textContent = profile.role;
+      document.getElementById('avatarLetter').textContent = name.charAt(0).toUpperCase();
+
+      if (currentRole !== 'owner') {
+        document.querySelectorAll('.owner-only').forEach(el => el.style.display = 'none');
+      }
+    }
+
+    loadAll();
+  }
+
+  function loadAll() {
+    loadStats();
+    loadOverview();
+    loadEmployees();
+    loadSchedules();
+    loadAttendance();
+    if (currentRole === 'owner') loadUsers();
+  }
+
+  // ===== NAVIGATION =====
+  function showPage(page, el) {
+    if ((page === 'users' || page === 'settings') && currentRole !== 'owner') {
+      alert('⛔ Access Denied. Owner only.');
+      return;
+    }
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    el.classList.add('active');
+  }
+
+  // ===== STATS =====
+  async function loadStats() {
+    const { count: empCount } = await sb.from('profiles').select('*', { count: 'exact', head: true });
+    const { count: schCount } = await sb.from('schedules').select('*', { count: 'exact', head: true });
+
+    const today = new Date().toISOString().split('T')[0];
+    const { data: att } = await sb.from('attendance').select('*').eq('date', today);
+
+    const onTime = att ? att.filter(a => a.status === 'On Time').length : 0;
+    const late = att ? att.filter(a => a.status === 'Late').length : 0;
+    const absent = att ? att.filter(a => a.status === 'Absent').length : 0;
+
+    document.getElementById('stat-employees').textContent = empCount || 0;
+    document.getElementById('stat-schedules') && (document.getElementById('stat-schedules').textContent = schCount || 0);
+    document.getElementById('stat-present').textContent = onTime;
+    document.getElementById('stat-late').textContent = late;
+    document.getElementById('stat-absent').textContent = absent;
+  }
+
+  // ===== OVERVIEW TABLE =====
+  async function loadOverview() {
+    const { data } = await sb.from('profiles').select('*').order('full_name');
+    const tbody = document.getElementById('overview-table');
+    if (!data || !data.length) {
+      tbody.innerHTML = `<tr><td colspan="4"><div class="empty"><div class="empty-icon">📋</div><p>No data</p></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.map(e => `
+      <tr>
+        <td><strong>${e.full_name || '—'}</strong></td>
+        <td style="color:#6b7280">${e.email || '—'}</td>
+        <td><span class="badge badge-${e.role}">${e.role || '—'}</span></td>
+        <td><span class="badge badge-success">Active</span></td>
+      </tr>
+    `).join('');
+  }
+
+  // ===== EMPLOYEES =====
+  async function loadEmployees() {
+    const { data } = await sb.from('profiles').select('*').order('full_name');
+    allEmployees = data || [];
+    renderEmployees(allEmployees);
+  }
+
+  function renderEmployees(list) {
+    const tbody = document.getElementById('employees-table');
+    if (!list.length) {
+      tbody.innerHTML = `<tr><td colspan="5"><div class="empty"><div class="empty-icon">👥</div><p>No employees found</p></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = list.map(e => `
+      <tr>
+        <td><strong>${e.full_name || '—'}</strong></td>
+        <td style="color:#6b7280">${e.email || '—'}</td>
+        <td><span class="badge badge-${e.role}">${e.role || '—'}</span></td>
+        <td style="color:#6b7280">${e.employee_id || '—'}</td>
+        <td>
+          <button class="btn btn-danger btn-sm" onclick="deleteEmployee('${e.id}')">🗑️ Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function searchEmployees(val) {
+    const filtered = allEmployees.filter(e =>
+      (e.full_name || '').toLowerCase().includes(val.toLowerCase()) ||
+      (e.email || '').toLowerCase().includes(val.toLowerCase())
+    );
+    renderEmployees(filtered);
+  }
+
+  function filterByRole(role) {
+    const filtered = role ? allEmployees.filter(e => e.role === role) : allEmployees;
+    renderEmployees(filtered);
+  }
+
+  async function addEmployee() {
+    const name = document.getElementById('emp-name').value.trim();
+    const email = document.getElementById('emp-email').value.trim();
+    const password = document.getElementById('emp-password').value;
+    const role = document.getElementById('emp-role').value;
+    const msg = document.getElementById('emp-msg');
+
+    if (!name || !email || !password) {
+      msg.textContent = '⚠️ Please fill all fields';
+      msg.style.color = '#e03131';
+      return;
+    }
+
+    msg.textContent = 'Adding...';
+    msg.style.color = '#6b7280';
+
+    const { data, error } = await sb.auth.admin.createUser({
+      email, password,
+      email_confirm: true,
+      user_metadata: { full_name: name }
+    });
+
+    if (error) {
+      msg.textContent = '❌ ' + error.message;
+      msg.style.color = '#e03131';
+      return;
+    }
+
+    await sb.from('profiles').update({ full_name: name, role }).eq('id', data.user.id);
+
+    msg.textContent = '✅ Employee added successfully!';
+    msg.style.color = '#2f9e44';
+    setTimeout(() => { closeModal('addEmployee'); loadEmployees(); loadStats(); }, 1500);
+  }
+
+  async function deleteEmployee(id) {
+    if (id === currentUser.id) { alert('⛔ Cannot delete yourself!'); return; }
+    if (!confirm('Delete this employee?')) return;
+    await sb.from('profiles').delete().eq('id', id);
+    loadEmployees();
+    loadStats();
+  }
+
+  // ===== SCHEDULES =====
+  async function loadSchedules() {
+    const { data } = await sb.from('schedules').select('*').order('date', { ascending: false }).limit(100);
+    const tbody = document.getElementById('schedules-table');
+    if (!data || !data.length) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">📅</div><p>No schedules found</p></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.map(s => `
+      <tr>
+        <td><strong>${s.agent_name || s.agent_id || '—'}</strong></td>
+        <td>${s.date || '—'}</td>
+        <td>${s.shift_start || '—'}</td>
+        <td>${s.shift_end || '—'}</td>
+        <td><span class="badge ${s.is_off ? 'badge-warning' : 'badge-success'}">${s.is_off ? '🏖️ Day Off' : '✅ Working'}</span></td>
+        <td>
+          <button class="btn btn-danger btn-sm" onclick="deleteSchedule('${s.id}')">🗑️</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function addSchedule() {
+    const agentId = document.getElementById('sch-agent').value.trim();
+    const agentName = document.getElementById('sch-name').value.trim();
+    const date = document.getElementById('sch-date').value;
+    const start = document.getElementById('sch-start').value;
+    const end = document.getElementById('sch-end').value;
+    const isOff = document.getElementById('sch-off').value === 'true';
+    const msg = document.getElementById('sch-msg');
+
+    if (!agentId || !date) {
+      msg.textContent = '⚠️ Please fill required fields';
+      msg.style.color = '#e03131';
+      return;
+    }
+
+    msg.textContent = 'Adding...';
+    msg.style.color = '#6b7280';
+
+    const { error } = await sb.from('schedules').insert({
+      agent_id: agentId,
+      agent_name: agentName,
+      date, shift_start: start,
+      shift_end: end,
+      is_off: isOff
+    });
+
+    if (error) {
+      msg.textContent = '❌ ' + error.message;
+      msg.style.color = '#e03131';
+      return;
+    }
+
+    msg.textContent = '✅ Schedule added!';
+    msg.style.color = '#2f9e44';
+    setTimeout(() => { closeModal('addSchedule'); loadSchedules(); }, 1500);
+  }
+
+  async function deleteSchedule(id) {
+    if (!confirm('Delete this schedule?')) return;
+    await sb.from('schedules').delete().eq('id', id);
+    loadSchedules();
+  }
+
+  // ===== ATTENDANCE =====
+  async function loadAttendance() {
+    const { data } = await sb.from('attendance').select('*').order('date', { ascending: false }).limit(100);
+    const tbody = document.getElementById('attendance-table');
+    if (!data || !data.length) {
+      tbody.innerHTML = `<tr><td colspan="5"><div class="empty"><div class="empty-icon">✅</div><p>No attendance records</p></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.map(a => `
+      <tr>
+        <td><strong>${a.agent_name || a.agent_id || '—'}</strong></td>
+        <td>${a.date || '—'}</td>
+        <td>${a.check_in || '—'}</td>
+        <td>${a.check_out || '—'}</td>
+        <td><span class="badge ${
+          a.status === 'On Time' ? 'badge-success' :
+          a.status === 'Late' ? 'badge-warning' :
+          'badge-danger'
+        }">${a.status || 'Present'}</span></td>
+      </tr>
+    `).join('');
+  }
+
+  // ===== USERS (OWNER) =====
+  async function loadUsers() {
+    const { data } = await sb.from('profiles').select('*').order('role');
+    const tbody = document.getElementById('users-table');
+    if (!data || !data.length) {
+      tbody.innerHTML = `<tr><td colspan="4"><div class="empty"><div class="empty-icon">👑</div><p>No users</p></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.map(u => `
+      <tr>
+        <td><strong>${u.full_name || '—'}</strong></td>
+        <td style="color:#6b7280">${u.email || '—'}</td>
+        <td><span class="badge badge-${u.role}">${u.role || '—'}</span></td>
+        <td>
+          ${u.id !== currentUser.id ? `<button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">🗑️ Delete</button>` : '<span style="color:#6b7280;font-size:12px">You</span>'}
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function addUser() {
+    const name = document.getElementById('user-name').value.trim();
+    const email = document.getElementById('user-email').value.trim();
+    const password = document.getElementById('user-password').value;
+    const role = document.getElementById('user-role').value;
+    const msg = document.getElementById('user-msg');
+
+    if (!name || !email || !password) {
+      msg.textContent = '⚠️ Please fill all fields';
+      msg.style.color = '#e03131';
+      return;
+    }
+
+    msg.textContent = 'Adding...';
+    msg.style.color = '#6b7280';
+
+    const { data, error } = await sb.auth.admin.createUser({
+      email, password,
+      email_confirm: true,
+      user_metadata: { full_name: name }
+    });
+
+    if (error) {
+      msg.textContent = '❌ ' + error.message;
+      msg.style.color = '#e03131';
+      return;
+    }
+
+    await sb.from('profiles').update({ full_name: name, role }).eq('id', data.user.id);
+
+    msg.textContent = '✅ User added!';
+    msg.style.color = '#2f9e44';
+    setTimeout(() => { closeModal('addUser'); loadUsers(); }, 1500);
+  }
+
+  async function deleteUser(id) {
+    if (!confirm('Delete this user?')) return;
+    await sb.from('profiles').delete().eq('id', id);
+    loadUsers();
+  }
+
+  // ===== MODAL =====
+  function openModal(name) { document.getElementById('modal-' + name).classList.add('show'); }
+  function closeModal(name) { document.getElementById('modal-' + name).classList.remove('show'); }
+
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) overlay.classList.remove('show');
+    });
+  });
+
+  // ===== LOGOUT =====
+  async function logout() {
+    await sb.auth.signOut();
+    window.location.href = 'index.html';
+  }
+
+  init();
+</script>
+
+</body>
+</html>
