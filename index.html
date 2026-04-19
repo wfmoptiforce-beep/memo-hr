@@ -1,7 +1,4 @@
 <!DOCTYPE html>
-<div style="background:red;color:white;padding:10px;text-align:center">
-  TEST FROM INDEX
-</div>
 <html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
@@ -12,36 +9,16 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', sans-serif; background: #f0f4ff; color: #1a1f3a; min-height: 100vh; }
-
-    /* ═══════════════════════════════
-       LOADING
-    ═══════════════════════════════ */
-    #loading-screen {
-      position: fixed; inset: 0; background: #1a1f3a;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center; z-index: 9999;
-    }
+    #loading-screen { position: fixed; inset: 0; background: #1a1f3a; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
     .load-logo { font-size: 48px; margin-bottom: 16px; }
     .load-text { color: #fff; font-size: 22px; font-weight: 800; margin-bottom: 8px; }
     .load-sub { color: rgba(255,255,255,0.4); font-size: 13px; margin-bottom: 32px; }
     .load-bar { width: 200px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
     .load-bar-fill { height: 100%; background: #3b5bdb; border-radius: 10px; animation: loadAnim 1.5s ease-in-out infinite; }
     @keyframes loadAnim { 0%{width:0%} 50%{width:70%} 100%{width:100%} }
-
-    /* ═══════════════════════════════
-       LOGIN
-    ═══════════════════════════════ */
-    #login-screen {
-      display: none; min-height: 100vh;
-      background: #f8faff; flex-direction: row;
-    }
+    #login-screen { display: none; min-height: 100vh; background: #f8faff; flex-direction: row; }
     #login-screen.show { display: flex; }
-    .login-left {
-      width: 55%; background: linear-gradient(135deg, #0a1628, #0d2461, #1a3a6e);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      position: relative; overflow: hidden;
-    }
+    .login-left { width: 55%; background: linear-gradient(135deg, #0a1628, #0d2461, #1a3a6e); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; }
     canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
     .login-left-content { position: relative; z-index: 1; text-align: center; padding: 40px; }
     .login-logo { width: 80px; height: 80px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); border-radius: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 36px; }
@@ -68,18 +45,9 @@
     .login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(13,71,161,0.4); }
     .login-msg { margin-top: 16px; font-size: 13px; min-height: 20px; text-align: center; font-weight: 500; }
     @media (max-width: 768px) { .login-left { display: none; } .login-right { width: 100%; } }
-
-    /* ═══════════════════════════════
-       APP SHELL
-    ═══════════════════════════════ */
     #app { display: none; }
     #app.show { display: block; }
-
-    .topbar {
-      background: #1a1f3a; padding: 0 24px; height: 60px;
-      display: flex; align-items: center; justify-content: space-between;
-      position: sticky; top: 0; z-index: 100;
-    }
+    .topbar { background: #1a1f3a; padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
     .topbar-logo { font-size: 18px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; }
     .topbar-logo-icon { width: 30px; height: 30px; background: #3b5bdb; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
     .topbar-nav { display: flex; gap: 4px; }
@@ -95,20 +63,14 @@
     .user-role { font-size: 10px; color: rgba(255,255,255,0.5); }
     .logout-btn { background: rgba(224,49,49,0.2); border: none; border-radius: 8px; padding: 6px 12px; color: #ff6b6b; font-size: 12px; font-weight: 600; cursor: pointer; }
     .logout-btn:hover { background: rgba(224,49,49,0.4); }
-
-    /* PANELS */
     .panel { display: none; padding: 24px; max-width: 1400px; margin: 0 auto; }
     .panel.show { display: block; }
-
-    /* NOTIFICATIONS */
     .notif-panel { position: fixed; top: 68px; right: 24px; width: 320px; background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); z-index: 200; display: none; max-height: 400px; overflow-y: auto; }
     .notif-panel.show { display: block; }
     .notif-header { padding: 14px 16px; border-bottom: 1px solid #e5e7eb; font-size: 14px; font-weight: 700; }
     .notif-item { padding: 12px 16px; border-bottom: 1px solid #f3f4f6; display: flex; gap: 10px; cursor: pointer; }
     .notif-item.unread { background: #f0f4ff; }
     .notif-item:hover { background: #f9fafb; }
-
-    /* CARDS & GRIDS */
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
     .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
     .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
@@ -119,8 +81,6 @@
     .stat-icon { font-size: 22px; }
     .stat-val { font-size: 24px; font-weight: 800; color: #1a1f3a; }
     .stat-lbl { font-size: 11px; color: #6b7280; }
-
-    /* PUNCH CARD */
     .punch-card { background: linear-gradient(135deg, #1a1f3a, #2d3561); border-radius: 18px; padding: 24px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
     .punch-greeting { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 4px; }
     .punch-date { font-size: 13px; color: rgba(255,255,255,0.5); }
@@ -138,12 +98,8 @@
     .btn-brk:hover:not(:disabled) { background: #e67700; }
     .btn-brk.active { animation: pulse 1.5s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
-
-    /* MISSING ALERT */
     .miss-alert { background: rgba(224,49,49,0.1); border: 1px solid rgba(224,49,49,0.3); border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: none; align-items: center; gap: 12px; }
     .miss-alert.show { display: flex; }
-
-    /* PROGRESS */
     .prog-wrap { margin-bottom: 14px; }
     .prog-label { display: flex; justify-content: space-between; font-size: 12px; color: #6b7280; margin-bottom: 6px; }
     .prog-bar { height: 8px; background: #f3f4f6; border-radius: 10px; overflow: hidden; }
@@ -153,8 +109,6 @@
     .fill-blue { background: #3b5bdb; }
     .fill-orange { background: #f08c00; }
     .fill-purple { background: #8250ff; }
-
-    /* ONLINE LIST */
     .online-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; transition: background 0.2s; cursor: pointer; }
     .online-item:hover { background: #f0f4ff; }
     .online-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
@@ -163,8 +117,6 @@
     .dot-brk { background: #f08c00; box-shadow: 0 0 6px rgba(240,140,0,0.6); }
     .online-av { width: 30px; height: 30px; border-radius: 8px; background: #3b5bdb; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; overflow: hidden; flex-shrink: 0; }
     .online-av img { width: 100%; height: 100%; object-fit: cover; }
-
-    /* BADGES */
     .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
     .badge-owner { background: rgba(255,215,0,0.15); color: #b8860b; }
     .badge-admin { background: rgba(224,49,49,0.1); color: #e03131; }
@@ -174,14 +126,10 @@
     .badge-ok { background: rgba(47,158,68,0.1); color: #2f9e44; }
     .badge-warn { background: rgba(240,140,0,0.1); color: #f08c00; }
     .badge-err { background: rgba(224,49,49,0.1); color: #e03131; }
-
-    /* TABLES */
     .tbl { width: 100%; border-collapse: collapse; }
     .tbl th { background: #f9fafb; padding: 10px 14px; text-align: left; font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e5e7eb; }
     .tbl td { padding: 12px 14px; font-size: 13px; border-bottom: 1px solid #f3f4f6; }
     .tbl tr:hover td { background: #f9fafb; }
-
-    /* MODAL */
     .modal-ov { display: none; position: fixed; inset: 0; background: rgba(26,31,58,0.5); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
     .modal-ov.show { display: flex; }
     .modal { background: #fff; border-radius: 18px; padding: 28px; width: 500px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
@@ -198,30 +146,18 @@
     .btn-danger { background: #e03131; color: #fff; }
     .btn-outline { background: #fff; color: #1a1f3a; border: 1px solid #e5e7eb; }
     .form-msg { margin-top: 10px; font-size: 13px; text-align: center; font-weight: 500; min-height: 20px; }
-
-    /* SMALL BTN */
     .sm-btn { padding: 4px 10px; border-radius: 8px; border: none; font-size: 11px; font-weight: 600; cursor: pointer; }
-
-    /* EMPTY */
     .empty { text-align: center; padding: 30px; color: #6b7280; }
     .empty-icon { font-size: 32px; margin-bottom: 8px; }
     .empty p { font-size: 12px; }
-
-    /* SCHEDULE ROW */
     .sched-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
     .sched-lbl { font-size: 12px; color: #6b7280; width: 80px; flex-shrink: 0; }
     .sched-val { font-size: 13px; font-weight: 600; }
-
-    @media (max-width: 768px) {
-      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
-      .punch-card { flex-direction: column; }
-      .topbar-nav { display: none; }
-    }
+    @media (max-width: 768px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } .punch-card { flex-direction: column; } .topbar-nav { display: none; } }
   </style>
 </head>
 <body>
 
-<!-- LOADING -->
 <div id="loading-screen">
   <div class="load-logo">🎯</div>
   <div class="load-text">Memo Pro</div>
@@ -229,7 +165,6 @@
   <div class="load-bar"><div class="load-bar-fill"></div></div>
 </div>
 
-<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-left">
     <canvas id="bgCanvas"></canvas>
@@ -263,9 +198,7 @@
   </div>
 </div>
 
-<!-- APP -->
 <div id="app">
-  <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-logo"><div class="topbar-logo-icon">🎯</div>Memo Pro</div>
     <div class="topbar-nav" id="topbar-nav"></div>
@@ -279,15 +212,12 @@
     </div>
   </div>
 
-  <!-- NOTIFICATIONS PANEL -->
   <div class="notif-panel" id="notif-panel">
     <div class="notif-header">🔔 Notifications</div>
     <div id="notif-list"><div class="empty"><div class="empty-icon">🔔</div><p>No notifications</p></div></div>
   </div>
 
-  <!-- ═══════ AGENT PANEL ═══════ -->
   <div class="panel" id="panel-agent">
-    <!-- Punch Card -->
     <div class="punch-card">
       <div>
         <div class="punch-greeting" id="a-greeting">Good Morning! 👋</div>
@@ -314,49 +244,25 @@
         <button class="punch-btn btn-out" id="a-btn-out" onclick="punchOut()" disabled>🔴 Punch Out</button>
       </div>
     </div>
-
-    <!-- Missing Alert -->
     <div class="miss-alert" id="a-miss-alert">
       <span style="font-size:24px">⚠️</span>
       <div><strong style="color:#e03131">Missing Hours!</strong><p id="a-miss-text" style="font-size:12px;color:#6b7280;margin-top:2px"></p></div>
     </div>
-
-    <!-- Stats -->
     <div class="grid-4" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
       <div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-val" id="a-stat-hours">0h 0m</div><div class="stat-lbl">Hours Today</div></div>
       <div class="stat-card"><div class="stat-icon">☕</div><div class="stat-val" id="a-stat-breaks">0</div><div class="stat-lbl">Breaks Taken</div></div>
       <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-val" id="a-stat-att">0%</div><div class="stat-lbl">Attendance Rate</div></div>
       <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-val" id="a-stat-qual">—</div><div class="stat-lbl">Quality Score</div></div>
     </div>
-
     <div class="grid-2">
-      <!-- Schedule -->
-      <div class="card">
-        <div class="card-title">📅 My Schedule</div>
-        <div id="a-schedule"><div class="empty"><div class="empty-icon">📅</div><p>No schedule</p></div></div>
-      </div>
-      <!-- Team Online -->
-      <div class="card">
-        <div class="card-title">👥 Team Online</div>
-        <div id="a-online"><div class="empty"><div class="empty-icon">👥</div><p>Loading...</p></div></div>
-      </div>
+      <div class="card"><div class="card-title">📅 My Schedule</div><div id="a-schedule"><div class="empty"><div class="empty-icon">📅</div><p>No schedule</p></div></div></div>
+      <div class="card"><div class="card-title">👥 Team Online</div><div id="a-online"><div class="empty"><div class="empty-icon">👥</div><p>Loading...</p></div></div></div>
     </div>
-
     <div class="grid-2">
-      <!-- My Breaks -->
-      <div class="card">
-        <div class="card-title">☕ My Breaks Today</div>
-        <div id="a-breaks"><div class="empty"><div class="empty-icon">☕</div><p>No breaks yet</p></div></div>
-      </div>
-      <!-- Quality Scores -->
-      <div class="card">
-        <div class="card-title">⭐ My Quality Scores</div>
-        <div id="a-quality"><div class="empty"><div class="empty-icon">⭐</div><p>No scores yet</p></div></div>
-      </div>
+      <div class="card"><div class="card-title">☕ My Breaks Today</div><div id="a-breaks"><div class="empty"><div class="empty-icon">☕</div><p>No breaks yet</p></div></div></div>
+      <div class="card"><div class="card-title">⭐ My Quality Scores</div><div id="a-quality"><div class="empty"><div class="empty-icon">⭐</div><p>No scores yet</p></div></div></div>
     </div>
-
     <div class="grid-2">
-      <!-- Performance -->
       <div class="card">
         <div class="card-title">📊 My Performance</div>
         <div class="prog-wrap"><div class="prog-label"><span>Attendance Rate</span><span id="a-att-val">0%</span></div><div class="prog-bar"><div class="prog-fill fill-green" id="a-att-bar" style="width:0%"></div></div></div>
@@ -364,37 +270,21 @@
         <div class="prog-wrap"><div class="prog-label"><span>Quality Score</span><span id="a-qual-val">0%</span></div><div class="prog-bar"><div class="prog-fill fill-blue" id="a-qual-bar" style="width:0%"></div></div></div>
         <div class="prog-wrap"><div class="prog-label"><span>Hours Completion</span><span id="a-hours-val">0%</span></div><div class="prog-bar"><div class="prog-fill fill-orange" id="a-hours-bar" style="width:0%"></div></div></div>
       </div>
-      <!-- Leave Requests -->
       <div class="card">
-        <div class="card-title">🏖️ Leave Requests
-          <button class="sm-btn btn-primary" onclick="openModal('leave')">+ Request</button>
-        </div>
+        <div class="card-title">🏖️ Leave Requests <button class="sm-btn btn-primary" onclick="openModal('leave')">+ Request</button></div>
         <div id="a-leaves"><div class="empty"><div class="empty-icon">🏖️</div><p>No requests</p></div></div>
       </div>
     </div>
   </div>
 
-  <!-- ═══════ QUALITY PANEL ═══════ -->
   <div class="panel" id="panel-quality">
     <div class="grid-2">
-      <div class="card">
-        <div class="card-title">📝 Submit Quality Form
-          <button class="sm-btn btn-primary" onclick="openModal('qform')">+ New Form</button>
-        </div>
-        <div id="q-forms-list"><div class="empty"><div class="empty-icon">📝</div><p>No forms yet</p></div></div>
-      </div>
-      <div class="card">
-        <div class="card-title">👥 Agents Online Now</div>
-        <div id="q-online"><div class="empty"><div class="empty-icon">👥</div><p>Loading...</p></div></div>
-      </div>
+      <div class="card"><div class="card-title">📝 Submit Quality Form <button class="sm-btn btn-primary" onclick="openModal('qform')">+ New Form</button></div><div id="q-forms-list"><div class="empty"><div class="empty-icon">📝</div><p>No forms yet</p></div></div></div>
+      <div class="card"><div class="card-title">👥 Agents Online Now</div><div id="q-online"><div class="empty"><div class="empty-icon">👥</div><p>Loading...</p></div></div></div>
     </div>
-    <div class="card">
-      <div class="card-title">👤 Above Agent Level Status</div>
-      <div id="q-above"><div class="empty"><div class="empty-icon">👤</div><p>Loading...</p></div></div>
-    </div>
+    <div class="card"><div class="card-title">👤 Above Agent Level Status</div><div id="q-above"><div class="empty"><div class="empty-icon">👤</div><p>Loading...</p></div></div></div>
   </div>
 
-  <!-- ═══════ SUPERVISOR PANEL ═══════ -->
   <div class="panel" id="panel-supervisor">
     <div class="grid-4" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
       <div class="stat-card"><div class="stat-icon">🟢</div><div class="stat-val" id="sup-online-count">0</div><div class="stat-lbl">Online Now</div></div>
@@ -402,39 +292,20 @@
       <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-val" id="sup-leave-count">0</div><div class="stat-lbl">Pending Leaves</div></div>
       <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-val" id="sup-avg-qual">—</div><div class="stat-lbl">Avg Quality</div></div>
     </div>
-
     <div class="grid-2">
-      <div class="card">
-        <div class="card-title">👥 All Agents
-          <button class="sm-btn btn-outline" onclick="loadSupAgents()">🔄 Refresh</button>
-        </div>
-        <div id="sup-agents"><div class="empty"><div class="empty-icon">👥</div><p>Loading...</p></div></div>
-      </div>
-      <div class="card">
-        <div class="card-title">🏖️ Leave Requests</div>
-        <div id="sup-leaves"><div class="empty"><div class="empty-icon">🏖️</div><p>No requests</p></div></div>
-      </div>
+      <div class="card"><div class="card-title">👥 All Agents <button class="sm-btn btn-outline" onclick="loadSupAgents()">🔄 Refresh</button></div><div id="sup-agents"><div class="empty"><div class="empty-icon">👥</div><p>Loading...</p></div></div></div>
+      <div class="card"><div class="card-title">🏖️ Leave Requests</div><div id="sup-leaves"><div class="empty"><div class="empty-icon">🏖️</div><p>No requests</p></div></div></div>
     </div>
-
-    <div class="card">
-      <div class="card-title">📝 Quality Forms
-        <button class="sm-btn btn-primary" onclick="openModal('qform')">+ New Form</button>
-      </div>
-      <div id="sup-qforms"><div class="empty"><div class="empty-icon">📝</div><p>No forms yet</p></div></div>
-    </div>
+    <div class="card"><div class="card-title">📝 Quality Forms <button class="sm-btn btn-primary" onclick="openModal('qform')">+ New Form</button></div><div id="sup-qforms"><div class="empty"><div class="empty-icon">📝</div><p>No forms yet</p></div></div></div>
   </div>
 
-  <!-- ═══════ ADMIN PANEL ═══════ -->
   <div class="panel" id="panel-admin">
-    <!-- Stats -->
     <div class="grid-4" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
       <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-val" id="adm-total">0</div><div class="stat-lbl">Total Users</div></div>
       <div class="stat-card"><div class="stat-icon">🟢</div><div class="stat-val" id="adm-online">0</div><div class="stat-lbl">Online Now</div></div>
       <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-val" id="adm-att">0%</div><div class="stat-lbl">Today Attendance</div></div>
       <div class="stat-card"><div class="stat-icon">📉</div><div class="stat-val" id="adm-attr">0%</div><div class="stat-lbl">Attrition Rate</div></div>
     </div>
-
-    <!-- Performance -->
     <div class="grid-2">
       <div class="card">
         <div class="card-title">📊 Attendance Rate</div>
@@ -442,49 +313,24 @@
         <div class="prog-wrap"><div class="prog-label"><span>Absent</span><span id="adm-abs-val">0%</span></div><div class="prog-bar"><div class="prog-fill fill-red" id="adm-abs-bar" style="width:0%"></div></div></div>
         <div class="prog-wrap"><div class="prog-label"><span>Attrition</span><span id="adm-attr-val">0%</span></div><div class="prog-bar"><div class="prog-fill fill-orange" id="adm-attr-bar" style="width:0%"></div></div></div>
       </div>
-      <div class="card">
-        <div class="card-title">🏖️ Leave Requests</div>
-        <div id="adm-leaves"><div class="empty"><div class="empty-icon">🏖️</div><p>No requests</p></div></div>
-      </div>
+      <div class="card"><div class="card-title">🏖️ Leave Requests</div><div id="adm-leaves"><div class="empty"><div class="empty-icon">🏖️</div><p>No requests</p></div></div></div>
     </div>
-
-    <!-- Users -->
     <div class="card" style="margin-bottom:20px">
-      <div class="card-title">👥 Users Management
-        <button class="sm-btn btn-primary" onclick="openModal('addUser')">+ Add User</button>
-      </div>
-      <div style="overflow-x:auto"><table class="tbl" id="adm-users-tbl">
-        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody id="adm-users-body"><tr><td colspan="5" style="text-align:center;padding:20px;color:#6b7280">Loading...</td></tr></tbody>
-      </table></div>
+      <div class="card-title">👥 Users Management <button class="sm-btn btn-primary" onclick="openModal('addUser')">+ Add User</button></div>
+      <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody id="adm-users-body"><tr><td colspan="5" style="text-align:center;padding:20px;color:#6b7280">Loading...</td></tr></tbody></table></div>
     </div>
-
-    <!-- Schedules -->
     <div class="card" style="margin-bottom:20px">
-      <div class="card-title">📅 Schedules
-        <button class="sm-btn btn-primary" onclick="openModal('addSchedule')">+ Add Schedule</button>
-      </div>
-      <div style="overflow-x:auto"><table class="tbl">
-        <thead><tr><th>Name</th><th>Seat</th><th>Language</th><th>Shift</th><th>Leader</th><th>Off Days</th><th>Period</th><th>Actions</th></tr></thead>
-        <tbody id="adm-sched-body"><tr><td colspan="8" style="text-align:center;padding:20px;color:#6b7280">Loading...</td></tr></tbody>
-      </table></div>
+      <div class="card-title">📅 Schedules <button class="sm-btn btn-primary" onclick="openModal('addSchedule')">+ Add Schedule</button></div>
+      <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Name</th><th>Seat</th><th>Language</th><th>Shift</th><th>Leader</th><th>Off Days</th><th>Period</th><th>Actions</th></tr></thead><tbody id="adm-sched-body"><tr><td colspan="8" style="text-align:center;padding:20px;color:#6b7280">Loading...</td></tr></tbody></table></div>
     </div>
-
-    <!-- Quality Forms -->
     <div class="card">
       <div class="card-title">⭐ Quality Forms</div>
-      <div style="overflow-x:auto"><table class="tbl">
-        <thead><tr><th>Agent</th><th>Score</th><th>Notes</th><th>Date</th></tr></thead>
-        <tbody id="adm-qual-body"><tr><td colspan="4" style="text-align:center;padding:20px;color:#6b7280">Loading...</td></tr></tbody>
-      </table></div>
+      <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Agent</th><th>Score</th><th>Notes</th><th>Date</th></tr></thead><tbody id="adm-qual-body"><tr><td colspan="4" style="text-align:center;padding:20px;color:#6b7280">Loading...</td></tr></tbody></table></div>
     </div>
   </div>
-
 </div>
 
-<!-- ═══════ MODALS ═══════ -->
-
-<!-- Leave Request -->
+<!-- MODALS -->
 <div class="modal-ov" id="modal-leave">
   <div class="modal">
     <div class="modal-title">🏖️ Leave Request</div>
@@ -500,7 +346,6 @@
   </div>
 </div>
 
-<!-- Quality Form -->
 <div class="modal-ov" id="modal-qform">
   <div class="modal">
     <div class="modal-title">⭐ Quality Evaluation</div>
@@ -515,7 +360,6 @@
   </div>
 </div>
 
-<!-- Add User -->
 <div class="modal-ov" id="modal-addUser">
   <div class="modal">
     <div class="modal-title">👤 Add New User</div>
@@ -539,7 +383,6 @@
   </div>
 </div>
 
-<!-- Add Schedule -->
 <div class="modal-ov" id="modal-addSchedule">
   <div class="modal">
     <div class="modal-title">📅 Add Schedule</div>
@@ -564,11 +407,9 @@
 
 <script>
 const sb = window.supabase;
-let CU = null; // current user
-let CP = null; // current profile
+let CU = null;
+let CP = null;
 let userRole = '';
-
-// punch state
 let punchInTime = null;
 let breakStartTime = null;
 let isOnBreak = false;
@@ -579,9 +420,7 @@ let totalBreakSec = 0;
 let breakCount = 0;
 let todayBreaks = [];
 
-// ════════════════════════════════════
-// CANVAS ANIMATION
-// ════════════════════════════════════
+// ════════ CANVAS ════════
 function initCanvas() {
   const canvas = document.getElementById('bgCanvas');
   if (!canvas) return;
@@ -616,9 +455,7 @@ function initCanvas() {
   draw();
 }
 
-// ════════════════════════════════════
-// INIT
-// ════════════════════════════════════
+// ════════ INIT ════════
 async function init() {
   initCanvas();
   try {
@@ -629,7 +466,10 @@ async function init() {
     CP = profile || {};
     userRole = (CP.role || CP.access || '').toLowerCase();
     showApp();
-  } catch(e) { showLogin(); }
+  } catch(e) {
+    console.error('Init error:', e);
+    showLogin();
+  }
 }
 
 function showLogin() {
@@ -645,9 +485,7 @@ function showApp() {
   loadPanel(userRole);
 }
 
-// ════════════════════════════════════
-// LOGIN
-// ════════════════════════════════════
+// ════════ LOGIN ════════
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pass = document.getElementById('login-pass').value;
@@ -665,41 +503,42 @@ async function doLogin() {
   setTimeout(showApp, 800);
 }
 
-document.addEventListener('keypress', e => { if (e.key === 'Enter' && document.getElementById('login-screen').classList.contains('show')) doLogin(); });
+document.addEventListener('keypress', e => {
+  if (e.key === 'Enter' && document.getElementById('login-screen').classList.contains('show')) doLogin();
+});
 
-// ════════════════════════════════════
-// TOPBAR
-// ════════════════════════════════════
+// ════════ TOPBAR ════════
 function setupTopbar() {
-  // ✅ NAME
   const name =
-    CP?.full_name ||
-    [CP?.first_name, CP?.last_name].filter(Boolean).join(' ') ||
-    CU?.email ||
+    CP.full_name ||
+    [CP.first_name, CP.last_name].filter(Boolean).join(' ') ||
+    CU.email ||
     'User';
 
   document.getElementById('user-name').textContent = name;
 
-  // ✅ ROLE
-  const role = (CP?.role || 'member').toLowerCase();
+  const role = (CP.role || 'member').toLowerCase();
   document.getElementById('user-role').textContent =
     role.charAt(0).toUpperCase() + role.slice(1);
 
-  // ✅ AVATAR
   const av = document.getElementById('user-av');
-  av.textContent = name.charAt(0).toUpperCase();
-} else { av.textContent = name.charAt(0).toUpperCase(); }
+  if (CP.avatar_url) {
+    av.innerHTML = '<img src="' + CP.avatar_url + '">';
+  } else {
+    av.textContent = name.charAt(0).toUpperCase();
+  }
+
   const navItems = {
-    agent: [{ id: 'agent', label: '🏠 Dashboard' }],
-    quality: [{ id: 'agent', label: '🏠 Home' }, { id: 'quality', label: '⭐ Quality' }],
+    agent:      [{ id: 'agent', label: '🏠 Dashboard' }],
+    quality:    [{ id: 'agent', label: '🏠 Home' }, { id: 'quality', label: '⭐ Quality' }],
     supervisor: [{ id: 'agent', label: '🏠 Home' }, { id: 'supervisor', label: '👥 Team' }, { id: 'quality', label: '⭐ Quality' }],
-    admin: [{ id: 'agent', label: '🏠 Home' }, { id: 'supervisor', label: '👥 Team' }, { id: 'admin', label: '⚙️ Admin' }],
-    owner: [{ id: 'agent', label: '🏠 Home' }, { id: 'supervisor', label: '👥 Team' }, { id: 'quality', label: '⭐ Quality' }, { id: 'admin', label: '⚙️ Admin' }]
+    admin:      [{ id: 'admin', label: '⚙️ Admin' }, { id: 'supervisor', label: '👥 Team' }],
+    owner:      [{ id: 'admin', label: '⚙️ Admin' }, { id: 'supervisor', label: '👥 Team' }, { id: 'quality', label: '⭐ Quality' }]
   };
 
-  const role = ['owner','admin','supervisor','quality'].includes(userRole) ? userRole : 'agent';
+  const activeRole = ['owner','admin','supervisor','quality'].includes(role) ? role : 'agent';
   const nav = document.getElementById('topbar-nav');
-  nav.innerHTML = (navItems[role] || navItems.agent).map(n =>
+  nav.innerHTML = (navItems[activeRole] || navItems.agent).map(n =>
     '<button class="nav-btn" onclick="switchPanel(\'' + n.id + '\')" id="nav-' + n.id + '">' + n.label + '</button>'
   ).join('');
 
@@ -718,7 +557,6 @@ function loadPanel(role) {
   if (['owner', 'admin'].includes(role)) {
     switchPanel('admin');
     loadAdminPanel();
-    loadAgentPanel();
   } else if (role === 'supervisor') {
     switchPanel('supervisor');
     loadSupPanel();
@@ -733,9 +571,7 @@ function loadPanel(role) {
   }
 }
 
-// ════════════════════════════════════
-// AGENT PANEL
-// ════════════════════════════════════
+// ════════ AGENT PANEL ════════
 async function loadAgentPanel() {
   const now = new Date();
   const hour = now.getHours();
@@ -757,8 +593,7 @@ async function checkTodayPunch() {
   const { data } = await sb.from('punches').select('*').eq('user_id', CU.id).eq('date', today).single();
   if (!data) return;
   if (data.punch_in && !data.punch_out) {
-    punchInTime = new Date(data.punch_in);
-    isPunchedIn = true;
+    punchInTime = new Date(data.punch_in); isPunchedIn = true;
     document.getElementById('a-punch-in-time').textContent = punchInTime.toLocaleTimeString();
     document.getElementById('a-btn-in').disabled = true;
     document.getElementById('a-btn-brk').disabled = false;
@@ -901,7 +736,7 @@ async function loadAgentOnline() {
 }
 
 function renderOnlineItem(u) {
-  const name = ((u.first_name||'')+ ' '+(u.last_name||'')||u.full_name||'Unknown').trim();
+  const name = ((u.first_name||'')+' '+(u.last_name||'')||u.full_name||'Unknown').trim();
   const st = u.status || 'offline';
   const dotC = st==='online'?'dot-on':st==='break'?'dot-brk':'dot-off';
   const stT = st==='online'?'🟢 Online':st==='break'?'🟡 Break':'⚫ Offline';
@@ -942,7 +777,7 @@ async function submitLeave() {
   const msg=document.getElementById('lv-msg');
   if (!from||!to) { msg.textContent='⚠️ Select dates'; msg.style.color='#e03131'; return; }
   msg.textContent='⏳ Submitting...'; msg.style.color='#6b7280';
-  const name = ((CP.first_name||'')+' '+(CP.last_name||'')||CP.full_name||'').trim();
+  const name = [CP.first_name, CP.last_name].filter(Boolean).join(' ') || CP.full_name || '';
   const {error} = await sb.from('leave_requests').insert({user_id:CU.id,agent_name:name,leave_type:type,from_date:from,to_date:to,reason,status:'pending'});
   if (error) { msg.textContent='❌ '+error.message; msg.style.color='#e03131'; return; }
   const {data:leaders} = await sb.from('profiles').select('id').in('role',['admin','owner','supervisor']);
@@ -951,13 +786,9 @@ async function submitLeave() {
   setTimeout(()=>{ closeModal('leave'); loadAgentLeaves(); },1200);
 }
 
-// ════════════════════════════════════
-// QUALITY PANEL
-// ════════════════════════════════════
+// ════════ QUALITY PANEL ════════
 async function loadQualityPanel() {
-  loadQForms();
-  loadQOnline();
-  loadQAgentSelect();
+  loadQForms(); loadQOnline(); loadQAgentSelect();
 }
 
 async function loadQForms() {
@@ -980,7 +811,7 @@ async function loadQOnline() {
 async function loadQAgentSelect() {
   const { data } = await sb.from('profiles').select('id,first_name,last_name,full_name,email');
   const sel = document.getElementById('qf-agent');
-  if (data) sel.innerHTML = data.map(u=>{ const n=((u.first_name||'')+' '+(u.last_name||'')||u.full_name||u.email||'').trim(); return '<option value="'+u.id+'" data-name="'+n+'">'+n+'</option>'; }).join('');
+  if (data) sel.innerHTML = data.map(u=>{ const n=([u.first_name,u.last_name].filter(Boolean).join(' ')||u.full_name||u.email||'').trim(); return '<option value="'+u.id+'" data-name="'+n+'">'+n+'</option>'; }).join('');
 }
 
 async function submitQForm() {
@@ -997,41 +828,31 @@ async function submitQForm() {
   if (error) { msg.textContent='❌ '+error.message; msg.style.color='#e03131'; return; }
   await sb.from('notifications').insert({user_id:agentId,type:'quality',title:'⭐ New Quality Score',message:'You received a quality score of '+score+'%'+(notes?' - '+notes:''),is_read:false});
   msg.textContent='✅ Submitted!'; msg.style.color='#2f9e44';
-  setTimeout(()=>{ closeModal('qform'); loadQForms(); loadSupQForms && loadSupQForms(); },1200);
+  setTimeout(()=>{ closeModal('qform'); loadQForms(); },1200);
 }
 
-// ════════════════════════════════════
-// SUPERVISOR PANEL
-// ════════════════════════════════════
+// ════════ SUPERVISOR PANEL ════════
 async function loadSupPanel() {
-  loadSupAgents();
-  loadSupLeaves();
-  loadSupQForms();
-  loadQAgentSelect();
+  loadSupAgents(); loadSupLeaves(); loadSupQForms(); loadQAgentSelect();
 }
 
 async function loadSupAgents() {
   const { data } = await sb.from('profiles').select('id,first_name,last_name,full_name,email,status,role,access,last_seen').order('status');
   const el = document.getElementById('sup-agents');
   if (!data||!data.length) { el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><p>No agents</p></div>'; return; }
-  const online = data.filter(u=>u.status==='online').length;
-  const onBreak = data.filter(u=>u.status==='break').length;
-  document.getElementById('sup-online-count').textContent = online;
-  document.getElementById('sup-break-count').textContent = onBreak;
+  document.getElementById('sup-online-count').textContent = data.filter(u=>u.status==='online').length;
+  document.getElementById('sup-break-count').textContent = data.filter(u=>u.status==='break').length;
   el.innerHTML = '<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Last Seen</th></tr></thead><tbody>'+data.map(u=>{
-    const name=((u.first_name||'')+' '+(u.last_name||'')||u.full_name||u.email||'').trim();
+    const name=([u.first_name,u.last_name].filter(Boolean).join(' ')||u.full_name||u.email||'').trim();
     const st=u.status||'offline';
-    const stT=st==='online'?'🟢 Online':st==='break'?'🟡 Break':'⚫ Offline';
-    const ls=u.last_seen?new Date(u.last_seen).toLocaleTimeString():'—';
-    return '<tr><td style="font-weight:600">'+name+'</td><td style="color:#6b7280;font-size:12px">'+u.email+'</td><td><span class="badge '+(u.role==='owner'?'badge-owner':u.role==='admin'?'badge-admin':u.role==='supervisor'?'badge-sup':u.role==='quality'?'badge-qual':'badge-agent')+'">'+u.role+'</span></td><td>'+stT+'</td><td style="font-size:12px;color:#6b7280">'+ls+'</td></tr>';
+    return '<tr><td style="font-weight:600">'+name+'</td><td style="color:#6b7280;font-size:12px">'+u.email+'</td><td><span class="badge '+(u.role==='owner'?'badge-owner':u.role==='admin'?'badge-admin':u.role==='supervisor'?'badge-sup':u.role==='quality'?'badge-qual':'badge-agent')+'">'+u.role+'</span></td><td>'+(st==='online'?'🟢 Online':st==='break'?'🟡 Break':'⚫ Offline')+'</td><td style="font-size:12px;color:#6b7280">'+(u.last_seen?new Date(u.last_seen).toLocaleTimeString():'—')+'</td></tr>';
   }).join('')+'</tbody></table></div>';
 }
 
 async function loadSupLeaves() {
   const { data } = await sb.from('leave_requests').select('*').order('created_at',{ascending:false}).limit(20);
   const el = document.getElementById('sup-leaves');
-  const pending = data ? data.filter(l=>l.status==='pending').length : 0;
-  document.getElementById('sup-leave-count').textContent = pending;
+  document.getElementById('sup-leave-count').textContent = data ? data.filter(l=>l.status==='pending').length : 0;
   if (!data||!data.length) { el.innerHTML='<div class="empty"><div class="empty-icon">🏖️</div><p>No requests</p></div>'; return; }
   el.innerHTML = data.map(l=>'<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:10px;border:1px solid #e5e7eb;background:#f9fafb;margin-bottom:8px"><div><div style="font-size:13px;font-weight:600">'+l.agent_name+'</div><div style="font-size:12px;color:#6b7280">'+l.leave_type+' · '+l.from_date+' → '+l.to_date+'</div></div><div style="display:flex;gap:6px;align-items:center">'+(l.status==='pending'?'<button class="sm-btn btn-success" onclick="updateLeave(\''+l.id+'\',\'approved\')">✅</button><button class="sm-btn btn-danger" onclick="updateLeave(\''+l.id+'\',\'rejected\')">❌</button>':'<span class="badge '+(l.status==='approved'?'badge-ok':'badge-err')+'">'+(l.status==='approved'?'✅ Approved':'❌ Rejected')+'</span>')+'</div></div>').join('');
 }
@@ -1039,26 +860,20 @@ async function loadSupLeaves() {
 async function updateLeave(id, status) {
   await sb.from('leave_requests').update({ status }).eq('id', id);
   loadSupLeaves();
+  if (['owner','admin'].includes(userRole)) loadAdminLeaves();
 }
 
 async function loadSupQForms() {
   const { data } = await sb.from('quality_forms').select('*').order('created_at',{ascending:false}).limit(20);
   const el = document.getElementById('sup-qforms');
   if (!data||!data.length) { el.innerHTML='<div class="empty"><div class="empty-icon">📝</div><p>No forms</p></div>'; return; }
-  const avg = data.reduce((s,q)=>s+(q.score||0),0)/data.length;
-  document.getElementById('sup-avg-qual').textContent = Math.round(avg)+'%';
-  el.innerHTML = '<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Agent</th><th>Score</th><th>Notes</th><th>By</th><th>Date</th></tr></thead><tbody>'+data.map(q=>'<tr><td>'+q.agent_name+'</td><td><span style="font-weight:700;color:'+(q.score>=80?'#2f9e44':q.score>=60?'#f08c00':'#e03131')+'">'+q.score+'%</span></td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(q.notes||'—')+'</td><td style="font-size:12px;color:#6b7280">'+(q.created_by||'—')+'</td><td>'+(q.created_at?new Date(q.created_at).toLocaleDateString():'—')+'</td></tr>').join('')+'</tbody></table></div>';
+  document.getElementById('sup-avg-qual').textContent = Math.round(data.reduce((s,q)=>s+(q.score||0),0)/data.length)+'%';
+  el.innerHTML = '<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Agent</th><th>Score</th><th>Notes</th><th>Date</th></tr></thead><tbody>'+data.map(q=>'<tr><td>'+q.agent_name+'</td><td><span style="font-weight:700;color:'+(q.score>=80?'#2f9e44':q.score>=60?'#f08c00':'#e03131')+'">'+q.score+'%</span></td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(q.notes||'—')+'</td><td>'+(q.created_at?new Date(q.created_at).toLocaleDateString():'—')+'</td></tr>').join('')+'</tbody></table></div>';
 }
 
-// ════════════════════════════════════
-// ADMIN PANEL
-// ════════════════════════════════════
+// ════════ ADMIN PANEL ════════
 async function loadAdminPanel() {
-  loadAdminUsers();
-  loadAdminSchedules();
-  loadAdminQuality();
-  loadAdminLeaves();
-  loadAdminStats();
+  loadAdminUsers(); loadAdminSchedules(); loadAdminQuality(); loadAdminLeaves(); loadAdminStats();
 }
 
 async function loadAdminStats() {
@@ -1066,23 +881,21 @@ async function loadAdminStats() {
   if (users) {
     document.getElementById('adm-total').textContent = users.length;
     document.getElementById('adm-online').textContent = users.filter(u=>u.status==='online').length;
-    const active = users.filter(u=>u.role!=='inactive').length;
     const inactive = users.filter(u=>u.role==='inactive').length;
-    const attrR = active ? Math.round((inactive/active)*100) : 0;
+    const attrR = users.length ? Math.round((inactive/users.length)*100) : 0;
     document.getElementById('adm-attr').textContent = attrR+'%';
     document.getElementById('adm-attr-val').textContent = attrR+'%';
     document.getElementById('adm-attr-bar').style.width = attrR+'%';
   }
   const today = new Date().toISOString().split('T')[0];
   const { data: punches } = await sb.from('punches').select('*').eq('date', today);
-  if (punches && users) {
+  if (punches && users && users.length) {
     const attR = Math.round((punches.filter(p=>p.status==='present').length / users.length)*100);
     document.getElementById('adm-att').textContent = attR+'%';
     document.getElementById('adm-att-val').textContent = attR+'%';
     document.getElementById('adm-att-bar').style.width = attR+'%';
-    const absR = 100 - attR;
-    document.getElementById('adm-abs-val').textContent = absR+'%';
-    document.getElementById('adm-abs-bar').style.width = absR+'%';
+    document.getElementById('adm-abs-val').textContent = (100-attR)+'%';
+    document.getElementById('adm-abs-bar').style.width = (100-attR)+'%';
   }
 }
 
@@ -1091,10 +904,9 @@ async function loadAdminUsers() {
   const tbody = document.getElementById('adm-users-body');
   if (!data||!data.length) { tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:20px;color:#6b7280">No users</td></tr>'; return; }
   tbody.innerHTML = data.map(u=>{
-    const name=((u.first_name||'')+' '+(u.last_name||'')||u.full_name||u.email||'').trim();
-    const st=u.status||'offline';
-    const isOwner = (u.role||'').toLowerCase()==='owner';
-    return '<tr><td style="font-weight:600">'+name+'</td><td style="color:#6b7280;font-size:12px">'+u.email+'</td><td><span class="badge '+(u.role==='owner'?'badge-owner':u.role==='admin'?'badge-admin':u.role==='supervisor'?'badge-sup':u.role==='quality'?'badge-qual':'badge-agent')+'">'+u.role+'</span></td><td>'+(st==='online'?'🟢 Online':st==='break'?'🟡 Break':'⚫ Offline')+'</td><td>'+(isOwner?'<span style="font-size:11px;color:#6b7280">Protected</span>':'<button class="sm-btn btn-danger" onclick="deleteUser(\''+u.id+'\',\''+name+'\')">🗑️ Delete</button>')+'</td></tr>';
+    const name=([u.first_name,u.last_name].filter(Boolean).join(' ')||u.full_name||u.email||'').trim();
+    const isOwner=(u.role||'').toLowerCase()==='owner';
+    return '<tr><td style="font-weight:600">'+name+'</td><td style="color:#6b7280;font-size:12px">'+u.email+'</td><td><span class="badge '+(u.role==='owner'?'badge-owner':u.role==='admin'?'badge-admin':u.role==='supervisor'?'badge-sup':u.role==='quality'?'badge-qual':'badge-agent')+'">'+u.role+'</span></td><td>'+(u.status==='online'?'🟢 Online':u.status==='break'?'🟡 Break':'⚫ Offline')+'</td><td>'+(isOwner?'<span style="font-size:11px;color:#6b7280">Protected</span>':'<button class="sm-btn btn-danger" onclick="deleteUser(\''+u.id+'\',\''+name+'\')">🗑️ Delete</button>')+'</td></tr>';
   }).join('');
 }
 
@@ -1168,9 +980,7 @@ async function loadAdminLeaves() {
   el.innerHTML = data.map(l=>'<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:10px;border:1px solid #e5e7eb;background:#f9fafb;margin-bottom:8px"><div><div style="font-size:13px;font-weight:600">'+l.agent_name+'</div><div style="font-size:12px;color:#6b7280">'+l.leave_type+' · '+l.from_date+' → '+l.to_date+'</div></div><div style="display:flex;gap:6px">'+(l.status==='pending'?'<button class="sm-btn btn-success" onclick="updateLeave(\''+l.id+'\',\'approved\')">✅</button><button class="sm-btn btn-danger" onclick="updateLeave(\''+l.id+'\',\'rejected\')">❌</button>':'<span class="badge '+(l.status==='approved'?'badge-ok':'badge-err')+'">'+(l.status==='approved'?'✅ Approved':'❌ Rejected')+'</span>')+'</div></div>').join('');
 }
 
-// ════════════════════════════════════
-// NOTIFICATIONS
-// ════════════════════════════════════
+// ════════ NOTIFICATIONS ════════
 async function loadNotifications() {
   const { data } = await sb.from('notifications').select('*').eq('user_id', CU.id).order('created_at',{ascending:false}).limit(20);
   const unread = data ? data.filter(n=>!n.is_read).length : 0;
@@ -1196,16 +1006,12 @@ document.addEventListener('click', e => {
   if (p && b && !p.contains(e.target) && !b.contains(e.target)) p.classList.remove('show');
 });
 
-// ════════════════════════════════════
-// MODALS
-// ════════════════════════════════════
+// ════════ MODALS ════════
 function openModal(name) { document.getElementById('modal-'+name).classList.add('show'); }
 function closeModal(name) { document.getElementById('modal-'+name).classList.remove('show'); }
 document.querySelectorAll('.modal-ov').forEach(o => o.addEventListener('click', e => { if (e.target===o) o.classList.remove('show'); }));
 
-// ════════════════════════════════════
-// LOGOUT
-// ════════════════════════════════════
+// ════════ LOGOUT ════════
 async function doLogout() {
   if (isPunchedIn) { if (!confirm('Still punched in! Logout anyway?')) return; await punchOut(); }
   await sb.from('profiles').update({ status: 'offline', last_seen: new Date().toISOString() }).eq('id', CU.id);
@@ -1215,9 +1021,7 @@ async function doLogout() {
   document.getElementById('login-screen').classList.add('show');
 }
 
-// ════════════════════════════════════
-// UTILS
-// ════════════════════════════════════
+// ════════ UTILS ════════
 function pad(n) { return String(n).padStart(2, '0'); }
 
 init();
