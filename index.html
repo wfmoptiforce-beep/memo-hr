@@ -460,8 +460,7 @@
       btn.disabled = true;
       msg.textContent = '';
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email, password
+const { data, error } = await window.supabase.auth.signInWithPassword({        email, password
       });
 
       if (error) {
