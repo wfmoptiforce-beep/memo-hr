@@ -589,7 +589,7 @@ async function loadAgentPanel() {
   loadAgentLeaves();
   setInterval(loadAgentOnline, 30000);
 }
-
+------------------------------
 async function checkTodayPunch() {
   const today = new Date().toISOString().split('T')[0];
   const { data } = await sb.from('punches').select('*').eq('user_id', CU.id).eq('date', today).single();
