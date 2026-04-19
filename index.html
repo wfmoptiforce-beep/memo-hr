@@ -16,7 +16,7 @@
 
 <div class="app">
 
-  <!-- LOADING SCREEN -->
+  <!-- ═══════════ LOADING SCREEN ═══════════ -->
   <div id="loading-screen">
     <div class="load-logo">🎯</div>
     <div class="load-text">Memo Pro</div>
@@ -24,7 +24,7 @@
     <div class="load-bar"><div class="load-bar-fill"></div></div>
   </div>
 
-  <!-- LOGIN SCREEN -->
+  <!-- ═══════════ LOGIN SCREEN ═══════════ -->
   <div id="login-screen">
     <div class="login-left">
       <canvas id="bgCanvas"></canvas>
@@ -41,7 +41,6 @@
               <span>Attrition · Absenteeism · Hours</span>
             </div>
           </div>
-
           <div class="feat-item">
             <div class="feat-icon">👥</div>
             <div class="feat-text">
@@ -49,7 +48,6 @@
               <span>Track status & productivity</span>
             </div>
           </div>
-
           <div class="feat-item">
             <div class="feat-icon">⏱️</div>
             <div class="feat-text">
@@ -89,27 +87,372 @@
     </div>
   </div>
 
-  <!-- APP -->
+  <!-- ═══════════ MAIN APP ═══════════ -->
   <div id="app">
 
-    <!-- مثال إصلاح الـ select -->
-    <select id="a-status-select" class="status-select">
-      <option value="online">🟢 Online</option>
-      <option value="break">☕ Break</option>
-      <option value="meeting">🧠 Meeting</option>
-      <option value="training">🎓 Training</option>
-      <option value="offline">🔴 Offline</option>
-    </select>
+    <!-- ────── TOPBAR ────── -->
+    <div id="topbar">
+      <div class="topbar-left">
+        <div class="topbar-logo">🎯</div>
+        <div class="topbar-brand">Memo Pro</div>
+      </div>
 
-    <!-- باقي الـ APP زي ما هو عندك -->
+      <div class="topbar-center" id="topbar-nav">
+        <!-- nav buttons injected by ui.js setupTopbar() -->
+      </div>
+
+      <div class="topbar-right">
+        <button class="notif-btn" id="notif-btn" onclick="toggleNotif()">🔔
+          <span class="notif-badge" id="notif-badge" style="display:none;">0</span>
+        </button>
+
+        <div class="user-info">
+          <div class="user-av" id="user-av">U</div>
+          <div class="user-meta">
+            <div class="user-name" id="user-name">User</div>
+            <div class="user-role" id="user-role">Agent</div>
+          </div>
+        </div>
+
+        <button class="logout-btn" onclick="doLogout()">🚪 Logout</button>
+      </div>
+
+      <!-- Notification Panel -->
+      <div class="notif-panel" id="notif-panel">
+        <div class="notif-header">🔔 Notifications</div>
+        <div class="notif-list" id="notif-list">
+          <div class="notif-empty">No new notifications</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ────── CONTENT AREA ────── -->
+    <div class="content-area">
+
+      <!-- ══ PANEL: ADMIN ══ -->
+      <div class="panel" id="panel-admin">
+        <div class="panel-header">
+          <h2>⚙️ Admin Dashboard</h2>
+          <p>Manage users, settings, and system configuration</p>
+        </div>
+
+        <div class="cards-row">
+          <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-info">
+              <div class="stat-num" id="admin-total-users">0</div>
+              <div class="stat-label">Total Users</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🟢</div>
+            <div class="stat-info">
+              <div class="stat-num" id="admin-online-count">0</div>
+              <div class="stat-label">Online Now</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-info">
+              <div class="stat-num" id="admin-att-rate">0%</div>
+              <div class="stat-label">Attendance Rate</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">⚠️</div>
+            <div class="stat-info">
+              <div class="stat-num" id="admin-absent-count">0</div>
+              <div class="stat-label">Absent Today</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="table-section">
+          <div class="table-header">
+            <h3>👥 All Users</h3>
+            <button class="btn-primary" onclick="openModal('add-user')">+ Add User</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-users-tbody">
+                <tr><td colspan="5" class="empty-row">Loading users...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: SUPERVISOR ══ -->
+      <div class="panel" id="panel-supervisor">
+        <div class="panel-header">
+          <h2>👥 Team Management</h2>
+          <p>Monitor your team's status and productivity</p>
+        </div>
+
+        <div class="cards-row">
+          <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-info">
+              <div class="stat-num" id="sup-team-count">0</div>
+              <div class="stat-label">Team Members</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🟢</div>
+            <div class="stat-info">
+              <div class="stat-num" id="sup-online-count">0</div>
+              <div class="stat-label">Online</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">☕</div>
+            <div class="stat-info">
+              <div class="stat-num" id="sup-break-count">0</div>
+              <div class="stat-label">On Break</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🔴</div>
+            <div class="stat-info">
+              <div class="stat-num" id="sup-offline-count">0</div>
+              <div class="stat-label">Offline</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Team Table -->
+        <div class="table-section">
+          <div class="table-header">
+            <h3>📋 Team Overview</h3>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Agent</th>
+                  <th>Status</th>
+                  <th>Shift</th>
+                  <th>Hours Today</th>
+                  <th>Last Activity</th>
+                </tr>
+              </thead>
+              <tbody id="sup-team-tbody">
+                <tr><td colspan="5" class="empty-row">Loading team...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: QUALITY ══ -->
+      <div class="panel" id="panel-quality">
+        <div class="panel-header">
+          <h2>⭐ Quality Assurance</h2>
+          <p>Monitor and evaluate agent performance</p>
+        </div>
+
+        <div class="cards-row">
+          <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-info">
+              <div class="stat-num" id="qa-avg-score">0%</div>
+              <div class="stat-label">Avg Score</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📝</div>
+            <div class="stat-info">
+              <div class="stat-num" id="qa-total-evals">0</div>
+              <div class="stat-label">Evaluations</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-info">
+              <div class="stat-num" id="qa-pass-rate">0%</div>
+              <div class="stat-label">Pass Rate</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🚨</div>
+            <div class="stat-info">
+              <div class="stat-num" id="qa-fail-count">0</div>
+              <div class="stat-label">Failed</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- QA Table -->
+        <div class="table-section">
+          <div class="table-header">
+            <h3>📋 Recent Evaluations</h3>
+            <button class="btn-primary" onclick="openModal('new-eval')">+ New Evaluation</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Agent</th>
+                  <th>Date</th>
+                  <th>Score</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="qa-evals-tbody">
+                <tr><td colspan="5" class="empty-row">No evaluations yet</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: AGENT ══ -->
+      <div class="panel" id="panel-agent">
+        <div class="panel-header">
+          <h2>🏠 My Dashboard</h2>
+          <p>Your personal workspace and activity overview</p>
+        </div>
+
+        <!-- Status Select -->
+        <div class="status-section">
+          <label class="status-label">My Status:</label>
+          <select id="a-status-select" class="status-select" onchange="updateMyStatus?.(this.value)">
+            <option value="online">🟢 Online</option>
+            <option value="break">☕ Break</option>
+            <option value="meeting">🧠 Meeting</option>
+            <option value="training">🎓 Training</option>
+            <option value="offline">🔴 Offline</option>
+          </select>
+        </div>
+
+        <div class="cards-row">
+          <div class="stat-card">
+            <div class="stat-icon">⏰</div>
+            <div class="stat-info">
+              <div class="stat-num" id="agent-hours-today">0h</div>
+              <div class="stat-label">Hours Today</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📅</div>
+            <div class="stat-info">
+              <div class="stat-num" id="agent-att-streak">0</div>
+              <div class="stat-label">Attendance Streak</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-info">
+              <div class="stat-num" id="agent-qa-score">-</div>
+              <div class="stat-label">QA Score</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-info">
+              <div class="stat-num" id="agent-shift">-</div>
+              <div class="stat-label">My Shift</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="table-section">
+          <div class="table-header">
+            <h3>📋 Today's Timeline</h3>
+          </div>
+          <div class="timeline-wrap" id="agent-timeline">
+            <div class="empty-row">No activities yet today</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content-area -->
+
+  </div><!-- /app -->
+
+  <!-- ═══════════ MODALS ═══════════ -->
+
+  <!-- Add User Modal -->
+  <div class="modal-ov" id="modal-add-user">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>👤 Add New User</h3>
+        <button class="modal-close" onclick="closeModal('add-user')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="inp-group">
+          <label>Full Name</label>
+          <input type="text" id="mu-name" placeholder="Enter full name">
+        </div>
+        <div class="inp-group">
+          <label>Email</label>
+          <input type="email" id="mu-email" placeholder="user@email.com">
+        </div>
+        <div class="inp-group">
+          <label>Role</label>
+          <select id="mu-role">
+            <option value="agent">Agent</option>
+            <option value="supervisor">Supervisor</option>
+            <option value="quality">Quality</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="inp-group">
+          <label>Password</label>
+          <input type="password" id="mu-pass" placeholder="Min 6 characters">
+        </div>
+        <button class="btn-primary full-w" onclick="addUser?.()">Create User</button>
+        <div class="modal-msg" id="mu-msg"></div>
+      </div>
+    </div>
   </div>
 
-</div>
+  <!-- New Evaluation Modal -->
+  <div class="modal-ov" id="modal-new-eval">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>⭐ New Evaluation</h3>
+        <button class="modal-close" onclick="closeModal('new-eval')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="inp-group">
+          <label>Agent</label>
+          <select id="eval-agent">
+            <option value="">Select agent...</option>
+          </select>
+        </div>
+        <div class="inp-group">
+          <label>Score (0-100)</label>
+          <input type="number" id="eval-score" min="0" max="100" placeholder="85">
+        </div>
+        <div class="inp-group">
+          <label>Notes</label>
+          <textarea id="eval-notes" rows="3" placeholder="Evaluation notes..."></textarea>
+        </div>
+        <button class="btn-primary full-w" onclick="submitEval?.()">Submit Evaluation</button>
+        <div class="modal-msg" id="eval-msg"></div>
+      </div>
+    </div>
+  </div>
 
-<!-- JS -->
+</div><!-- /app wrapper -->
+
+<!-- ═══════════ JS FILES ═══════════ -->
 <script src="js/core/state.js"></script>
-<script src="js/core/auth.js"></script>
 <script src="js/core/ui.js"></script>
+<script src="js/core/auth.js"></script>
 <script src="js/agent/attendance.js"></script>
 
 </body>
