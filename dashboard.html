@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memo Pro - Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4ff;
+      color: #1a1f3a;
+      min-height: 100vh;
+    }
+
+    /* LOADING */
+    #loading-screen {
+      position: fixed; inset: 0;
+      background: #1a1f3a;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 9999;
+    }
+    .loading-logo { font-size: 48px; margin-bottom: 16px; }
+    .loading-text { color: #fff; font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    .loading-sub { color: rgba(255,255,255,0.4); font-size: 13px; margin-bottom: 32px; }
+    .loading-bar { width: 200px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
+    .loading-bar-fill { height: 100%; background: #3b5bdb; border-radius: 10px; animation: loadingAnim 1.5s ease-in-out infinite; }
+    @keyframes loadingAnim { 0%{width:0%} 50%{width:70%} 100%{width:100%} }
+
+    #app { display: none; }
+
+    /* TOPBAR */
+    .topbar {
+      background: #1a1f3a;
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .logo { font-size: 20px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; }
+    .logo-icon { width: 32px; height: 32px; background: #3b5bdb; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+    .notif-btn {
+      position: relative;
+      background: rgba(255,255,255,0.1);
+      border: none; border-radius: 8px;
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: #fff; font-size: 16px;
+      transition: background 0.2s;
+    }
+    .notif-btn:hover { background: rgba(255,255,255,0.2); }
+    .notif-badge {
+      position: absolute; top: -4px; right: -4px;
+      background: #e03131; color: #fff;
+      font-size: 9px; font-weight: 700;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .user-pill {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px; padding: 6px 12px;
+      cursor: pointer;
+    }
+    .user-pill-avatar {
+      width: 28px; height: 28px;
+      border-radius: 6px; background: #3b5bdb;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #fff; overflow: hidden;
+    }
+    .user-pill-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-pill-name { font-size: 13px; font-weight: 600; color: #fff; }
+    .user-pill-role { font-size: 10px; color: rgba(255,255,255,0.5); }
+
+    .logout-btn {
+      background: rgba(224,49,49,0.2);
+      border: none; border-radius: 8px;
+      padding: 7px 14px; color: #ff6b6b;
+      font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .logout-btn:hover { background: rgba(224,49,49,0.4); }
+
+    /* MAIN */
+    .main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+
+    /* PUNCH CARD */
+    .punch-card {
+      background: linear-gradient(135deg, #1a1f3a, #2d3561);
+      border-radius: 18px;
+      padding: 24px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+      box-shadow: 0 4px 20px rgba(26,31,58,0.3);
+    }
+
+    .punch-info { }
+    .punch-greeting { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+    .punch-date { font-size: 13px; color: rgba(255,255,255,0.5); }
+
+    .punch-timer {
+      text-align: center;
+    }
+    .punch-time-display {
+      font-size: 36px; font-weight: 800; color: #fff;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 2px;
+    }
+    .punch-time-label { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+
+    .punch-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .punch-btn {
+      padding: 10px 20px; border-radius: 10px;
+      border: none; font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .punch-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-punchin { background: #2f9e44; color: #fff; }
+    .btn-punchin:hover:not(:disabled) { background: #27832a; transform: translateY(-1px); }
+    .btn-punchout { background: #e03131; color: #fff; }
+    .btn-punchout:hover:not(:disabled) { background: #c92a2a; transform: translateY(-1px); }
+    .btn-break { background: #f08c00; color: #fff; }
+    .btn-break:hover:not(:disabled) { background: #e67700; transform: translateY(-1px); }
+    .btn-break.active { background: #e67700; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+
+    /* MISSING HOURS ALERT */
+    .missing-alert {
+      background: rgba(224,49,49,0.1);
+      border: 1px solid rgba(224,49,49,0.3);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      display: none;
+      align-items: center;
+      gap: 12px;
+    }
+    .missing-alert.show { display: flex; }
+    .missing-alert-icon { font-size: 24px; }
+    .missing-alert strong { color: #e03131; font-size: 14px; }
+    .missing-alert p { font-size: 12px; color: #6b7280; margin-top: 2px; }
+
+    /* STATS GRID */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 18px;
+      display: flex; flex-direction: column; gap: 8px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+    .stat-icon { font-size: 22px; }
+    .stat-value { font-size: 24px; font-weight: 800; color: #1a1f3a; }
+    .stat-label { font-size: 11px; color: #6b7280; font-weight: 500; }
+
+    /* GRID 2 COL */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+
+    /* CARD */
+    .card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .card-title {
+      font-size: 14px; font-weight: 700; color: #1a1f3a;
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+      justify-content: space-between;
+    }
+
+    /* ONLINE LIST */
+    .online-list { display: flex; flex-direction: column; gap: 8px; }
+    .online-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px; border-radius: 10px;
+      transition: background 0.2s; cursor: pointer;
+    }
+    .online-item:hover { background: #f0f4ff; }
+    .online-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-online { background: #2f9e44; box-shadow: 0 0 6px rgba(47,158,68,0.6); }
+    .dot-offline { background: #adb5bd; }
+    .dot-break { background: #f08c00; box-shadow: 0 0 6px rgba(240,140,0,0.6); }
+    .online-avatar {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: #3b5bdb; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; overflow: hidden; flex-shrink: 0;
+    }
+    .online-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .online-name { font-size: 13px; font-weight: 600; color: #1a1f3a; }
+    .online-role { font-size: 11px; color: #6b7280; }
+    .online-status { margin-left: auto; font-size: 11px; font-weight: 600; }
+    .status-online { color: #2f9e44; }
+    .status-break { color: #f08c00; }
+    .status-offline { color: #adb5bd; }
+
+    /* BREAK LIST */
+    .break-list { display: flex; flex-direction: column; gap: 8px; }
+    .break-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; background: #f9fafb;
+      border-radius: 10px; border: 1px solid #e5e7eb;
+    }
+    .break-num { font-size: 12px; color: #6b7280; }
+    .break-duration { font-size: 13px; font-weight: 700; color: #1a1f3a; }
+    .break-time { font-size: 11px; color: #6b7280; }
+
+    /* BADGE */
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 600;
+    }
+    .badge-owner { background: rgba(255,215,0,0.15); color: #b8860b; }
+    .badge-admin { background: rgba(59,91,219,0.1); color: #3b5bdb; }
+    .badge-supervisor { background: rgba(130,80,255,0.1); color: #8250ff; }
+    .badge-quality { background: rgba(0,188,212,0.1); color: #00838f; }
+    .badge-member { background: rgba(107,114,128,0.1); color: #6b7280; }
+    .badge-success { background: rgba(47,158,68,0.1); color: #2f9e44; }
+    .badge-warning { background: rgba(240,140,0,0.1); color: #f08c00; }
+    .badge-danger { background: rgba(224,49,49,0.1); color: #e03131; }
+
+    /* PROGRESS BAR */
+    .progress-wrap { margin-bottom: 14px; }
+    .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+    .progress-bar { height: 8px; background: #f3f4f6; border-radius: 10px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 10px; transition: width 0.5s; }
+    .fill-green { background: #2f9e44; }
+    .fill-red { background: #e03131; }
+    .fill-blue { background: #3b5bdb; }
+    .fill-orange { background: #f08c00; }
+
+    /* NOTIFICATION PANEL */
+    .notif-panel {
+      position: fixed; top: 68px; right: 24px;
+      width: 320px; background: #fff;
+      border: 1px solid #e5e7eb; border-radius: 14px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+      z-index: 200; display: none;
+      max-height: 400px; overflow-y: auto;
+    }
+    .notif-panel.show { display: block; }
+    .notif-header { padding: 14px 16px; border-bottom: 1px solid #e5e7eb; font-size: 14px; font-weight: 700; }
+    .notif-item {
+      padding: 12px 16px; border-bottom: 1px solid #f3f4f6;
+      display: flex; gap: 10px; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .notif-item:hover { background: #f9fafb; }
+    .notif-item.unread { background: #f0f4ff; }
+    .notif-icon { font-size: 20px; flex-shrink: 0; }
+    .notif-text { font-size: 12px; color: #1a1f3a; line-height: 1.5; }
+    .notif-time { font-size: 10px; color: #9ca3af; margin-top: 4px; }
+
+    /* MODAL */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(26,31,58,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1000; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: #fff; border-radius: 18px; padding: 28px;
+      width: 500px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+    .modal-title { font-size: 17px; font-weight: 700; color: #1a1f3a; margin-bottom: 20px; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; display: block; margin-bottom: 6px; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 10px 14px;
+      border: 1px solid #e5e7eb; border-radius: 10px;
+      color: #1a1f3a; font-size: 13px; outline: none;
+      transition: border 0.2s; background: #f9fafb;
+      font-family: inherit;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #3b5bdb; background: #fff; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .btn { padding: 9px 18px; border-radius: 10px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary { background: #3b5bdb; color: #fff; }
+    .btn-primary:hover { background: #2f4cc0; }
+    .btn-outline { background: #fff; color: #1a1f3a; border: 1px solid #e5e7eb; }
+    .form-msg { margin-top: 10px; font-size: 13px; text-align: center; font-weight: 500; min-height: 20px; }
+
+    /* LEAVE REQUEST */
+    .leave-status-list { display: flex; flex-direction: column; gap: 8px; }
+    .leave-item {
+      padding: 12px 14px; border-radius: 10px;
+      border: 1px solid #e5e7eb; background: #f9fafb;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .leave-date { font-size: 13px; font-weight: 600; }
+    .leave-type { font-size: 12px; color: #6b7280; }
+
+    /* QUALITY SCORES */
+    .quality-list { display: flex; flex-direction: column; gap: 8px; }
+    .quality-item {
+      padding: 12px 14px; border-radius: 10px;
+      background: #f9fafb; border: 1px solid #e5e7eb;
+    }
+    .quality-score-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .quality-score-val { font-size: 20px; font-weight: 800; }
+    .quality-date { font-size: 11px; color: #6b7280; }
+
+    /* SCHEDULE CARD */
+    .schedule-info { display: flex; flex-direction: column; gap: 10px; }
+    .schedule-row { display: flex; align-items: center; gap: 10px; }
+    .schedule-icon { font-size: 16px; width: 24px; text-align: center; }
+    .schedule-label { font-size: 12px; color: #6b7280; width: 80px; flex-shrink: 0; }
+    .schedule-val { font-size: 13px; font-weight: 600; color: #1a1f3a; }
+
+    /* EMPTY */
+    .empty { text-align: center; padding: 30px; color: #6b7280; }
+    .empty-icon { font-size: 32px; margin-bottom: 8px; }
+    .empty p { font-size: 12px; }
+
+    /* AGENT NAMES POPUP */
+    .agents-popup {
+      position: fixed; inset: 0;
+      background: rgba(26,31,58,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 500; display: none;
+      align-items: center; justify-content: center;
+    }
+    .agents-popup.show { display: flex; }
+    .agents-popup-inner {
+      background: #fff; border-radius: 16px; padding: 24px;
+      width: 360px; max-height: 80vh; overflow-y: auto;
+    }
+
+    @media (max-width: 768px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .punch-card { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-screen">
+  <div class="loading-logo">🎯</div>
+  <div class="loading-text">Memo Pro</div>
+  <div class="loading-sub">Loading your dashboard...</div>
+  <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo">
+        <div class="logo-icon">🎯</div>
+        Memo Pro
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="notif-btn" onclick="toggleNotifications()" id="notif-btn">
+        🔔
+        <div class="notif-badge" id="notif-count" style="display:none">0</div>
+      </button>
+      <div class="user-pill">
+        <div class="user-pill-avatar" id="topbar-avatar">?</div>
+        <div>
+          <div class="user-pill-name" id="topbar-name">Loading...</div>
+          <div class="user-pill-role" id="topbar-role">...</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="logout()">⏻ Logout</button>
+    </div>
+  </div>
+
+  <!-- NOTIFICATIONS PANEL -->
+  <div class="notif-panel" id="notif-panel">
+    <div class="notif-header">🔔 Notifications</div>
+    <div id="notif-list">
+      <div class="empty"><div class="empty-icon">🔔</div><p>No notifications</p></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- PUNCH CARD -->
+    <div class="punch-card">
+      <div class="punch-info">
+        <div class="punch-greeting" id="punch-greeting">Good Morning! 👋</div>
+        <div class="punch-date" id="punch-date">—</div>
+        <div style="margin-top:10px">
+          <span style="color:rgba(255,255,255,0.6);font-size:12px">Punch In: </span>
+          <span style="color:#fff;font-size:12px;font-weight:700" id="punch-in-time">—</span>
+          <span style="color:rgba(255,255,255,0.3);margin:0 8px">|</span>
+          <span style="color:rgba(255,255,255,0.6);font-size:12px">Breaks: </span>
+          <span style="color:#f08c00;font-size:12px;font-weight:700" id="total-breaks-display">0</span>
+        </div>
+      </div>
+
+      <div class="punch-timer">
+        <div class="punch-time-display" id="work-timer">00:00:00</div>
+        <div class="punch-time-label">WORK TIME</div>
+        <div style="margin-top:8px">
+          <div class="punch-time-display" id="break-timer" style="font-size:20px;color:#f08c00">00:00:00</div>
+          <div class="punch-time-label">BREAK TIME</div>
+        </div>
+      </div>
+
+      <div class="punch-actions">
+        <button class="punch-btn btn-punchin" id="btn-punchin" onclick="punchIn()">🟢 Punch In</button>
+        <button class="punch-btn btn-break" id="btn-break" onclick="toggleBreak()" disabled>☕ Break</button>
+        <button class="punch-btn btn-punchout" id="btn-punchout" onclick="punchOut()" disabled>🔴 Punch Out</button>
+      </div>
+    </div>
+
+    <!-- MISSING HOURS ALERT -->
+    <div class="missing-alert" id="missing-alert">
+      <div class="missing-alert-icon">⚠️</div>
+      <div>
+        <strong>Missing Hours!</strong>
+        <p id="missing-alert-text">You are missing 0h 0m today</p>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid" id="stats-section">
+      <div class="stat-card">
+        <div class="stat-icon">⏱️</div>
+        <div class="stat-value" id="stat-workhours">0h 0m</div>
+        <div class="stat-label">Hours Worked Today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">☕</div>
+        <div class="stat-value" id="stat-breaks">0</div>
+        <div class="stat-label">Breaks Taken</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📅</div>
+        <div class="stat-value" id="stat-attendance">0%</div>
+        <div class="stat-label">Attendance Rate</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⭐</div>
+        <div class="stat-value" id="stat-quality">—</div>
+        <div class="stat-label">Quality Score</div>
+      </div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="grid-2">
+
+      <!-- MY SCHEDULE -->
+      <div class="card">
+        <div class="card-title">📅 My Schedule</div>
+        <div class="schedule-info" id="schedule-info">
+          <div class="empty"><div class="empty-icon">📅</div><p>No schedule found</p></div>
+        </div>
+      </div>
+
+      <!-- ONLINE STATUS -->
+      <div class="card">
+        <div class="card-title">
+          👥 Team Online
+          <button onclick="showAgentsPopup()" style="background:#f0f4ff;border:none;border-radius:8px;padding:4px 10px;font-size:11px;color:#3b5bdb;cursor:pointer;font-weight:600">View All</button>
+        </div>
+        <div class="online-list" id="online-list">
+          <div class="empty"><div class="empty-icon">👥</div><p>Loading...</p></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="grid-2">
+
+      <!-- MY BREAKS TODAY -->
+      <div class="card">
+        <div class="card-title">☕ My Breaks Today</div>
+        <div class="break-list" id="break-list">
+          <div class="empty"><div class="empty-icon">☕</div><p>No breaks yet</p></div>
+        </div>
+      </div>
+
+      <!-- QUALITY SCORES -->
+      <div class="card">
+        <div class="card-title">⭐ My Quality Scores</div>
+        <div class="quality-list" id="quality-list">
+          <div class="empty"><div class="empty-icon">⭐</div><p>No scores yet</p></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="grid-2">
+
+      <!-- ATTENDANCE RATE -->
+      <div class="card">
+        <div class="card-title">📊 My Performance</div>
+        <div id="performance-section">
+          <div class="progress-wrap">
+            <div class="progress-label"><span>Attendance Rate</span><span id="att-rate-val">0%</span></div>
+            <div class="progress-bar"><div class="progress-fill fill-green" id="att-rate-bar" style="width:0%"></div></div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-label"><span>Absence Rate</span><span id="abs-rate-val">0%</span></div>
+            <div class="progress-bar"><div class="progress-fill fill-red" id="abs-rate-bar" style="width:0%"></div></div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-label"><span>Quality Score</span><span id="qual-rate-val">0%</span></div>
+            <div class="progress-bar"><div class="progress-fill fill-blue" id="qual-rate-bar" style="width:0%"></div></div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-label"><span>Hours Completion</span><span id="hours-rate-val">0%</span></div>
+            <div class="progress-bar"><div class="progress-fill fill-orange" id="hours-rate-bar" style="width:0%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LEAVE REQUESTS -->
+      <div class="card">
+        <div class="card-title">
+          🏖️ Leave Requests
+          <button onclick="openModal('leaveRequest')" style="background:#f0f4ff;border:none;border-radius:8px;padding:4px 10px;font-size:11px;color:#3b5bdb;cursor:pointer;font-weight:600">+ Request</button>
+        </div>
+        <div class="leave-status-list" id="leave-list">
+          <div class="empty"><div class="empty-icon">🏖️</div><p>No leave requests</p></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- AGENTS POPUP -->
+<div class="agents-popup" id="agents-popup">
+  <div class="agents-popup-inner">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:700">👥 All Team Members</div>
+      <button onclick="closeAgentsPopup()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6b7280">✕</button>
+    </div>
+    <div id="agents-popup-list"></div>
+  </div>
+</div>
+
+<!-- MODAL: Leave Request -->
+<div class="modal-overlay" id="modal-leaveRequest">
+  <div class="modal">
+    <div class="modal-title">🏖️ Leave Request</div>
+    <div class="form-group">
+      <label>Leave Type</label>
+      <select id="leave-type">
+        <option value="Annual Leave">Annual Leave</option>
+        <option value="Sick Leave">Sick Leave</option>
+        <option value="Emergency Leave">Emergency Leave</option>
+        <option value="Unpaid Leave">Unpaid Leave</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>From Date</label>
+      <input type="date" id="leave-from">
+    </div>
+    <div class="form-group">
+      <label>To Date</label>
+      <input type="date" id="leave-to">
+    </div>
+    <div class="form-group">
+      <label>Reason</label>
+      <textarea id="leave-reason" rows="3" placeholder="Explain your reason..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('leaveRequest')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitLeaveRequest()">📤 Submit Request</button>
+    </div>
+    <div class="form-msg" id="leave-msg"></div>
+  </div>
+</div>
+
+<script>
+const sb = window.supabase;
+let currentUser = null;
+let currentProfile = null;
+let punchInTime = null;
+let breakStartTime = null;
+let isOnBreak = false;
+let isPunchedIn = false;
+let workTimerInterval = null;
+let breakTimerInterval = null;
+let totalBreakSeconds = 0;
+let breakCount = 0;
+let todayBreaks = [];
+
+// ===== DATE & GREETING =====
+function setDateGreeting() {
+  const now = new Date();
+  const hour = now.getHours();
+  let greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+  document.getElementById('punch-date').textContent = now.toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
+  document.getElementById('punch-greeting').textContent = `${greeting}! 👋`;
+}
+
+// ===== INIT =====
+async function init() {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = 'index.html'; return; }
+
+    currentUser = session.user;
+    const { data: profile } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+    if (!profile) { window.location.href = 'index.html'; return; }
+
+    currentProfile = profile;
+    const name = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || currentUser.email;
+
+    document.getElementById('topbar-name').textContent = name;
+    document.getElementById('topbar-role').textContent = profile.access || profile.role || 'Member';
+
+    const avatarBox = document.getElementById('topbar-avatar');
+    if (profile.avatar_url) {
+      avatarBox.innerHTML = `<img src="${profile.avatar_url}" alt="">`;
+    } else {
+      avatarBox.textContent = name.charAt(0).toUpperCase();
+    }
+
+    setDateGreeting();
+    await checkTodayPunch();
+    loadSchedule();
+    loadOnlineStatus();
+    loadBreaksToday();
+    loadQualityScores();
+    loadPerformance();
+    loadLeaveRequests();
+    loadNotifications();
+
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+
+    // Refresh online status every 30s
+    setInterval(loadOnlineStatus, 30000);
+
+  } catch (err) {
+    console.error(err);
+    window.location.href = 'index.html';
+  }
+}
+
+// ===== PUNCH SYSTEM =====
+async function checkTodayPunch() {
+  const today = new Date().toISOString().split('T')[0];
+  const { data } = await sb.from('punches')
+    .select('*').eq('user_id', currentUser.id).eq('date', today).single();
+
+  if (data && data.punch_in && !data.punch_out) {
+    punchInTime = new Date(data.punch_in);
+    isPunchedIn = true;
+    document.getElementById('punch-in-time').textContent = punchInTime.toLocaleTimeString();
+    document.getElementById('btn-punchin').disabled = true;
+    document.getElementById('btn-break').disabled = false;
+    document.getElementById('btn-punchout').disabled = false;
+    startWorkTimer();
+
+    // Update online status
+    await sb.from('profiles').update({ status: 'online', last_seen: new Date().toISOString() }).eq('id', currentUser.id);
+  } else if (data && data.punch_in && data.punch_out) {
+    punchInTime = new Date(data.punch_in);
+    const punchOutTime = new Date(data.punch_out);
+    const workedMs = punchOutTime - punchInTime - (data.total_break_seconds || 0) * 1000;
+    const workedH = Math.floor(workedMs / 3600000);
+    const workedM = Math.floor((workedMs % 3600000) / 60000);
+    document.getElementById('work-timer').textContent = `${String(workedH).padStart(2,'0')}:${String(workedM).padStart(2,'0')}:00`;
+    document.getElementById('stat-workhours').textContent = `${workedH}h ${workedM}m`;
+    document.getElementById('btn-punchin').disabled = true;
+    document.getElementById('btn-break').disabled = true;
+    document.getElementById('btn-punchout').disabled = true;
+    checkMissingHours(workedMs / 3600000);
+  }
+}
+
+async function punchIn() {
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
+
+  const { error } = await sb.from('punches').upsert({
+    user_id: currentUser.id,
+    date: today,
+    punch_in: now.toISOString(),
+    status: 'present'
+  }, { onConflict: 'user_id,date' });
+
+  if (error) { alert('❌ ' + error.message); return; }
+
+  await sb.from('profiles').update({ status: 'online', last_seen: now.toISOString() }).eq('id', currentUser.id);
+
+  punchInTime = now;
+  isPunchedIn = true;
+  document.getElementById('punch-in-time').textContent = now.toLocaleTimeString();
+  document.getElementById('btn-punchin').disabled = true;
+  document.getElementById('btn-break').disabled = false;
+  document.getElementById('btn-punchout').disabled = false;
+  startWorkTimer();
+}
+
+async function punchOut() {
+  if (!confirm('Are you sure you want to punch out?')) return;
+
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
+
+  if (isOnBreak) await endBreak();
+
+  const workedMs = now - punchInTime - totalBreakSeconds * 1000;
+  const workedHours = workedMs / 3600000;
+
+  await sb.from('punches').update({
+    punch_out: now.toISOString(),
+    total_break_seconds: totalBreakSeconds,
+    total_work_seconds: Math.floor(workedMs / 1000),
+    status: 'present'
+  }).eq('user_id', currentUser.id).eq('date', today);
+
+  await sb.from('profiles').update({ status: 'offline', last_seen: now.toISOString() }).eq('id', currentUser.id);
+
+  clearInterval(workTimerInterval);
+  clearInterval(breakTimerInterval);
+
+  document.getElementById('btn-punchin').disabled = true;
+  document.getElementById('btn-break').disabled = true;
+  document.getElementById('btn-punchout').disabled = true;
+
+  const h = Math.floor(workedMs / 3600000);
+  const m = Math.floor((workedMs % 3600000) / 60000);
+  document.getElementById('stat-workhours').textContent = `${h}h ${m}m`;
+
+  checkMissingHours(workedHours);
+}
+
+function startWorkTimer() {
+  clearInterval(workTimerInterval);
+  workTimerInterval = setInterval(() => {
+    if (!punchInTime) return;
+    const now = new Date();
+    const elapsed = now - punchInTime - totalBreakSeconds * 1000;
+    const h = Math.floor(elapsed / 3600000);
+    const m = Math.floor((elapsed % 3600000) / 60000);
+    const s = Math.floor((elapsed % 60000) / 1000);
+    document.getElementById('work-timer').textContent =
+      `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    const workedH = elapsed / 3600000;
+    const hoursPercent = Math.min((workedH / 8) * 100, 100);
+    document.getElementById('hours-rate-bar').style.width = hoursPercent + '%';
+    document.getElementById('hours-rate-val').textContent = Math.round(hoursPercent) + '%';
+    document.getElementById('stat-workhours').textContent = `${h}h ${m}m`;
+  }, 1000);
+}
+
+async function toggleBreak() {
+  if (isOnBreak) {
+    await endBreak();
+  } else {
+    await startBreak();
+  }
+}
+
+async function startBreak() {
+  breakStartTime = new Date();
+  isOnBreak = true;
+  breakCount++;
+  document.getElementById('btn-break').textContent = '⏸️ End Break';
+  document.getElementById('btn-break').classList.add('active');
+
+  await sb.from('profiles').update({ status: 'break', last_seen: breakStartTime.toISOString() }).eq('id', currentUser.id);
+
+  startBreakTimer();
+}
+
+async function endBreak() {
+  const now = new Date();
+  const breakDuration = Math.floor((now - breakStartTime) / 1000);
+  totalBreakSeconds += breakDuration;
+  isOnBreak = false;
+
+  clearInterval(breakTimerInterval);
+  document.getElementById('btn-break').textContent = '☕ Break';
+  document.getElementById('btn-break').classList.remove('active');
+  document.getElementById('break-timer').textContent = '00:00:00';
+
+  const today = now.toISOString().split('T')[0];
+  todayBreaks.push({ start: breakStartTime, end: now, duration: breakDuration });
+
+  await sb.from('breaks').insert({
+    user_id: currentUser.id,
+    date: today,
+    start_time: breakStartTime.toISOString(),
+    end_time: now.toISOString(),
+    duration_seconds: breakDuration
+  });
+
+  await sb.from('profiles').update({ status: 'online', last_seen: now.toISOString() }).eq('id', currentUser.id);
+
+  document.getElementById('stat-breaks').textContent = breakCount;
+  document.getElementById('total-breaks-display').textContent = breakCount;
+  renderBreakList();
+}
+
+function startBreakTimer() {
+  clearInterval(breakTimerInterval);
+  breakTimerInterval = setInterval(() => {
+    if (!breakStartTime || !isOnBreak) return;
+    const elapsed = new Date() - breakStartTime;
+    const h = Math.floor(elapsed / 3600000);
+    const m = Math.floor((elapsed % 3600000) / 60000);
+    const s = Math.floor((elapsed % 60000) / 1000);
+    document.getElementById('break-timer').textContent =
+      `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }, 1000);
+}
+
+function checkMissingHours(workedHours) {
+  const required = 8;
+  if (workedHours < required) {
+    const missing = required - workedHours;
+    const mH = Math.floor(missing);
+    const mM = Math.floor((missing - mH) * 60);
+    document.getElementById('missing-alert').classList.add('show');
+    document.getElementById('missing-alert-text').textContent = `You are missing ${mH}h ${mM}m today`;
+  }
+}
+
+function renderBreakList() {
+  const list = document.getElementById('break-list');
+  if (!todayBreaks.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">☕</div><p>No breaks yet</p></div>`;
+    return;
+  }
+  list.innerHTML = todayBreaks.map((b, i) => {
+    const dur = b.duration;
+    const m = Math.floor(dur / 60);
+    const s = dur % 60;
+    return `
+      <div class="break-item">
+        <span class="break-num">Break ${i + 1}</span>
+        <span class="break-time">${b.start.toLocaleTimeString()} → ${b.end.toLocaleTimeString()}</span>
+        <span class="break-duration">${m}m ${s}s</span>
+      </div>
+    `;
+  }).join('');
+}
+
+// ===== LOAD BREAKS =====
+async function loadBreaksToday() {
+  const today = new Date().toISOString().split('T')[0];
+  const { data } = await sb.from('breaks')
+    .select('*').eq('user_id', currentUser.id).eq('date', today);
+
+  if (data && data.length) {
+    breakCount = data.length;
+    totalBreakSeconds = data.reduce((sum, b) => sum + (b.duration_seconds || 0), 0);
+    todayBreaks = data.map(b => ({
+      start: new Date(b.start_time),
+      end: new Date(b.end_time),
+      duration: b.duration_seconds
+    }));
+    document.getElementById('stat-breaks').textContent = breakCount;
+    document.getElementById('total-breaks-display').textContent = breakCount;
+    renderBreakList();
+  }
+}
+
+// ===== SCHEDULE =====
+async function loadSchedule() {
+  const today = new Date().toISOString().split('T')[0];
+  const { data } = await sb.from('schedules')
+    .select('*')
+    .or(`email.eq.${currentUser.email},interpreter_name.ilike.%${currentProfile.first_name || ''}%`)
+    .gte('end_date', today)
+    .lte('start_date', today)
+    .limit(1)
+    .single();
+
+  const info = document.getElementById('schedule-info');
+  if (!data) {
+    info.innerHTML = `<div class="empty"><div class="empty-icon">📅</div><p>No active schedule found</p></div>`;
+    return;
+  }
+
+  info.innerHTML = `
+    <div class="schedule-row"><span class="schedule-icon">💺</span><span class="schedule-label">Seat</span><span class="schedule-val">${data.seat_number || '—'}</span></div>
+    <div class="schedule-row"><span class="schedule-icon">🌐</span><span class="schedule-label">Language</span><span class="schedule-val">${data.language || '—'}</span></div>
+    <div class="schedule-row"><span class="schedule-icon">📦</span><span class="schedule-label">Module</span><span class="schedule-val">${data.module || '—'}</span></div>
+    <div class="schedule-row"><span class="schedule-icon">⏰</span><span class="schedule-label">Shift</span><span class="schedule-val">${data.shift || '—'}</span></div>
+    <div class="schedule-row"><span class="schedule-icon">👤</span><span class="schedule-label">Leader</span><span class="schedule-val">${data.leader || '—'}</span></div>
+    <div class="schedule-row"><span class="schedule-icon">🏖️</span><span class="schedule-label">Off Days</span><span class="schedule-val">${data.off_day_1 || 'None'} / ${data.off_day_2 || 'None'}</span></div>
+    <div class="schedule-row"><span class="schedule-icon">📆</span><span class="schedule-label">Period</span><span class="schedule-val">${data.start_date} → ${data.end_date || '∞'}</span></div>
+  `;
+}
+
+// ===== ONLINE STATUS =====
+async function loadOnlineStatus() {
+  const { data } = await sb.from('profiles')
+    .select('id, first_name, last_name, avatar_url, status, access, last_seen')
+    .neq('id', currentUser.id)
+    .order('status');
+
+  const list = document.getElementById('online-list');
+  if (!data || !data.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">👥</div><p>No team members</p></div>`;
+    return;
+  }
+
+  // Show only above agent level
+  const aboveAgent = data.filter(u =>
+    ['admin', 'owner', 'supervisor', 'quality', 'Admin', 'Owner', 'Supervisor', 'Quality'].includes(u.access)
+  );
+
+  const displayList = aboveAgent.length ? aboveAgent : data.slice(0, 5);
+
+  list.innerHTML = displayList.map(u => {
+    const name = `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Unknown';
+    const status = u.status || 'offline';
+    const dotClass = status === 'online' ? 'dot-online' : status === 'break' ? 'dot-break' : 'dot-offline';
+    const statusClass = status === 'online' ? 'status-online' : status === 'break' ? 'status-break' : 'status-offline';
+    const statusText = status === 'online' ? '🟢 Online' : status === 'break' ? '🟡 Break' : '⚫ Offline';
+    return `
+      <div class="online-item">
+        <div class="online-dot ${dotClass}"></div>
+        <div class="online-avatar">${u.avatar_url ? `<img src="${u.avatar_url}">` : name.charAt(0).toUpperCase()}</div>
+        <div>
+          <div class="online-name">${name}</div>
+          <div class="online-role">${u.access || 'Member'}</div>
+        </div>
+        <div class="online-status ${statusClass}">${statusText}</div>
+      </div>
+    `;
+  }).join('');
+
+  // Update popup too
+  document.getElementById('agents-popup-list').innerHTML = data.map(u => {
+    const name = `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Unknown';
+    const status = u.status || 'offline';
+    const dotClass = status === 'online' ? 'dot-online' : status === 'break' ? 'dot-break' : 'dot-offline';
+    const statusText = status === 'online' ? '🟢 Online' : status === 'break' ? '🟡 On Break' : '⚫ Offline';
+    return `
+      <div class="online-item">
+        <div class="online-dot ${dotClass}"></div>
+        <div class="online-avatar">${u.avatar_url ? `<img src="${u.avatar_url}">` : name.charAt(0).toUpperCase()}</div>
+        <div>
+          <div class="online-name">${name}</div>
+          <div class="online-role">${u.access || 'Member'}</div>
+        </div>
+        <div class="online-status">${statusText}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ===== QUALITY SCORES =====
+async function loadQualityScores() {
+  const { data } = await sb.from('quality_forms')
+    .select('*').eq('agent_id', currentUser.id)
+    .order('created_at', { ascending: false }).limit(5);
+
+  const list = document.getElementById('quality-list');
+  if (!data || !data.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">⭐</div><p>No quality scores yet</p></div>`;
+    return;
+  }
+
+  const avg = data.reduce((sum, q) => sum + (q.score || 0), 0) / data.length;
+  document.getElementById('stat-quality').textContent = Math.round(avg) + '%';
+  document.getElementById('qual-rate-val').textContent = Math.round(avg) + '%';
+  document.getElementById('qual-rate-bar').style.width = avg + '%';
+
+  list.innerHTML = data.map(q => `
+    <div class="quality-item">
+      <div class="quality-score-row">
+        <span class="quality-score-val" style="color:${q.score >= 80 ? '#2f9e44' : q.score >= 60 ? '#f08c00' : '#e03131'}">${q.score || 0}%</span>
+        <span class="quality-date">${q.created_at ? new Date(q.created_at).toLocaleDateString() : '—'}</span>
+      </div>
+      <div style="font-size:12px;color:#6b7280">${q.notes || 'No notes'}</div>
+      <div class="progress-bar" style="margin-top:6px"><div class="progress-fill ${q.score >= 80 ? 'fill-green' : q.score >= 60 ? 'fill-orange' : 'fill-red'}" style="width:${q.score || 0}%"></div></div>
+    </div>
+  `).join('');
+}
+
+// ===== PERFORMANCE =====
+async function loadPerformance() {
+  const { data: punches } = await sb.from('punches')
+    .select('*').eq('user_id', currentUser.id);
+
+  if (!punches || !punches.length) return;
+
+  const total = punches.length;
+  const present = punches.filter(p => p.status === 'present').length;
+  const absent = punches.filter(p => p.status === 'absent').length;
+
+  const attRate = Math.round((present / total) * 100);
+  const absRate = Math.round((absent / total) * 100);
+
+  document.getElementById('stat-attendance').textContent = attRate + '%';
+  document.getElementById('att-rate-val').textContent = attRate + '%';
+  document.getElementById('att-rate-bar').style.width = attRate + '%';
+  document.getElementById('abs-rate-val').textContent = absRate + '%';
+  document.getElementById('abs-rate-bar').style.width = absRate + '%';
+}
+
+// ===== LEAVE REQUESTS =====
+async function loadLeaveRequests() {
+  const { data } = await sb.from('leave_requests')
+    .select('*').eq('user_id', currentUser.id)
+    .order('created_at', { ascending: false }).limit(5);
+
+  const list = document.getElementById('leave-list');
+  if (!data || !data.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🏖️</div><p>No leave requests</p></div>`;
+    return;
+  }
+
+  list.innerHTML = data.map(l => `
+    <div class="leave-item">
+      <div>
+        <div class="leave-date">${l.from_date} → ${l.to_date}</div>
+        <div class="leave-type">${l.leave_type}</div>
+      </div>
+      <span class="badge ${l.status === 'approved' ? 'badge-success' : l.status === 'rejected' ? 'badge-danger' : 'badge-warning'}">
+        ${l.status === 'approved' ? '✅ Approved' : l.status === 'rejected' ? '❌ Rejected' : '⏳ Pending'}
+      </span>
+    </div>
+  `).join('');
+}
+
+async function submitLeaveRequest() {
+  const type = document.getElementById('leave-type').value;
+  const from = document.getElementById('leave-from').value;
+  const to = document.getElementById('leave-to').value;
+  const reason = document.getElementById('leave-reason').value.trim();
+  const msg = document.getElementById('leave-msg');
+
+  if (!from || !to) {
+    msg.textContent = '⚠️ Please select dates';
+    msg.style.color = '#e03131';
+    return;
+  }
+
+  msg.textContent = '⏳ Submitting...';
+  msg.style.color = '#6b7280';
+
+  const name = `${currentProfile.first_name || ''} ${currentProfile.last_name || ''}`.trim();
+
+  const { error } = await sb.from('leave_requests').insert({
+    user_id: currentUser.id,
+    agent_name: name,
+    leave_type: type,
+    from_date: from,
+    to_date: to,
+    reason,
+    status: 'pending'
+  });
+
+  if (error) {
+    msg.textContent = '❌ ' + error.message;
+    msg.style.color = '#e03131';
+    return;
+  }
+
+  // Send notification to supervisors/admins
+  const { data: leaders } = await sb.from('profiles')
+    .select('id').in('access', ['Admin', 'Owner', 'Supervisor', 'admin', 'owner', 'supervisor']);
+
+  if (leaders && leaders.length) {
+    await sb.from('notifications').insert(
+      leaders.map(l => ({
+        user_id: l.id,
+        type: 'leave_request',
+        title: '🏖️ New Leave Request',
+        message: `${name} requested ${type} from ${from} to ${to}`,
+        is_read: false
+      }))
+    );
+  }
+
+  msg.textContent = '✅ Request submitted!';
+  msg.style.color = '#2f9e44';
+  setTimeout(() => { closeModal('leaveRequest'); loadLeaveRequests(); }, 1500);
+}
+
+// ===== NOTIFICATIONS =====
+async function loadNotifications() {
+  const { data } = await sb.from('notifications')
+    .select('*').eq('user_id', currentUser.id)
+    .order('created_at', { ascending: false }).limit(20);
+
+  const unread = data ? data.filter(n => !n.is_read).length : 0;
+  const badge = document.getElementById('notif-count');
+
+  if (unread > 0) {
+    badge.style.display = 'flex';
+    badge.textContent = unread > 9 ? '9+' : unread;
+  } else {
+    badge.style.display = 'none';
+  }
+
+  const list = document.getElementById('notif-list');
+  if (!data || !data.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🔔</div><p>No notifications</p></div>`;
+    return;
+  }
+
+  list.innerHTML = data.map(n => `
+    <div class="notif-item ${!n.is_read ? 'unread' : ''}" onclick="markRead('${n.id}')">
+      <div class="notif-icon">${n.type === 'leave_request' ? '🏖️' : n.type === 'quality' ? '⭐' : '🔔'}</div>
+      <div>
+        <div class="notif-text"><strong>${n.title || 'Notification'}</strong><br>${n.message || ''}</div>
+        <div class="notif-time">${n.created_at ? new Date(n.created_at).toLocaleString() : ''}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function markRead(id) {
+  await sb.from('notifications').update({ is_read: true }).eq('id', id);
+  loadNotifications();
+}
+
+function toggleNotifications() {
+  const panel = document.getElementById('notif-panel');
+  panel.classList.toggle('show');
+  if (panel.classList.contains('show')) loadNotifications();
+}
+
+// ===== MODALS =====
+function openModal(name) {
+  document.getElementById('modal-' + name).classList.add('show');
+}
+function closeModal(name) {
+  document.getElementById('modal-' + name).classList.remove('show');
+}
+
+function showAgentsPopup() {
+  document.getElementById('agents-popup').classList.add('show');
+}
+function closeAgentsPopup() {
+  document.getElementById('agents-popup').classList.remove('show');
+}
+
+// Close on outside click
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); });
+});
+document.getElementById('agents-popup').addEventListener('click', e => {
+  if (e.target === document.getElementById('agents-popup')) closeAgentsPopup();
+});
+document.addEventListener('click', e => {
+  const panel = document.getElementById('notif-panel');
+  const btn = document.getElementById('notif-btn');
+  if (!panel.contains(e.target) && !btn.contains(e.target)) panel.classList.remove('show');
+});
+
+// ===== LOGOUT =====
+async function logout() {
+  if (isPunchedIn) {
+    if (!confirm('You are still punched in! Are you sure you want to logout?')) return;
+    await punchOut();
+  }
+  await sb.from('profiles').update({ status: 'offline', last_seen: new Date().toISOString() }).eq('id', currentUser.id);
+  await sb.auth.signOut();
+  window.location.href = 'index.html';
+}
+
+init();
+</script>
+
+</body>
+</html>
