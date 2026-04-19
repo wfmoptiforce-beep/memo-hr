@@ -1,57 +1,188 @@
-/* ===== Memo HR – Base UI ===== */
+/* ===== RESET ===== */
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
   font-family: Inter, Arial, sans-serif;
 }
 
 body {
-  margin: 0;
-  background: #f3f4f6;
+  background: #f4f6f8;
   color: #111827;
 }
 
-/* Main container */
+/* ===== APP WRAPPER ===== */
 .app {
-  max-width: 420px;
-  margin: 80px auto;
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  min-height: 100vh;
 }
 
-h1, h2 {
-  text-align: center;
+/* ===== LOGIN SCREEN ===== */
+#login-screen {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* LEFT SIDE */
+.login-left {
+  width: 55%;
+  background: linear-gradient(135deg, #0b1f3a, #123c7a);
+  color: #fff;
+  position: relative;
+  padding: 60px;
+}
+
+.login-left-content {
+  max-width: 420px;
+}
+
+.login-logo {
+  font-size: 40px;
   margin-bottom: 16px;
 }
 
-/* Inputs */
-input {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 12px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
+.login-title {
+  font-size: 36px;
+  font-weight: 700;
 }
 
-/* Buttons */
-button {
+.login-sub {
+  opacity: 0.8;
+  margin-bottom: 40px;
+  letter-spacing: 2px;
+  font-size: 12px;
+}
+
+.login-features {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.feat-item {
+  background: rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+}
+
+.feat-icon {
+  font-size: 22px;
+}
+
+.feat-text strong {
+  display: block;
+  font-size: 14px;
+}
+
+.feat-text span {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* RIGHT SIDE */
+.login-right {
+  width: 45%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-box {
+  width: 360px;
+}
+
+.login-welcome {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.login-welcsub {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 24px;
+}
+
+/* INPUTS */
+.inp-group {
+  margin-bottom: 16px;
+}
+
+.inp-group label {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.inp-wrap {
+  display: flex;
+  align-items: center;
+  background: #f1f5f9;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.inp-icon {
+  margin-right: 8px;
+  opacity: 0.6;
+}
+
+.inp-wrap input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  font-size: 14px;
+}
+
+/* ACTIONS */
+.forgot-row {
+  text-align: right;
+  margin-bottom: 16px;
+}
+
+.forgot-row a {
+  font-size: 12px;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.login-btn {
   width: 100%;
   padding: 12px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: none;
-  background: #2563eb;
-  color: #ffffff;
-  font-size: 15px;
+  background: linear-gradient(135deg, #0b1f3a, #2563eb);
+  color: #fff;
   font-weight: 600;
   cursor: pointer;
 }
 
-button:hover {
-  background: #1e40af;
+.login-msg {
+  margin-top: 12px;
+  font-size: 13px;
 }
 
-/* Helpers */
-.hidden {
+/* ===== HIDE APP BY DEFAULT ===== */
+#app {
   display: none;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  #login-screen {
+    flex-direction: column;
+  }
+
+  .login-left,
+  .login-right {
+    width: 100%;
+  }
+
+  .login-left {
+    padding: 40px;
+  }
 }
