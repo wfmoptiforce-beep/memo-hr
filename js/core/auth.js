@@ -2,6 +2,31 @@
 // 🔐 AUTH (INIT / LOGIN / LOGOUT)
 // ═════════════════════════════════════
 
+// ===== UI HELPERS =====
+function showLogin() {
+  const login = document.getElementById('login-screen');
+  const app = document.getElementById('app');
+
+  if (login) login.style.display = 'flex';
+  if (app) app.style.display = 'none';
+
+  // Reset button text if needed
+  const btn = document.getElementById('login-btn');
+  if (btn) {
+    btn.textContent = 'Sign In';
+    btn.disabled = false;
+  }
+}
+
+function showApp() {
+  const login = document.getElementById('login-screen');
+  const app = document.getElementById('app');
+
+  if (login) login.style.display = 'none';
+  if (app) app.style.display = 'block';
+}
+
+// ===== INIT =====
 async function initApp() {
   try {
     const { data: { session }, error } = await sb.auth.getSession();
@@ -15,7 +40,7 @@ async function initApp() {
 
     APP.CU = session.user;
 
-    // Load profile safely
+    // Load profile
     try {
       const { data: profile, error: pErr } = await sb
         .from('profiles')
@@ -23,26 +48,28 @@ async function initApp() {
         .eq('id', APP.CU.id)
         .maybeSingle();
 
-      if (pErr) console.warn('profile load error', pErr);
-      APP.CP = profile || {};
+        if (pErr) console.warn('profile load error', pErr);
+        APP.CP = profile || {};
     } catch (e) {
       console.warn('profile load exception', e);
       APP.CP = {};
     }
 
-    // Role (owner override by email)
+    // Role logic
     APP.userRole =
       (APP.CU.email === 'wfmoptiforce@gmail.com')
         ? 'owner'
         : ((APP.CP?.role || APP.CP?.access || 'agent').toLowerCase());
 
     showApp();
+
   } catch (e) {
     console.error('initApp error', e);
     showLogin();
   }
 }
 
+// ===== LOGIN =====
 async function doLogin() {
   const email = document.getElementById('login-email')?.value?.trim();
   const pass = document.getElementById('login-pass')?.value;
@@ -50,24 +77,39 @@ async function doLogin() {
   const btn = document.getElementById('login-btn');
 
   if (!email || !pass) {
-    if (msg) { msg.textContent = '⚠️ Enter email and password'; msg.style.color = '#e03131'; }
+    if (msg) {
+      msg.textContent = '⚠️ Enter email and password';
+      msg.style.color = '#e03131';
+    }
     return;
   }
 
-  if (btn) { btn.textContent = 'Signing in...'; btn.disabled = true; }
+  if (btn) {
+    btn.textContent = 'Signing in...';
+    btn.disabled = true;
+  }
   if (msg) msg.textContent = '';
 
-  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  const { data, error } = await sb.auth.signInWithPassword({
+    email,
+    password: pass
+  });
 
   if (error) {
-    if (msg) { msg.textContent = '❌ ' + error.message; msg.style.color = '#e03131'; }
-    if (btn) { btn.textContent = 'Sign In'; btn.disabled = false; }
+    if (msg) {
+      msg.textContent = '❌ ' + error.message;
+      msg.style.color = '#e03131';
+    }
+    if (btn) {
+      btn.textContent = 'Sign In';
+      btn.disabled = false;
+    }
     return;
   }
 
   APP.CU = data.user;
 
-  // Load profile safely
+  // Load profile
   try {
     const { data: profile, error: pErr } = await sb
       .from('profiles')
@@ -87,17 +129,25 @@ async function doLogin() {
       ? 'owner'
       : ((APP.CP?.role || APP.CP?.access || 'agent').toLowerCase());
 
-  if (msg) { msg.textContent = '✅ Login successful!'; msg.style.color = '#2f9e44'; }
-  if (btn) { btn.textContent = 'Sign In'; btn.disabled = false; }
+  if (msg) {
+    msg.textContent = '✅ Login successful!';
+    msg.style.color = '#2f9e44';
+  }
 
-  showApp();
+  setTimeout(() => {
+    showApp();
+  }, 400);
 }
 
+// ===== LOGOUT =====
 async function doLogout() {
   try {
     if (APP.CU?.id) {
       await sb.from('profiles')
-        .update({ status: 'offline', last_seen: new Date().toISOString() })
+        .update({
+          status: 'offline',
+          last_seen: new Date().toISOString()
+        })
         .eq('id', APP.CU.id);
     }
   } catch (e) {
@@ -117,16 +167,17 @@ async function doLogout() {
   showLogin();
 }
 
-// Enter key triggers login while login screen is shown
-document.addEventListener('keypress', (e) => {
-  const loginShown = document.getElementById('login-screen')?.classList?.contains('show');
-  if (e.key === 'Enter' && loginShown) doLogin();
+// ===== ENTER KEY LOGIN =====
+document.addEventListener('keydown', (e) => {
+  const loginVisible =
+    document.getElementById('login-screen')?.style.display !== 'none';
+
+  if (e.key === 'Enter' && loginVisible) {
+    doLogin();
+  }
 });
 
-// Boot
-document.addEventListener('DOMContentLoaded', () => {
-  initApp();
-});
+// ===== BOOT =====
 document.addEventListener('DOMContentLoaded', () => {
   initApp();
 });
