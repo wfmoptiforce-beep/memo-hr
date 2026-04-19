@@ -14,430 +14,99 @@
 </head>
 <body>
 
-<!-- ═══════════════════════════════════ -->
-<!-- LOADING SCREEN                      -->
-<!-- ═══════════════════════════════════ -->
-<div id="loading-screen">
-  <div class="load-logo">🎯</div>
-  <div class="load-text">Memo Pro</div>
-  <div class="load-sub">Loading...</div>
-  <div class="load-bar"><div class="load-bar-fill"></div></div>
-</div>
+<div class="app">
 
-<!-- ═══════════════════════════════════ -->
-<!-- LOGIN SCREEN                        -->
-<!-- ═══════════════════════════════════ -->
-<div id="login-screen">
-  <div class="login-left">
-    <canvas id="bgCanvas"></canvas>
-    <div class="login-left-content">
-      <div class="login-logo">🎯</div>
-      <div class="login-title">Memo Pro</div>
-      <div class="login-sub">Workforce Tool</div>
-      <div class="login-features">
-        <div class="feat-item">
-          <div class="feat-icon">📊</div>
-          <div class="feat-text">
-            <strong>Real-Time Reports</strong>
-            <span>Attrition · Absenteeism · Hours</span>
+  <!-- LOADING SCREEN -->
+  <div id="loading-screen">
+    <div class="load-logo">🎯</div>
+    <div class="load-text">Memo Pro</div>
+    <div class="load-sub">Loading...</div>
+    <div class="load-bar"><div class="load-bar-fill"></div></div>
+  </div>
+
+  <!-- LOGIN SCREEN -->
+  <div id="login-screen">
+    <div class="login-left">
+      <canvas id="bgCanvas"></canvas>
+      <div class="login-left-content">
+        <div class="login-logo">🎯</div>
+        <div class="login-title">Memo Pro</div>
+        <div class="login-sub">Workforce Tool</div>
+
+        <div class="login-features">
+          <div class="feat-item">
+            <div class="feat-icon">📊</div>
+            <div class="feat-text">
+              <strong>Real-Time Reports</strong>
+              <span>Attrition · Absenteeism · Hours</span>
+            </div>
+          </div>
+
+          <div class="feat-item">
+            <div class="feat-icon">👥</div>
+            <div class="feat-text">
+              <strong>Agent Management</strong>
+              <span>Track status & productivity</span>
+            </div>
+          </div>
+
+          <div class="feat-item">
+            <div class="feat-icon">⏱️</div>
+            <div class="feat-text">
+              <strong>Live Timeline</strong>
+              <span>Breaks · Meetings · Training</span>
+            </div>
           </div>
         </div>
-        <div class="feat-item">
-          <div class="feat-icon">👥</div>
-          <div class="feat-text">
-            <strong>Agent Management</strong>
-            <span>Track status & productivity</span>
+      </div>
+    </div>
+
+    <div class="login-right">
+      <div class="login-box">
+        <div class="login-welcome">Welcome Back 👋</div>
+        <div class="login-welcsub">Sign in to your Memo Pro account</div>
+
+        <div class="inp-group">
+          <label>EMAIL</label>
+          <div class="inp-wrap">
+            <span class="inp-icon">📧</span>
+            <input type="email" id="login-email" placeholder="your@email.com">
           </div>
         </div>
-        <div class="feat-item">
-          <div class="feat-icon">⏱️</div>
-          <div class="feat-text">
-            <strong>Live Timeline</strong>
-            <span>Breaks · Meetings · Training</span>
+
+        <div class="inp-group">
+          <label>PASSWORD</label>
+          <div class="inp-wrap">
+            <span class="inp-icon">🔒</span>
+            <input type="password" id="login-pass" placeholder="••••••••">
           </div>
         </div>
+
+        <div class="forgot-row"><a href="#">Forgot Password?</a></div>
+        <button class="login-btn" id="login-btn" onclick="doLogin()">Sign In</button>
+        <div class="login-msg" id="login-msg"></div>
       </div>
     </div>
   </div>
-  <div class="login-right">
-    <div class="login-box">
-      <div class="login-welcome">Welcome Back 👋</div>
-      <div class="login-welcsub">Sign in to your Memo Pro account</div>
-      <div class="inp-group">
-        <label>EMAIL</label>
-        <div class="inp-wrap">
-          <span class="inp-icon">📧</span>
-          <input type="email" id="login-email" placeholder="your@email.com">
-        </div>
-      </div>
-      <div class="inp-group">
-        <label>PASSWORD</label>
-        <div class="inp-wrap">
-          <span class="inp-icon">🔒</span>
-          <input type="password" id="login-pass" placeholder="••••••••">
-        </div>
-      </div>
-      <div class="forgot-row"><a href="#">Forgot Password?</a></div>
-      <button class="login-btn" id="login-btn" onclick="doLogin()">Sign In</button>
-      <div class="login-msg" id="login-msg"></div>
-    </div>
-  </div>
-</div>
 
-<!-- ═══════════════════════════════════ -->
-<!-- APP                                 -->
-<!-- ═══════════════════════════════════ -->
-<div id="app">
+  <!-- APP -->
+  <div id="app">
 
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <div class="topbar-logo">
-      <div class="topbar-logo-icon">🎯</div>
-      Memo Pro
-    </div>
-    <div class="topbar-nav" id="topbar-nav"></div>
-    <div class="topbar-right">
-      <button class="notif-btn" onclick="toggleNotif()" id="notif-btn">
-        🔔
-        <div class="notif-badge" id="notif-badge" style="display:none">0</div>
-      </button>
-      <div class="user-pill">
-        <div class="user-av" id="user-av">?</div>
-        <div>
-          <div class="user-name" id="user-name">...</div>
-          <div class="user-role" id="user-role">...</div>
-        </div>
-      </div>
-      <button class="logout-btn" onclick="doLogout()">⏻ Logout</button>
-    </div>
-  </div>
+    <!-- مثال إصلاح الـ select -->
+    <select id="a-status-select" class="status-select">
+      <option value="online">🟢 Online</option>
+      <option value="break">☕ Break</option>
+      <option value="meeting">🧠 Meeting</option>
+      <option value="training">🎓 Training</option>
+      <option value="offline">🔴 Offline</option>
+    </select>
 
-  <!-- NOTIFICATIONS -->
-  <div class="notif-panel" id="notif-panel">
-    <div class="notif-header">🔔 Notifications</div>
-    <div id="notif-list">
-      <div class="empty"><div class="empty-icon">🔔</div><p>No notifications</p></div>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════ -->
-  <!-- AGENT PANEL                         -->
-  <!-- ═══════════════════════════════════ -->
-  <div class="panel" id="panel-agent">
-
-    <!-- Punch Card -->
-    <div class="punch-card">
-      <div>
-        <div class="punch-greeting" id="a-greeting">Good Morning! 👋</div>
-        <div class="punch-date" id="a-date">—</div>
-        <div style="margin-top:10px">
-          <span style="color:rgba(255,255,255,0.6);font-size:12px">In: </span>
-          <span style="color:#fff;font-size:12px;font-weight:700" id="a-punch-in-time">—</span>
-          <span style="color:rgba(255,255,255,0.3);margin:0 8px">|</span>
-          <span style="color:rgba(255,255,255,0.6);font-size:12px">Breaks: </span>
-          <span style="color:#f08c00;font-size:12px;font-weight:700" id="a-break-count">0</span>
-        </div>
-      </div>
-      <div style="text-align:center">
-        <div class="punch-timer-big" id="a-work-timer">00:00:00</div>
-        <div class="punch-lbl">WORK TIME</div>
-        <div style="margin-top:8px">
-          <div class="punch-timer-sm" id="a-break-timer">00:00:00</div>
-          <div class="punch-lbl">BREAK TIME</div>
-        </div>
-      </div>
-      <!-- Status Dropdown -->
-      <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
-<select id="a-status-select" class="status-select"></select>          <option value="online">🟢 Online</option>
-          <option value="break">☕ Break</option>
-          <option value="meeting">🧠 Meeting</option>
-          <option value="training">🎓 Training</option>
-          <option value="offline">🔴 Offline</option>
-        </select>
-        <div class="punch-actions">
-          <button class="punch-btn btn-in"  id="a-btn-in"  onclick="punchIn()">🟢 Punch In</button>
-          <button class="punch-btn btn-brk" id="a-btn-brk" onclick="toggleBreak()" disabled>☕ Break</button>
-          <button class="punch-btn btn-out" id="a-btn-out" onclick="punchOut()" disabled>🔴 Punch Out</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Missing Alert -->
-    <div class="miss-alert" id="a-miss-alert">
-      <span style="font-size:24px">⚠️</span>
-      <div>
-        <strong style="color:#e03131">Missing Hours!</strong>
-        <p id="a-miss-text" style="font-size:12px;color:#6b7280;margin-top:2px"></p>
-      </div>
-    </div>
-
-    <!-- Stats -->
-    <div class="grid-4">
-      <div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-val" id="a-stat-hours">0h 0m</div><div class="stat-lbl">Hours Today</div></div>
-      <div class="stat-card"><div class="stat-icon">☕</div><div class="stat-val" id="a-stat-breaks">0</div><div class="stat-lbl">Breaks Taken</div></div>
-      <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-val" id="a-stat-att">0%</div><div class="stat-lbl">Attendance Rate</div></div>
-      <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-val" id="a-stat-qual">—</div><div class="stat-lbl">Quality Score</div></div>
-    </div>
-
-    <!-- Schedule + Team -->
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-title">📅 My Schedule</div>
-        <div id="a-schedule"><div class="empty"><div class="empty-icon">📅</div><p>No schedule</p></div></div>
-      </div>
-      <div class="card">
-        <div class="card-title">
-          👥 Team Online
-<button class="sm-btn btn-primary" disabled>👁️ View All</button>        </div>
-        <div id="a-online"><div class="empty"><div class="empty-icon">👥</div><p>Loading...</p></div></div>
-      </div>
-    </div>
-
-    <!-- Breaks + Quality -->
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-title">☕ My Breaks Today</div>
-        <div id="a-breaks"><div class="empty"><div class="empty-icon">☕</div><p>No breaks yet</p></div></div>
-      </div>
-      <div class="card">
-        <div class="card-title">⭐ My Quality Scores</div>
-        <div id="a-quality"><div class="empty"><div class="empty-icon">⭐</div><p>No scores yet</p></div></div>
-      </div>
-    </div>
-
-    <!-- Performance + Leaves -->
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-title">📊 My Performance</div>
-        <div class="prog-wrap"><div class="prog-label"><span>Attendance Rate</span><span id="a-att-val">0%</span></div><div class="prog-bar"><div class="prog-fill fill-green" id="a-att-bar" style="width:0%"></div></div></div>
-        <div class="prog-wrap"><div class="prog-label"><span>Absence Rate</span><span id="a-abs-val">0%</span></div><div class="prog-bar"><div class="prog-fill fill-red" id="a-abs-bar" style="width:0%"></div></div></div>
-        <div class="prog-wrap"><div class="prog-label"><span>Quality Score</span><span id="a-qual-val">0%</span></div><div class="prog-bar"><div class="prog-fill fill-blue" id="a-qual-bar" style="width:0%"></div></div></div>
-        <div class="prog-wrap"><div class="prog-label"><span>Hours Completion</span><span id="a-hours-val">0%</span></div><div class="prog-bar"><div class="prog-fill fill-orange" id="a-hours-bar" style="width:0%"></div></div></div>
-      </div>
-      <div class="card">
-        <div class="card-title">
-          🏖️ Leave Requests
-          <button class="sm-btn btn-primary" onclick="openModal('leave')">+ Request</button>
-        </div>
-        <div id="a-leaves"><div class="empty"><div class="empty-icon">🏖️</div><p>No requests</p></div></div>
-      </div>
-    </div>
-
-  </div>
-  <!-- END AGENT PANEL -->
-
-  <!-- ═══════════════════════════════════ -->
-  <!-- QUALITY PANEL                       -->
-  <!-- ═══════════════════════════════════ -->
-  <div class="panel" id="panel-quality">
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-title">📝 Quality Forms <button class="sm-btn btn-primary" onclick="openModal('qform')">+ New</button></div>
-        <div id="q-forms-list"><div class="empty"><div class="empty-icon">📝</div><p>No forms yet</p></div></div>
-      </div>
-      <div class="card">
-        <div class="card-title">👥 Agents Online</div>
-        <div id="q-online"><div class="empty"><div class="empty-icon">👥</div><p>Loading...</p></div></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">👤 Above Agent Level</div>
-      <div id="q-above"><div class="empty"><div class="empty-icon">👤</div><p>Loading...</p></div></div>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════ -->
-  <!-- SUPERVISOR PANEL                    -->
-  <!-- ═══════════════════════════════════ -->
-  <div class="panel" id="panel-supervisor">
-    <div class="grid-4">
-      <div class="stat-card"><div class="stat-icon">🟢</div><div class="stat-val" id="sup-online-count">0</div><div class="stat-lbl">Online Now</div></div>
-      <div class="stat-card"><div class="stat-icon">☕</div><div class="stat-val" id="sup-break-count">0</div><div class="stat-lbl">On Break</div></div>
-      <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-val" id="sup-leave-count">0</div><div class="stat-lbl">Pending Leaves</div></div>
-      <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-val" id="sup-avg-qual">—</div><div class="stat-lbl">Avg Quality</div></div>
-    </div>
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-title">👥 All Agents <button class="sm-btn btn-outline" onclick="loadSupAgents()">🔄</button></div>
-        <div id="sup-agents"><div class="empty"><div class="empty-icon">👥</div><p>Loading...</p></div></div>
-      </div>
-      <div class="card">
-        <div class="card-title">🏖️ Leave Requests</div>
-        <div id="sup-leaves"><div class="empty"><div class="empty-icon">🏖️</div><p>No requests</p></div></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">📝 Quality Forms <button class="sm-btn btn-primary" onclick="openModal('qform')">+ New</button></div>
-      <div id="sup-qforms"><div class="empty"><div class="empty-icon">📝</div><p>No forms</p></div></div>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════ -->
-  <!-- ADMIN PANEL                         -->
-  <!-- ═══════════════════════════════════ -->
-  <div class="panel" id="panel-admin">
-    <div class="grid-4">
-      <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-val" id="adm-total">0</div><div class="stat-lbl">Total Users</div></div>
-      <div class="stat-card"><div class="stat-icon">🟢</div><div class="stat-val" id="adm-online">0</div><div class="stat-lbl">Online Now</div></div>
-      <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-val" id="adm-att">0%</div><div class="stat-lbl">Today Attendance</div></div>
-      <div class="stat-card"><div class="stat-icon">📉</div><div class="stat-val" id="adm-attr">0%</div><div class="stat-lbl">Attrition Rate</div></div>
-    </div>
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-title">📊 Attendance Overview</div>
-        <div class="prog-wrap"><div class="prog-label"><span>Present</span><span id="adm-att-val">0%</span></div><div class="prog-bar"><div class="prog-fill fill-green" id="adm-att-bar" style="width:0%"></div></div></div>
-        <div class="prog-wrap"><div class="prog-label"><span>Absent</span><span id="adm-abs-val">0%</span></div><div class="prog-bar"><div class="prog-fill fill-red" id="adm-abs-bar" style="width:0%"></div></div></div>
-        <div class="prog-wrap"><div class="prog-label"><span>Attrition</span><span id="adm-attr-val">0%</span></div><div class="prog-bar"><div class="prog-fill fill-orange" id="adm-attr-bar" style="width:0%"></div></div></div>
-      </div>
-      <div class="card">
-        <div class="card-title">🏖️ Leave Requests</div>
-        <div id="adm-leaves"><div class="empty"><div class="empty-icon">🏖️</div><p>No requests</p></div></div>
-      </div>
-    </div>
-    <div class="card" style="margin-bottom:20px">
-      <div class="card-title">
-        👥 Users Management
-        <div style="display:flex;gap:8px">
-          <button class="sm-btn btn-primary" onclick="openModal('addUser')">+ Add User</button>
-          <button class="sm-btn btn-outline" onclick="exportUsers()">📥 Export</button>
-          <button class="sm-btn btn-outline" onclick="document.getElementById('import-users').click()">📤 Import</button>
-          <input type="file" id="import-users" accept=".csv" style="display:none" onchange="importUsers(this)">
-        </div>
-      </div>
-      <div style="overflow-x:auto">
-        <table class="tbl">
-          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
-          <tbody id="adm-users-body"><tr><td colspan="5" style="text-align:center;padding:20px;color:#6b7280">Loading...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-    <div class="card" style="margin-bottom:20px">
-      <div class="card-title">
-        📅 Schedules
-        <div style="display:flex;gap:8px">
-          <button class="sm-btn btn-primary" onclick="openModal('addSchedule')">+ Add</button>
-          <button class="sm-btn btn-outline" onclick="exportSchedules()">📥 Export</button>
-          <button class="sm-btn btn-outline" onclick="document.getElementById('import-sched').click()">📤 Import</button>
-          <input type="file" id="import-sched" accept=".csv" style="display:none" onchange="importSchedules(this)">
-        </div>
-      </div>
-      <div style="overflow-x:auto">
-        <table class="tbl">
-          <thead><tr><th>Name</th><th>Seat</th><th>Language</th><th>Shift</th><th>Leader</th><th>Off Days</th><th>Period</th><th>Actions</th></tr></thead>
-          <tbody id="adm-sched-body"><tr><td colspan="8" style="text-align:center;padding:20px;color:#6b7280">Loading...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">⭐ Quality Forms</div>
-      <div style="overflow-x:auto">
-        <table class="tbl">
-          <thead><tr><th>Agent</th><th>Score</th><th>Notes</th><th>Date</th></tr></thead>
-          <tbody id="adm-qual-body"><tr><td colspan="4" style="text-align:center;padding:20px;color:#6b7280">Loading...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
+    <!-- باقي الـ APP زي ما هو عندك -->
   </div>
 
 </div>
-<!-- END APP -->
 
-<!-- ═══════════════════════════════════ -->
-<!-- MODALS                              -->
-<!-- ═══════════════════════════════════ -->
-
-<!-- Leave Modal -->
-<div class="modal-ov" id="modal-leave">
-  <div class="modal">
-    <div class="modal-title">🏖️ Leave Request</div>
-    <div class="fg"><label>Leave Type</label><select id="lv-type"><option>Annual Leave</option><option>Sick Leave</option><option>Emergency Leave</option><option>Unpaid Leave</option></select></div>
-    <div class="fg"><label>From Date</label><input type="date" id="lv-from"></div>
-    <div class="fg"><label>To Date</label><input type="date" id="lv-to"></div>
-    <div class="fg"><label>Reason</label><textarea id="lv-reason" rows="3" placeholder="Explain your reason..."></textarea></div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal('leave')">Cancel</button>
-      <button class="btn btn-primary" onclick="submitLeave()">📤 Submit</button>
-    </div>
-    <div class="form-msg" id="lv-msg"></div>
-  </div>
-</div>
-
-<!-- Quality Form Modal -->
-<div class="modal-ov" id="modal-qform">
-  <div class="modal">
-    <div class="modal-title">⭐ Quality Evaluation</div>
-    <div class="fg"><label>Agent</label><select id="qf-agent"></select></div>
-    <div class="fg"><label>Score (0-100)</label><input type="number" id="qf-score" min="0" max="100" placeholder="85"></div>
-    <div class="fg"><label>Notes</label><textarea id="qf-notes" rows="3" placeholder="Feedback notes..."></textarea></div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal('qform')">Cancel</button>
-      <button class="btn btn-primary" onclick="submitQForm()">📤 Submit</button>
-    </div>
-    <div class="form-msg" id="qf-msg"></div>
-  </div>
-</div>
-
-<!-- Add User Modal -->
-<div class="modal-ov" id="modal-addUser">
-  <div class="modal">
-    <div class="modal-title">👤 Add New User</div>
-    <div class="fg"><label>First Name</label><input type="text" id="au-fname" placeholder="Ahmed"></div>
-    <div class="fg"><label>Last Name</label><input type="text" id="au-lname" placeholder="Mohamed"></div>
-    <div class="fg"><label>Email</label><input type="email" id="au-email" placeholder="ahmed@company.com"></div>
-    <div class="fg"><label>Password</label><input type="password" id="au-pass" placeholder="••••••••"></div>
-    <div class="fg"><label>Role</label>
-      <select id="au-role">
-        <option value="agent">Agent</option>
-        <option value="quality">Quality</option>
-        <option value="supervisor">Supervisor</option>
-        <option value="admin">Admin</option>
-      </select>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal('addUser')">Cancel</button>
-      <button class="btn btn-primary" onclick="addUser()">➕ Add User</button>
-    </div>
-    <div class="form-msg" id="au-msg"></div>
-  </div>
-</div>
-
-<!-- Add Schedule Modal -->
-<div class="modal-ov" id="modal-addSchedule">
-  <div class="modal">
-    <div class="modal-title">📅 Add Schedule</div>
-    <div class="fg"><label>Agent Name</label><input type="text" id="sc-name" placeholder="Agent name"></div>
-    <div class="fg"><label>Email</label><input type="email" id="sc-email" placeholder="agent@company.com"></div>
-    <div class="fg"><label>Seat Number</label><input type="text" id="sc-seat" placeholder="A-01"></div>
-    <div class="fg"><label>Language</label><input type="text" id="sc-lang" placeholder="English"></div>
-    <div class="fg"><label>Module</label><input type="text" id="sc-module" placeholder="Customer Service"></div>
-    <div class="fg"><label>Shift</label><input type="text" id="sc-shift" placeholder="9:00 AM - 5:00 PM"></div>
-    <div class="fg"><label>Team Leader</label><input type="text" id="sc-leader" placeholder="Leader name"></div>
-    <div class="fg"><label>Off Day 1</label><input type="text" id="sc-off1" placeholder="Friday"></div>
-    <div class="fg"><label>Off Day 2</label><input type="text" id="sc-off2" placeholder="Saturday"></div>
-    <div class="fg"><label>Start Date</label><input type="date" id="sc-start"></div>
-    <div class="fg"><label>End Date</label><input type="date" id="sc-end"></div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal('addSchedule')">Cancel</button>
-      <button class="btn btn-primary" onclick="addSchedule()">➕ Add</button>
-    </div>
-    <div class="form-msg" id="sc-msg"></div>
-  </div>
-</div>
-
-<!-- Team Modal -->
-<div class="modal-ov" id="modal-team">
-  <div class="modal" style="width:600px">
-    <div class="modal-title">👥 Team Online</div>
-    <div id="team-modal-list"></div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal('team')">Close</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════ -->
-<!-- JS FILES                            -->
-<!-- ═══════════════════════════════════ -->
+<!-- JS -->
 <script src="js/core/state.js"></script>
 <script src="js/core/auth.js"></script>
 <script src="js/core/ui.js"></script>
