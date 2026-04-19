@@ -464,8 +464,10 @@ async function init() {
     CU = session.user;
     const { data: profile } = await sb.from('profiles').select('*').eq('id', CU.id).single();
     CP = profile || {};
-    userRole = (CP.role || CP.access || '').toLowerCase();
-    showApp();
+userRole =
+  (session.user.email === 'wfmoptiforce@gmail.com')
+    ? 'owner'
+    : (CP?.role || 'agent');    showApp();
   } catch(e) {
     console.error('Init error:', e);
     showLogin();
