@@ -1,4 +1,7 @@
 <!DOCTYPE html>
+<div style="background:red;color:white;padding:10px;text-align:center">
+  TEST FROM INDEX
+</div>
 <html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
@@ -668,12 +671,24 @@ document.addEventListener('keypress', e => { if (e.key === 'Enter' && document.g
 // TOPBAR
 // ════════════════════════════════════
 function setupTopbar() {
-  const name = ((CP.first_name || '') + ' ' + (CP.last_name || '') || CP.full_name || CU.email).trim();
-  document.getElementById('user-name').textContent = name;
-  document.getElementById('user-role').textContent = CP.role || CP.access || 'Member';
-  const av = document.getElementById('user-av');
-  if (CP.avatar_url) { av.innerHTML = '<img src="' + CP.avatar_url + '">'; } else { av.textContent = name.charAt(0).toUpperCase(); }
+  // ✅ NAME
+  const name =
+    CP?.full_name ||
+    [CP?.first_name, CP?.last_name].filter(Boolean).join(' ') ||
+    CU?.email ||
+    'User';
 
+  document.getElementById('user-name').textContent = name;
+
+  // ✅ ROLE
+  const role = (CP?.role || 'member').toLowerCase();
+  document.getElementById('user-role').textContent =
+    role.charAt(0).toUpperCase() + role.slice(1);
+
+  // ✅ AVATAR
+  const av = document.getElementById('user-av');
+  av.textContent = name.charAt(0).toUpperCase();
+} else { av.textContent = name.charAt(0).toUpperCase(); }
   const navItems = {
     agent: [{ id: 'agent', label: '🏠 Dashboard' }],
     quality: [{ id: 'agent', label: '🏠 Home' }, { id: 'quality', label: '⭐ Quality' }],
