@@ -1,145 +1,121 @@
-// ═════════════════════════════════════
-// 🖥️ UI (SHOW/HIDE / TOPBAR / PANELS / MODALS)
-// ═════════════════════════════════════
+// ═══════════════════════════════════
+// 🖥️ UI CONTROLLER (SINGLE SOURCE)
+// ═══════════════════════════════════
 
 function showLogin() {
-  const loading = document.getElementById('loading-screen');
-  const login   = document.getElementById('login-screen');
-  const app     = document.getElementById('app');
-
-  if (loading) loading.style.display = 'none';
-  if (login)   login.style.display   = 'flex';
-  if (app)     app.style.display     = 'none';
-
+  const login = document.getElementById('login-screen');
+  const app   = document.getElementById('app');
+  if (login) { login.classList.add('show'); login.style.display = ''; }
+  if (app)   { app.classList.remove('show'); app.style.display = ''; }
   const btn = document.getElementById('login-btn');
   if (btn) { btn.textContent = 'Sign In'; btn.disabled = false; }
 }
 
 function showApp() {
-  const loading = document.getElementById('loading-screen');
-  const login   = document.getElementById('login-screen');
-  const app     = document.getElementById('app');
-
-  if (loading) loading.style.display = 'none';
-  if (login)   login.style.display   = 'none';
-  if (app)     app.style.display     = 'block';
+  const login = document.getElementById('login-screen');
+  const app   = document.getElementById('app');
+  if (login) { login.classList.remove('show'); login.style.display = ''; }
+  if (app)   { app.classList.add('show'); app.style.display = ''; }
 
   setupTopbar();
-  loadPanel(APP.userRole);
+  setupUserInfo();
+  showDefaultPanel();
 }
 
-function switchPanel(id) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('show'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-
-  const panel = document.getElementById('panel-' + id);
-  if (panel) panel.classList.add('show');
-
-  const nb = document.getElementById('nav-' + id);
-  if (nb) nb.classList.add('active');
-}
-
-function loadPanel(role) {
-  if (['owner', 'admin'].includes(role)) {
-    switchPanel('admin');
-    window.loadAdminPanel?.();
-    return;
-  }
-
-  if (role === 'supervisor') {
-    switchPanel('supervisor');
-    window.loadSupPanel?.();
-    window.loadAgentPanel?.();
-    return;
-  }
-
-  if (role === 'quality') {
-    switchPanel('quality');
-    window.loadQualityPanel?.();
-    window.loadAgentPanel?.();
-    return;
-  }
-
-  switchPanel('agent');
-  window.loadAgentPanel?.();
-}
-
+// ═══ TOPBAR NAV ═══
 function setupTopbar() {
-  const CU = APP.CU;
-  const CP = APP.CP || {};
-
-  const name =
-    CP.full_name ||
-    [CP.first_name, CP.last_name].filter(Boolean).join(' ') ||
-    CU?.email ||
-    'User';
-
-  safeText('user-name', name);
+  const nav = document.getElementById('topbar-nav');
+  if (!nav) return;
 
   const role = (APP.userRole || 'agent').toLowerCase();
-  safeText('user-role', role.charAt(0).toUpperCase() + role.slice(1));
+  let tabs = [];
 
-  const av = document.getElementById('user-av');
-  if (av) {
-    if (CP.avatar_url) av.innerHTML = '<img src="' + CP.avatar_url + '">';
-    else av.textContent = name.charAt(0).toUpperCase();
+  if (role === 'owner' || role === 'admin') {
+    tabs = [
+      { id: 'panel-admin',      icon: '⚙️', label: 'Admin' },
+      { id: 'panel-supervisor', icon: '👥', label: 'Team' },
+      { id: 'panel-quality',    icon: '⭐', label: 'Quality' },
+      { id: 'panel-agent',      icon: '🏠', label: 'My View' },
+    ];
+  } else if (role === 'supervisor') {
+    tabs = [
+      { id: 'panel-supervisor', icon: '👥', label: 'Team' },
+      { id: 'panel-agent',      icon: '🏠', label: 'My View' },
+    ];
+  } else if (role === 'quality') {
+    tabs = [
+      { id: 'panel-quality',    icon: '⭐', label: 'Quality' },
+      { id: 'panel-agent',      icon: '🏠', label: 'My View' },
+    ];
+  } else {
+    tabs = [
+      { id: 'panel-agent', icon: '🏠', label: 'My View' },
+    ];
   }
 
-  const navItems = {
-    agent:      [{ id: 'agent',      label: '🏠 Dashboard' }],
-    quality:    [{ id: 'agent',      label: '🏠 Home' },
-                 { id: 'quality',    label: '⭐ Quality' }],
-    supervisor: [{ id: 'agent',      label: '🏠 Home' },
-                 { id: 'supervisor', label: '👥 Team' },
-                 { id: 'quality',    label: '⭐ Quality' }],
-    admin:      [{ id: 'admin',      label: '⚙️ Admin' },
-                 { id: 'supervisor', label: '👥 Team' }],
-    owner:      [{ id: 'admin',      label: '⚙️ Admin' },
-                 { id: 'supervisor', label: '👥 Team' },
-                 { id: 'quality',    label: '⭐ Quality' }]
-  };
-
-  const activeRole = ['owner','admin','supervisor','quality'].includes(role)
-    ? role : 'agent';
-
-  const nav = document.getElementById('topbar-nav');
-  if (nav) {
-    nav.innerHTML = (navItems[activeRole] || navItems.agent).map(n =>
-      `<button class="nav-btn" onclick="switchPanel('${n.id}')" id="nav-${n.id}">${n.label}</button>`
-    ).join('');
-  }
-
-  window.loadNotifications?.();
+  nav.innerHTML = '';
+  tabs.forEach((tab, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'nav-btn' + (i === 0 ? ' active' : '');
+    btn.innerHTML = tab.icon + ' ' + tab.label;
+    btn.onclick = () => switchPanel(tab.id, btn);
+    nav.appendChild(btn);
+  });
 }
 
-// ===== NOTIFICATIONS =====
+// ═══ USER INFO ═══
+function setupUserInfo() {
+  const nameEl = document.getElementById('user-name');
+  const roleEl = document.getElementById('user-role');
+  const avEl   = document.getElementById('user-av');
+
+  const name = APP.CP?.full_name || APP.CU?.email?.split('@')[0] || 'User';
+  const role = APP.userRole || 'agent';
+
+  if (nameEl) nameEl.textContent = name;
+  if (roleEl) roleEl.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+  if (avEl)   avEl.textContent = name.charAt(0).toUpperCase();
+}
+
+// ═══ SWITCH PANEL ═══
+function switchPanel(panelId, btn) {
+  // hide all panels
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('show'));
+
+  // show target
+  const target = document.getElementById(panelId);
+  if (target) target.classList.add('show');
+
+  // update nav buttons
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+// ═══ DEFAULT PANEL ═══
+function showDefaultPanel() {
+  const role = (APP.userRole || 'agent').toLowerCase();
+  let defaultPanel = 'panel-agent';
+
+  if (role === 'owner' || role === 'admin') defaultPanel = 'panel-admin';
+  else if (role === 'supervisor') defaultPanel = 'panel-supervisor';
+  else if (role === 'quality') defaultPanel = 'panel-quality';
+
+  switchPanel(defaultPanel);
+}
+
+// ═══ NOTIFICATIONS ═══
 function toggleNotif() {
-  const p = document.getElementById('notif-panel');
-  if (!p) return;
-  p.classList.toggle('show');
-  if (p.classList.contains('show')) window.loadNotifications?.();
+  const panel = document.getElementById('notif-panel');
+  if (panel) panel.classList.toggle('show');
 }
 
-document.addEventListener('click', (e) => {
-  const p = document.getElementById('notif-panel');
-  const b = document.getElementById('notif-btn');
-  if (!p || !b) return;
-  if (!p.contains(e.target) && !b.contains(e.target)) p.classList.remove('show');
-});
-
-// ===== MODALS =====
+// ═══ MODALS ═══
 function openModal(name) {
-  const el = document.getElementById('modal-' + name);
-  if (el) el.classList.add('show');
+  const m = document.getElementById('modal-' + name);
+  if (m) m.classList.add('show');
 }
 
 function closeModal(name) {
-  const el = document.getElementById('modal-' + name);
-  if (el) el.classList.remove('show');
+  const m = document.getElementById('modal-' + name);
+  if (m) m.classList.remove('show');
 }
-
-document.querySelectorAll('.modal-ov').forEach(o => {
-  o.addEventListener('click', (e) => {
-    if (e.target === o) o.classList.remove('show');
-  });
-});
