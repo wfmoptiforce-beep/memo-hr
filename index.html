@@ -315,11 +315,96 @@
       </div>
 
       <!-- ══════ PANEL: AGENT (MY VIEW) ══════ -->
+<!-- ══════ PANEL: AGENT (MY VIEW) ══════ -->
       <div class="panel" id="panel-agent">
         <div class="panel-header">
           <h2>🏠 My Dashboard</h2>
           <p>Your personal workspace and activity overview</p>
         </div>
+
+        <!-- AUX PUNCH -->
+        <div class="punch-section">
+          <div class="punch-card">
+            <div class="punch-header">
+              <span class="punch-icon">⏰</span>
+              <h3>Attendance & Status</h3>
+            </div>
+            <p id="punch-status" class="punch-status">Ready to start your day</p>
+
+            <div class="aux-buttons">
+              <button class="aux-btn aux-online" data-aux="online" onclick="punchAux('online')">🟢 Online</button>
+              <button class="aux-btn aux-break" data-aux="break" onclick="punchAux('break')">🟡 Break</button>
+              <button class="aux-btn aux-meeting" data-aux="meeting" onclick="punchAux('meeting')">🟠 Meeting</button>
+              <button class="aux-btn aux-training" data-aux="training" onclick="punchAux('training')">🔵 Training</button>
+              <button class="aux-btn aux-coaching" data-aux="coaching" onclick="punchAux('coaching')">🟣 Coaching</button>
+              <button class="aux-btn aux-offline" data-aux="offline" onclick="punchAux('offline')">🔴 Punch Out</button>
+            </div>
+
+            <div class="aux-timer-wrap">
+              <div class="aux-timer-label">Current Aux Time:</div>
+              <div class="aux-timer" id="aux-timer">00:00:00</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DAILY SUMMARY -->
+        <div class="summary-section">
+          <div class="summary-card">
+            <h3>📊 Today's Summary</h3>
+            <div id="aux-summary" class="aux-summary">
+              <div class="aux-summary-row"><span>🟢 Online:</span><strong>0.0h</strong></div>
+              <div class="aux-summary-row"><span>🟡 Break:</span><strong>0.0h</strong> / 1h</div>
+              <div class="aux-summary-row"><span>🟠 Meeting:</span><strong>0.0h</strong></div>
+              <div class="aux-summary-row"><span>🔵 Training:</span><strong>0.0h</strong></div>
+              <div class="aux-summary-row"><span>🟣 Coaching:</span><strong>0.0h</strong></div>
+              <div class="aux-summary-row total"><span>📊 Login Time:</span><strong>0.0h</strong> / 8h</div>
+              <div class="aux-summary-row warn"><span>⏳ Missing:</span><strong>8.0h</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STAT CARDS -->
+        <div class="cards-row">
+          <div class="stat-card">
+            <span class="stat-icon">⏱️</span>
+            <div>
+              <div class="stat-num" id="agent-hours">0.0h</div>
+              <div class="stat-label">Login Hours</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">☕</span>
+            <div>
+              <div class="stat-num" id="agent-break">0.0h</div>
+              <div class="stat-label">Break Time</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">⏳</span>
+            <div>
+              <div class="stat-num" id="agent-missing">8.0h</div>
+              <div class="stat-label">Missing Hours</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">🧠</span>
+            <div>
+              <div class="stat-num" id="agent-meeting">0.0h</div>
+              <div class="stat-label">Meeting/Coaching</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TIMELINE -->
+        <div class="table-section">
+          <div class="table-header"><h3>📋 Today's Timeline</h3></div>
+          <div class="timeline-wrap" id="agent-timeline">
+            <p class="notif-empty">No activities yet today</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content-area -->
 
         <!-- PUNCH IN / OUT -->
         <div class="punch-section">
@@ -467,7 +552,14 @@
 <script src="js/core/state.js"></script>
 <script src="js/core/ui.js"></script>
 <script src="js/core/auth.js"></script>
+<script src="js/agent/status.js"></script>
 <script src="js/agent/attendance.js"></script>
+<script src="js/agent/team.js"></script>
+<script src="js/agent/leaves.js"></script>
+<script src="js/admin/users.js"></script>
+<script src="js/admin/schedules.js"></script>
+<script src="js/admin/import-export.js"></script>
+<script src="js/quality/monitoring.js"></script>
 
 </body>
 </html>

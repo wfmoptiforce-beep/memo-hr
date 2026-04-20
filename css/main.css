@@ -265,4 +265,56 @@ body { background: #f4f6f8; color: #111827; }
   .login-right { width: 100%; }
   .punch-buttons { flex-direction: column; }
   .punch-btn { width: 100%; }
+}/* ===== AUX BUTTONS ===== */
+.aux-buttons {
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 10px; margin-bottom: 20px;
+}
+.aux-btn {
+  padding: 12px 24px; border: 2px solid #e5e7eb; border-radius: 12px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  background: #fff; transition: all .2s; color: #374151;
+}
+.aux-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+.aux-btn.aux-active { color: #fff !important; border-color: transparent !important; transform: scale(1.05); box-shadow: 0 4px 16px rgba(0,0,0,.15); }
+.aux-online.aux-active { background: #16a34a; }
+.aux-break.aux-active { background: #eab308; }
+.aux-meeting.aux-active { background: #f97316; }
+.aux-training.aux-active { background: #3b82f6; }
+.aux-coaching.aux-active { background: #8b5cf6; }
+.aux-offline.aux-active { background: #dc2626; }
+
+/* ===== AUX TIMER ===== */
+.aux-timer-wrap { text-align: center; margin-top: 8px; }
+.aux-timer-label { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
+.aux-timer {
+  font-size: 42px; font-weight: 700; color: #2563eb;
+  font-family: 'Courier New', monospace; letter-spacing: 2px;
+}
+
+/* ===== SUMMARY ===== */
+.summary-section { margin-bottom: 24px; }
+.summary-card {
+  background: #fff; border-radius: 16px; padding: 24px;
+  border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+.summary-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+.aux-summary { display: flex; flex-direction: column; gap: 8px; }
+.aux-summary-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 12px; border-radius: 8px; background: #f9fafb; font-size: 14px;
+}
+.aux-summary-row span { color: #6b7280; }
+.aux-summary-row strong { color: #111827; }
+.aux-summary-row.total { background: #eff6ff; border: 1px solid #bfdbfe; }
+.aux-summary-row.total strong { color: #2563eb; }
+.aux-summary-row.warn { background: #fef3c7; border: 1px solid #fde68a; }
+.aux-summary-row.warn strong { color: #dc2626; }
+.aux-summary-row.good { background: #dcfce7; border: 1px solid #bbf7d0; }
+.aux-summary-row.good strong { color: #16a34a; }
+
+/* ===== RESPONSIVE AUX ===== */
+@media (max-width: 480px) {
+  .aux-buttons { flex-direction: column; }
+  .aux-btn { width: 100%; }
 }
