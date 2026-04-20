@@ -14,7 +14,7 @@ async function initApp() {
       return;
     }
 
-    // Show loading screen
+    // Show loading screen (optional)
     const loadingScreen = document.getElementById('loading-screen');
     if (loadingScreen) loadingScreen.style.display = 'flex';
 
@@ -23,23 +23,24 @@ async function initApp() {
 
     if (error) {
       console.warn('Session error:', error);
-      showLogin();
+      if (typeof window.showLogin === 'function') window.showLogin();
       return;
     }
 
     if (!session) {
-      showLogin();
+      if (typeof window.showLogin === 'function') window.showLogin();
       return;
     }
 
     // User is logged in
     APP.CU = session.user;
     await loadProfile();
-    showApp();
+
+    if (typeof window.showApp === 'function') window.showApp();
 
   } catch (e) {
     console.error('initApp error:', e);
-    showLogin();
+    if (typeof window.showLogin === 'function') window.showLogin();
   } finally {
     // Hide loading screen
     const loadingScreen = document.getElementById('loading-screen');
@@ -85,9 +86,8 @@ async function loadProfile() {
 }
 
 // ✅ LOGIN FUNCTION
-async function doLogin() {
+window.doLogin = async function doLogin() {
   try {
-    // Get inputs
     const emailEl = document.getElementById('login-email');
     const passEl = document.getElementById('login-pass');
     const msgEl = document.getElementById('login-msg');
@@ -100,7 +100,6 @@ async function doLogin() {
     const email = emailEl.value?.trim();
     const pass = passEl.value;
 
-    // Validate
     if (!email || !pass) {
       msgEl.textContent = '⚠️ Please enter email and password';
       msgEl.style.color = '#dc2626';
@@ -113,11 +112,9 @@ async function doLogin() {
       return;
     }
 
-    // Clear message and show loading
     msgEl.textContent = '⏳ Signing in...';
     msgEl.style.color = '#6b7280';
 
-    // Sign in
     const { error, data } = await sb.auth.signInWithPassword({
       email,
       password: pass
@@ -130,25 +127,23 @@ async function doLogin() {
       return;
     }
 
-    if (!data.user) {
+    if (!data?.user) {
       msgEl.textContent = '❌ No user data returned';
       msgEl.style.color = '#dc2626';
       return;
     }
 
-    // Success
     APP.CU = data.user;
     await loadProfile();
 
     msgEl.textContent = '✅ Welcome back!';
     msgEl.style.color = '#16a34a';
 
-    // Redirect after 500ms
     setTimeout(() => {
-      showApp();
+      if (typeof window.showApp === 'function') window.showApp();
       emailEl.value = '';
       passEl.value = '';
-    }, 500);
+    }, 300);
 
   } catch (e) {
     const msgEl = document.getElementById('login-msg');
@@ -158,10 +153,10 @@ async function doLogin() {
     }
     console.error('doLogin error:', e);
   }
-}
+};
 
 // ✅ LOGOUT FUNCTION
-async function doLogout() {
+window.doLogout = async function doLogout() {
   try {
     const { error } = await sb.auth.signOut();
 
@@ -170,53 +165,18 @@ async function doLogout() {
       return;
     }
 
-    // Clear state
     APP.CU = null;
     APP.CP = null;
     APP.userRole = 'agent';
 
     console.log('✅ Logged out');
 
-    // Redirect to login
-    showLogin();
+    if (typeof window.showLogin === 'function') window.showLogin();
 
   } catch (e) {
     console.error('doLogout error:', e);
   }
-}
-
-// ✅ SHOW LOGIN SCREEN
-function showLogin() {
-  const loginScreen = document.getElementById('login-screen');
-  const appContainer = document.getElementById('app');
-
-  if (loginScreen) {
-    loginScreen.classList.remove('show');
-    loginScreen.classList.add('show');
-  }
-
-  if (appContainer) {
-    appContainer.classList.remove('show');
-  }
-
-  console.log('✅ Login screen shown');
-}
-
-// ✅ SHOW APP SCREEN
-function showApp() {
-  const loginScreen = document.getElementById('login-screen');
-  const appContainer = document.getElementById('app');
-
-  if (loginScreen) {
-    loginScreen.classList.remove('show');
-  }
-
-  if (appContainer) {
-    appContainer.classList.add('show');
-  }
-
-  console.log('✅ App screen shown');
-}
+};
 
 // ✅ INITIALIZE ON DOM READY
 document.addEventListener('DOMContentLoaded', () => {
