@@ -4,19 +4,25 @@
 
 console.log('✅ team.js loaded');
 
-// ✅ LOAD TEAM MEMBERS (Simplified)
+// ✅ LOAD TEAM MEMBERS (SAFE – AFTER AUTH ONLY)
 window.loadTeamOnline = async function () {
-  try {
-    if (!window.sb || !window.APP?.CU) {
-      console.warn('Auth not ready');
-      return;
-    }
+  // ✅ HARD GUARD
+  if (!window.sb || !window.APP || !APP.CU) {
+    // مش Error – ده طبيعي قبل Login
+    return;
+  }
 
+  try {
     // Get all team members (exclude self)
-    const { data: members } = await sb
+    const { data: members, error } = await sb
       .from('profiles')
       .select('id, full_name, email, role, status')
       .neq('id', APP.CU.id);
+
+    if (error) {
+      console.warn('Team fetch error:', error);
+      return;
+    }
 
     if (!members) return;
 
@@ -24,7 +30,7 @@ window.loadTeamOnline = async function () {
     const offline = members.filter(m => !m.status || m.status === 'offline');
     const breakCount = members.filter(m => m.status === 'break').length;
 
-    // Update supervisor cards (if exists)
+    // ✅ Supervisor cards
     if (document.getElementById('sup-team-count')) {
       safeText('sup-team-count', String(members.length));
       safeText('sup-online-count', String(online.length));
@@ -32,75 +38,72 @@ window.loadTeamOnline = async function () {
       safeText('sup-offline-count', String(offline.length));
     }
 
-    // Team table (supervisor view)
+    // ✅ Supervisor table
     const tbody = document.getElementById('sup-team-tbody');
     if (tbody) {
       if (members.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="empty-row">No team members</td></tr>';
-        return;
+      } else {
+        tbody.innerHTML = members.map(m => {
+          const st = m.status || 'offline';
+          const color = getStatusColor(st);
+          const safeName = (m.full_name || 'User').replace(/'/g, "\\'");
+
+          return `
+            <tr>
+              <td><strong>${m.full_name || 'Unknown'}</strong></td>
+              <td><span style="color:${color};font-weight:600;">● ${st}</span></td>
+              <td>${m.role || 'agent'}</td>
+              <td>-</td>
+              <td>
+                <button class="btn-sm"
+                  onclick="nudgeUser('${m.id}', '${safeName}')">
+                  👋 Nudge
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
       }
-
-      tbody.innerHTML = members.map(m => {
-        const st = m.status || 'offline';
-        const color = getStatusColor(st);
-
-        return `
-          <tr>
-            <td><strong>${m.full_name || 'Unknown'}</strong></td>
-            <td><span style="color:${color};font-weight:600;">● ${st}</span></td>
-            <td>${m.role || 'agent'}</td>
-            <td>-</td>
-            <td>
-              <button 
-                class="btn-sm" 
-                onclick="nudgeUser('${m.id}', '${(m.full_name || '').replace(/'/g, "\\'")}')">
-                👋 Nudge
-              </button>
-            </td>
-          </tr>
-        `;
-      }).join('');
     }
 
-    // Agent team online widget
+    // ✅ Agent timeline
     const agentTeam = document.getElementById('agent-timeline');
-    if (agentTeam && online.length > 0) {
-      agentTeam.innerHTML = `
-        <h4 style="margin-bottom:8px;">👥 Team Online Now (${online.length})</h4>
-        ${online.map(m => `
-          <div class="team-online-item" 
-            style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f0fdf4;border-radius:8px;margin-bottom:6px;border-left:4px solid ${getStatusColor(m.status)};">
-            <div>
-              <strong>${m.full_name || 'Unknown'}</strong>
-              <br>
-              <small style="color:#6b7280;">${m.role || 'agent'}</small>
-            </div>
-            <button 
-              class="btn-sm" 
-              onclick="nudgeUser('${m.id}', '${(m.full_name || '').replace(/'/g, "\\'")}')">
-              👋
-            </button>
-          </div>
-        `).join('')}
-      `;
-    }
-
-    // Empty state
-    if (agentTeam && online.length === 0) {
-      agentTeam.innerHTML = '<p style="color:#9ca3af;font-size:13px;">No team members online</p>';
+    if (agentTeam) {
+      if (online.length === 0) {
+        agentTeam.innerHTML =
+          '<p style="color:#9ca3af;font-size:13px;">No team members online</p>';
+      } else {
+        agentTeam.innerHTML = `
+          <h4 style="margin-bottom:8px;">👥 Team Online Now (${online.length})</h4>
+          ${online.map(m => {
+            const safeName = (m.full_name || 'User').replace(/'/g, "\\'");
+            return `
+              <div class="team-online-item"
+                style="border-left:4px solid ${getStatusColor(m.status)};">
+                <div>
+                  <strong>${m.full_name || 'Unknown'}</strong><br>
+                  <small>${m.role || 'agent'}</small>
+                </div>
+                <button class="btn-sm"
+                  onclick="nudgeUser('${m.id}', '${safeName}')">👋</button>
+              </div>
+            `;
+          }).join('')}
+        `;
+      }
     }
 
   } catch (e) {
-    console.warn('loadTeamOnline error:', e);
+    console.error('loadTeamOnline error:', e);
   }
 };
 
-// ✅ NUDGE FUNCTION
+// ✅ NUDGE USER
 window.nudgeUser = async function (userId, name) {
-  try {
-    if (!window.sb || !window.APP?.CU) return;
+  if (!window.sb || !APP.CU) return;
 
-    // Insert notification
+  try {
     const { error } = await sb.from('notifications').insert({
       user_id: userId,
       from_id: APP.CU.id,
@@ -111,60 +114,29 @@ window.nudgeUser = async function (userId, name) {
       created_at: new Date().toISOString()
     });
 
-    if (error) {
-      console.warn('Nudge insert error:', error);
-      return;
+    if (!error) {
+      showToast('✅ Nudge sent to ' + (name || 'user'), 'success');
     }
-
-    // Success feedback (no alert)
-    showToast('✅ Nudge sent to ' + (name || 'user'));
-
   } catch (e) {
-    console.warn('nudgeUser error:', e);
-    showToast('❌ Failed to send nudge');
+    showToast('❌ Failed to send nudge', 'error');
   }
 };
 
-// ✅ HELPER: Get Status Color
+// ✅ STATUS COLOR HELPER
 function getStatusColor(status) {
-  const colors = {
+  return {
     online: '#16a34a',
     break: '#eab308',
     meeting: '#f97316',
     training: '#3b82f6',
     coaching: '#8b5cf6',
     offline: '#dc2626'
-  };
-  return colors[status] || '#6b7280';
+  }[status] || '#6b7280';
 }
 
-// ✅ HELPER: Toast Notification
-function showToast(message) {
-  // Simple toast (optional - can be enhanced)
-  const toast = document.createElement('div');
-  toast.style.cssText = `
-    position: fixed; bottom: 20px; right: 20px;
-    background: #111827; color: #fff; padding: 12px 16px;
-    border-radius: 8px; font-size: 13px; z-index: 9999;
-    animation: slideIn 0.3s ease;
-  `;
-  toast.textContent = message;
-  document.body.appendChild(toast);
-
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
-}
-
-// ✅ AUTO-REFRESH (every 30 seconds)
+// ✅ AUTO REFRESH (SAFE – AFTER LOGIN ONLY)
 setInterval(() => {
-  if (window.APP?.CU?.id && typeof loadTeamOnline === 'function') {
+  if (APP.CU?.id) {
     loadTeamOnline();
   }
 }, 30000);
-
-// ✅ LOAD ON INIT
-document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(loadTeamOnline, 500);
-});
