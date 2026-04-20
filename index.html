@@ -97,9 +97,7 @@
         <div class="topbar-brand">Memo Pro</div>
       </div>
 
-      <div class="topbar-center" id="topbar-nav">
-        <!-- nav buttons injected by ui.js -->
-      </div>
+      <div class="topbar-center" id="topbar-nav"></div>
 
       <div class="topbar-right">
         <button class="notif-btn" id="notif-btn" onclick="toggleNotif()">🔔
@@ -117,7 +115,6 @@
         <button class="logout-btn" onclick="doLogout()">🚪 Logout</button>
       </div>
 
-      <!-- Notification Panel -->
       <div class="notif-panel" id="notif-panel">
         <div class="notif-header">🔔 Notifications</div>
         <div class="notif-list" id="notif-list">
@@ -176,11 +173,7 @@
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                  <th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th>
                 </tr>
               </thead>
               <tbody id="admin-users-tbody">
@@ -230,18 +223,12 @@
         </div>
 
         <div class="table-section">
-          <div class="table-header">
-            <h3>📋 Team Overview</h3>
-          </div>
+          <div class="table-header"><h3>📋 Team Overview</h3></div>
           <div class="table-wrap">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Agent</th>
-                  <th>Status</th>
-                  <th>Shift</th>
-                  <th>Hours Today</th>
-                  <th>Last Activity</th>
+                  <th>Agent</th><th>Status</th><th>Shift</th><th>Hours Today</th><th>Last Activity</th>
                 </tr>
               </thead>
               <tbody id="sup-team-tbody">
@@ -299,11 +286,7 @@
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Agent</th>
-                  <th>Date</th>
-                  <th>Score</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                  <th>Agent</th><th>Date</th><th>Score</th><th>Status</th><th>Actions</th>
                 </tr>
               </thead>
               <tbody id="qa-evals-tbody">
@@ -315,7 +298,6 @@
       </div>
 
       <!-- ══════ PANEL: AGENT (MY VIEW) ══════ -->
-<!-- ══════ PANEL: AGENT (MY VIEW) ══════ -->
       <div class="panel" id="panel-agent">
         <div class="panel-header">
           <h2>🏠 My Dashboard</h2>
@@ -398,80 +380,6 @@
         <!-- TIMELINE -->
         <div class="table-section">
           <div class="table-header"><h3>📋 Today's Timeline</h3></div>
-          <div class="timeline-wrap" id="agent-timeline">
-            <p class="notif-empty">No activities yet today</p>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /content-area -->
-
-        <!-- PUNCH IN / OUT -->
-        <div class="punch-section">
-          <div class="punch-card">
-            <div class="punch-header">
-              <span class="punch-icon">⏰</span>
-              <h3>Attendance</h3>
-            </div>
-            <p id="punch-status" class="punch-status">Ready to start your day</p>
-            <div class="punch-buttons">
-              <button id="punch-in-btn" class="punch-btn punch-in" onclick="doPunchIn()">🟢 Punch In</button>
-              <button id="punch-out-btn" class="punch-btn punch-out" onclick="doPunchOut()" disabled>🔴 Punch Out</button>
-            </div>
-            <div class="punch-time" id="punch-timer">--:--:--</div>
-          </div>
-        </div>
-
-        <!-- STATUS -->
-        <div class="status-section">
-          <span class="status-label">📡 My Status:</span>
-          <select class="status-select" id="my-status" onchange="updateMyStatus(this.value)">
-            <option value="online">🟢 Online</option>
-            <option value="busy">🟡 Busy</option>
-            <option value="break">🟠 On Break</option>
-            <option value="meeting">🔵 In Meeting</option>
-            <option value="training">🎓 Training</option>
-            <option value="offline">🔴 Offline</option>
-          </select>
-        </div>
-
-        <!-- STAT CARDS -->
-        <div class="cards-row">
-          <div class="stat-card">
-            <span class="stat-icon">⏱️</span>
-            <div>
-              <div class="stat-num" id="agent-hours">0h</div>
-              <div class="stat-label">Hours Today</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <span class="stat-icon">📅</span>
-            <div>
-              <div class="stat-num" id="agent-streak">0</div>
-              <div class="stat-label">Attendance Streak</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <span class="stat-icon">⭐</span>
-            <div>
-              <div class="stat-num" id="agent-qa">-</div>
-              <div class="stat-label">QA Score</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <span class="stat-icon">📊</span>
-            <div>
-              <div class="stat-num" id="agent-shift">-</div>
-              <div class="stat-label">My Shift</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- TIMELINE -->
-        <div class="table-section">
-          <div class="table-header">
-            <h3>📋 Today's Timeline</h3>
-          </div>
           <div class="timeline-wrap" id="agent-timeline">
             <p class="notif-empty">No activities yet today</p>
           </div>
