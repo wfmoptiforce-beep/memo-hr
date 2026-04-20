@@ -98,7 +98,7 @@
       </div>
 
       <div class="topbar-center" id="topbar-nav">
-        <!-- nav buttons injected by ui.js setupTopbar() -->
+        <!-- nav buttons injected by ui.js -->
       </div>
 
       <div class="topbar-right">
@@ -129,7 +129,7 @@
     <!-- ────── CONTENT AREA ────── -->
     <div class="content-area">
 
-      <!-- ══ PANEL: ADMIN ══ -->
+      <!-- ══════ PANEL: ADMIN ══════ -->
       <div class="panel" id="panel-admin">
         <div class="panel-header">
           <h2>⚙️ Admin Dashboard</h2>
@@ -167,7 +167,6 @@
           </div>
         </div>
 
-        <!-- Users Table -->
         <div class="table-section">
           <div class="table-header">
             <h3>👥 All Users</h3>
@@ -192,7 +191,7 @@
         </div>
       </div>
 
-      <!-- ══ PANEL: SUPERVISOR ══ -->
+      <!-- ══════ PANEL: SUPERVISOR ══════ -->
       <div class="panel" id="panel-supervisor">
         <div class="panel-header">
           <h2>👥 Team Management</h2>
@@ -230,7 +229,6 @@
           </div>
         </div>
 
-        <!-- Team Table -->
         <div class="table-section">
           <div class="table-header">
             <h3>📋 Team Overview</h3>
@@ -254,7 +252,7 @@
         </div>
       </div>
 
-      <!-- ══ PANEL: QUALITY ══ -->
+      <!-- ══════ PANEL: QUALITY ══════ -->
       <div class="panel" id="panel-quality">
         <div class="panel-header">
           <h2>⭐ Quality Assurance</h2>
@@ -292,7 +290,6 @@
           </div>
         </div>
 
-        <!-- QA Table -->
         <div class="table-section">
           <div class="table-header">
             <h3>📋 Recent Evaluations</h3>
@@ -317,69 +314,86 @@
         </div>
       </div>
 
-      <!-- ══ PANEL: AGENT ══ -->
+      <!-- ══════ PANEL: AGENT (MY VIEW) ══════ -->
       <div class="panel" id="panel-agent">
         <div class="panel-header">
           <h2>🏠 My Dashboard</h2>
           <p>Your personal workspace and activity overview</p>
         </div>
 
-        <!-- Status Select -->
+        <!-- PUNCH IN / OUT -->
+        <div class="punch-section">
+          <div class="punch-card">
+            <div class="punch-header">
+              <span class="punch-icon">⏰</span>
+              <h3>Attendance</h3>
+            </div>
+            <p id="punch-status" class="punch-status">Ready to start your day</p>
+            <div class="punch-buttons">
+              <button id="punch-in-btn" class="punch-btn punch-in" onclick="doPunchIn()">🟢 Punch In</button>
+              <button id="punch-out-btn" class="punch-btn punch-out" onclick="doPunchOut()" disabled>🔴 Punch Out</button>
+            </div>
+            <div class="punch-time" id="punch-timer">--:--:--</div>
+          </div>
+        </div>
+
+        <!-- STATUS -->
         <div class="status-section">
-          <label class="status-label">My Status:</label>
-          <select id="a-status-select" class="status-select" onchange="updateMyStatus?.(this.value)">
+          <span class="status-label">📡 My Status:</span>
+          <select class="status-select" id="my-status" onchange="updateMyStatus(this.value)">
             <option value="online">🟢 Online</option>
-            <option value="break">☕ Break</option>
-            <option value="meeting">🧠 Meeting</option>
+            <option value="busy">🟡 Busy</option>
+            <option value="break">🟠 On Break</option>
+            <option value="meeting">🔵 In Meeting</option>
             <option value="training">🎓 Training</option>
             <option value="offline">🔴 Offline</option>
           </select>
         </div>
 
+        <!-- STAT CARDS -->
         <div class="cards-row">
           <div class="stat-card">
-            <div class="stat-icon">⏰</div>
-            <div class="stat-info">
-              <div class="stat-num" id="agent-hours-today">0h</div>
+            <span class="stat-icon">⏱️</span>
+            <div>
+              <div class="stat-num" id="agent-hours">0h</div>
               <div class="stat-label">Hours Today</div>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon">📅</div>
-            <div class="stat-info">
-              <div class="stat-num" id="agent-att-streak">0</div>
+            <span class="stat-icon">📅</span>
+            <div>
+              <div class="stat-num" id="agent-streak">0</div>
               <div class="stat-label">Attendance Streak</div>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon">⭐</div>
-            <div class="stat-info">
-              <div class="stat-num" id="agent-qa-score">-</div>
+            <span class="stat-icon">⭐</span>
+            <div>
+              <div class="stat-num" id="agent-qa">-</div>
               <div class="stat-label">QA Score</div>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon">📊</div>
-            <div class="stat-info">
+            <span class="stat-icon">📊</span>
+            <div>
               <div class="stat-num" id="agent-shift">-</div>
               <div class="stat-label">My Shift</div>
             </div>
           </div>
         </div>
 
-        <!-- Timeline -->
+        <!-- TIMELINE -->
         <div class="table-section">
           <div class="table-header">
             <h3>📋 Today's Timeline</h3>
           </div>
           <div class="timeline-wrap" id="agent-timeline">
-            <div class="empty-row">No activities yet today</div>
+            <p class="notif-empty">No activities yet today</p>
           </div>
         </div>
       </div>
 
     </div><!-- /content-area -->
-
   </div><!-- /app -->
 
   <!-- ═══════════ MODALS ═══════════ -->
@@ -413,7 +427,7 @@
           <label>Password</label>
           <input type="password" id="mu-pass" placeholder="Min 6 characters">
         </div>
-        <button class="btn-primary full-w" onclick="addUser?.()">Create User</button>
+        <button class="btn-primary full-w" onclick="addUser()">Create User</button>
         <div class="modal-msg" id="mu-msg"></div>
       </div>
     </div>
@@ -441,7 +455,7 @@
           <label>Notes</label>
           <textarea id="eval-notes" rows="3" placeholder="Evaluation notes..."></textarea>
         </div>
-        <button class="btn-primary full-w" onclick="submitEval?.()">Submit Evaluation</button>
+        <button class="btn-primary full-w" onclick="submitEval()">Submit Evaluation</button>
         <div class="modal-msg" id="eval-msg"></div>
       </div>
     </div>

@@ -106,9 +106,7 @@ body { background: #f4f6f8; color: #111827; }
 .notif-empty { text-align: center; padding: 24px; color: #9ca3af; font-size: 13px; }
 
 /* ===== CONTENT AREA ===== */
-.content-area {
-  max-width: 1200px; margin: 0 auto; padding: 24px;
-}
+.content-area { max-width: 1200px; margin: 0 auto; padding: 24px; }
 
 /* ===== PANEL HEADER ===== */
 .panel-header { margin-bottom: 24px; }
@@ -130,6 +128,44 @@ body { background: #f4f6f8; color: #111827; }
 .stat-icon { font-size: 32px; }
 .stat-num { font-size: 28px; font-weight: 700; color: #111827; }
 .stat-label { font-size: 12px; color: #6b7280; margin-top: 2px; }
+
+/* ===== PUNCH SECTION ===== */
+.punch-section { margin-bottom: 24px; }
+.punch-card {
+  background: #fff; border-radius: 16px; padding: 28px;
+  border: 2px solid #e5e7eb; text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.punch-header {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; margin-bottom: 12px;
+}
+.punch-header h3 { font-size: 20px; font-weight: 700; }
+.punch-icon { font-size: 28px; }
+.punch-status { font-size: 14px; color: #6b7280; margin-bottom: 20px; }
+.punch-buttons {
+  display: flex; justify-content: center; gap: 16px; margin-bottom: 16px;
+}
+.punch-btn {
+  padding: 14px 40px; border: none; border-radius: 12px;
+  font-size: 16px; font-weight: 700; cursor: pointer; transition: all .2s;
+}
+.punch-in {
+  background: linear-gradient(135deg, #16a34a, #22c55e); color: #fff;
+  box-shadow: 0 4px 12px rgba(22,163,74,.3);
+}
+.punch-in:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(22,163,74,.4); }
+.punch-in:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+.punch-out {
+  background: linear-gradient(135deg, #dc2626, #ef4444); color: #fff;
+  box-shadow: 0 4px 12px rgba(220,38,38,.3);
+}
+.punch-out:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(220,38,38,.4); }
+.punch-out:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+.punch-time {
+  font-size: 36px; font-weight: 700; color: #2563eb;
+  font-family: 'Courier New', monospace;
+}
 
 /* ===== STATUS SECTION ===== */
 .status-section {
@@ -217,10 +253,8 @@ body { background: #f4f6f8; color: #111827; }
   .login-left, .login-right { width: 100%; }
   .login-left { padding: 40px; }
   .login-box { width: 100%; max-width: 420px; }
-
   #topbar { flex-wrap: wrap; gap: 8px; padding: 10px 16px; }
   .topbar-center { order: 3; width: 100%; justify-content: center; }
-
   .cards-row { grid-template-columns: repeat(2, 1fr); }
   .content-area { padding: 16px; }
 }
@@ -229,4 +263,6 @@ body { background: #f4f6f8; color: #111827; }
   .cards-row { grid-template-columns: 1fr; }
   .login-left { display: none; }
   .login-right { width: 100%; }
+  .punch-buttons { flex-direction: column; }
+  .punch-btn { width: 100%; }
 }
