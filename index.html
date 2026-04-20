@@ -1,19 +1,58 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Memo Pro</title>
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
-  <!-- Config (Supabase initialization) -->
-  <script src="config.js"></script>
+  <!-- ✅ Styles أولاً (مسار Absolute مناسب لـ Vercel) -->
+  <link rel="stylesheet" href="/css/main.css" />
 
-  <!-- Styles -->
-  <link rel="stylesheet" href="css/main.css">
+  <!-- ✅ Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- ✅ Config (Supabase initialization) -->
+  <script src="/config.js"></script>
+
+  <style>
+    @keyframes progress {
+      0% { width: 0%; }
+      50% { width: 100%; }
+      100% { width: 100%; }
+    }
+
+    .aux-btn.aux-active {
+      background: #2563eb;
+      color: white;
+    }
+
+    .modal-ov {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-ov.show {
+      display: flex;
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.show {
+      display: block;
+    }
+  </style>
 </head>
+
 <body>
 
 <div class="app">
@@ -33,34 +72,37 @@
   <!-- ═══════════════════════════════ -->
   <!-- 🔐 LOGIN SCREEN -->
   <!-- ═══════════════════════════════ -->
-  <div id="login-screen" class="login-container" style="display:none;">
-    <div class="login-box">
-      <div class="login-header">
-        <div style="font-size:40px;margin-bottom:10px;">🎯</div>
-        <h1>Memo Pro</h1>
-        <p>Employee Management & QA System</p>
-      </div>
-
-      <form class="login-form" onsubmit="event.preventDefault(); doLogin();">
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="login-email" placeholder="your@email.com" required>
+  <!-- ✅ مهم: بدون display:none inline عشان CSS/JS يتحكموا -->
+  <div id="login-screen">
+    <div class="login-container">
+      <div class="login-box">
+        <div class="login-header">
+          <div style="font-size:40px;margin-bottom:10px;">🎯</div>
+          <h1>Memo Pro</h1>
+          <p>Employee Management & QA System</p>
         </div>
 
-        <div class="form-group">
-          <label>Password</label>
-          <input type="password" id="login-pass" placeholder="••••••••" required>
+        <form class="login-form" onsubmit="event.preventDefault(); doLogin();">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="login-email" placeholder="your@email.com" required />
+          </div>
+
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="login-pass" placeholder="••••••••" required />
+          </div>
+
+          <div id="login-msg" class="login-msg"></div>
+
+          <button type="submit" id="login-btn" class="btn-primary" style="width:100%;">
+            Sign In
+          </button>
+        </form>
+
+        <div class="login-footer">
+          <p>© 2026 Foundever. All rights reserved.</p>
         </div>
-
-        <div id="login-msg" class="login-msg"></div>
-
-        <button type="submit" id="login-btn" class="btn-primary" style="width:100%;">
-          Sign In
-        </button>
-      </form>
-
-      <div class="login-footer">
-        <p>© 2026 Foundever. All rights reserved.</p>
       </div>
     </div>
   </div>
@@ -68,7 +110,8 @@
   <!-- ═══════════════════════════════ -->
   <!-- 🏠 MAIN APP -->
   <!-- ═══════════════════════════════ -->
-  <div id="app" class="app-container" style="display:none;">
+  <!-- ✅ مهم: بدون display:none inline عشان state.js يتحكم -->
+  <div id="app" class="app-container">
 
     <!-- TOPBAR -->
     <div class="topbar">
@@ -119,7 +162,6 @@
           <h2>📊 My Dashboard</h2>
         </div>
         <div class="panel-body">
-          <!-- Status Cards -->
           <div class="cards-grid">
             <div class="card">
               <div class="card-label">🟢 Online Hours</div>
@@ -139,7 +181,6 @@
             </div>
           </div>
 
-          <!-- Status Section -->
           <div class="section">
             <h3>⏰ Punch Status</h3>
             <div id="punch-status" style="font-size:18px;font-weight:700;margin-bottom:16px;color:#16a34a;">🟢 Ready to punch</div>
@@ -158,7 +199,6 @@
             </div>
           </div>
 
-          <!-- Team Online -->
           <div class="section">
             <div id="agent-timeline">
               <!-- Populated by loadTeamOnline() -->
@@ -173,7 +213,6 @@
           <h2>👥 Team Management</h2>
         </div>
         <div class="panel-body">
-          <!-- Team Stats -->
           <div class="cards-grid">
             <div class="card">
               <div class="card-label">👥 Total Members</div>
@@ -193,7 +232,6 @@
             </div>
           </div>
 
-          <!-- Team Table -->
           <div class="section">
             <h3>Team Members</h3>
             <table class="data-table">
@@ -221,7 +259,6 @@
           <button class="btn-primary btn-sm" onclick="openModal('new-eval');">+ New Evaluation</button>
         </div>
         <div class="panel-body">
-          <!-- QA Stats -->
           <div class="cards-grid">
             <div class="card">
               <div class="card-label">📊 Total Evals</div>
@@ -241,14 +278,10 @@
             </div>
           </div>
 
-          <!-- Agent Performance -->
           <div class="section">
-            <div id="qa-agent-perf">
-              <!-- Populated by loadQualityMonitoring() -->
-            </div>
+            <div id="qa-agent-perf"></div>
           </div>
 
-          <!-- Evaluations Table -->
           <div class="section">
             <h3>Recent Evaluations</h3>
             <table class="data-table">
@@ -276,7 +309,6 @@
           <button class="btn-primary btn-sm" onclick="openModal('add-user');">+ Add User</button>
         </div>
         <div class="panel-body">
-          <!-- Admin Stats -->
           <div class="cards-grid">
             <div class="card">
               <div class="card-label">👥 Total Users</div>
@@ -296,7 +328,6 @@
             </div>
           </div>
 
-          <!-- Users Table -->
           <div class="section">
             <h3>User Management</h3>
             <table class="data-table">
@@ -326,7 +357,6 @@
 <!-- 🔧 MODALS -->
 <!-- ═══════════════════════════════════════════════════════ -->
 
-<!-- ADD USER MODAL (ADMIN) -->
 <div id="modal-add-user" class="modal-ov" style="display:none;">
   <div class="modal-content">
     <div class="modal-header">
@@ -336,15 +366,15 @@
     <div class="modal-body">
       <div class="form-group">
         <label>Full Name</label>
-        <input type="text" id="mu-name" placeholder="John Doe">
+        <input type="text" id="mu-name" placeholder="John Doe" />
       </div>
       <div class="form-group">
         <label>Email</label>
-        <input type="email" id="mu-email" placeholder="john@example.com">
+        <input type="email" id="mu-email" placeholder="john@example.com" />
       </div>
       <div class="form-group">
         <label>Password</label>
-        <input type="password" id="mu-pass" placeholder="••••••••">
+        <input type="password" id="mu-pass" placeholder="••••••••" />
       </div>
       <div class="form-group">
         <label>Role</label>
@@ -364,7 +394,6 @@
   </div>
 </div>
 
-<!-- NEW EVALUATION MODAL (QUALITY) -->
 <div id="modal-new-eval" class="modal-ov" style="display:none;">
   <div class="modal-content">
     <div class="modal-header">
@@ -380,7 +409,7 @@
       </div>
       <div class="form-group">
         <label>Score (0-100)</label>
-        <input type="number" id="eval-score" min="0" max="100" placeholder="85">
+        <input type="number" id="eval-score" min="0" max="100" placeholder="85" />
       </div>
       <div class="form-group">
         <label>Notes</label>
@@ -396,65 +425,27 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<!-- 🔧 JAVASCRIPT (Core + Modules) -->
+<!-- ✅ JAVASCRIPT (Core + Modules) -->
 <!-- ═══════════════════════════════════════════════════════ -->
 
-<!-- ✅ CORE (في الترتيب الصح) -->
-<script src="js/core/state.js"></script>
-<script src="js/core/auth.js"></script>
-<script src="js/core/ui.js"></script>
+<!-- ✅ CORE -->
+<script src="/js/core/state.js"></script>
+<script src="/js/core/auth.js"></script>
+<script src="/js/core/ui.js"></script>
 
 <!-- ✅ AGENT MODULES -->
-<script src="js/agent/status.js"></script>
-<script src="js/agent/attendance.js"></script>
-<script src="js/agent/team.js"></script>
-<script src="js/agent/leaves.js"></script>
+<script src="/js/agent/status.js"></script>
+<script src="/js/agent/attendance.js"></script>
+<script src="/js/agent/team.js"></script>
+<script src="/js/agent/leaves.js"></script>
 
 <!-- ✅ ADMIN MODULES -->
-<script src="js/admin/users.js"></script>
-<script src="js/admin/schedules.js"></script>
-<script src="js/admin/import-export.js"></script>
+<script src="/js/admin/users.js"></script>
+<script src="/js/admin/schedules.js"></script>
+<script src="/js/admin/import-export.js"></script>
 
 <!-- ✅ QUALITY MODULES -->
-<script src="js/quality/monitoring.js"></script>
-
-<style>
-  @keyframes progress {
-    0% { width: 0%; }
-    50% { width: 100%; }
-    100% { width: 100%; }
-  }
-
-  .aux-btn.aux-active {
-    background: #2563eb;
-    color: white;
-  }
-
-  .modal-ov {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .modal-ov.show {
-    display: flex;
-  }
-
-  .panel {
-    display: none;
-  }
-
-  .panel.show {
-    display: block;
-  }
-</style>
+<script src="/js/quality/monitoring.js"></script>
 
 </body>
 </html>
