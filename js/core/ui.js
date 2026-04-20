@@ -8,7 +8,7 @@ console.log('✅ ui.js loaded');
 // 🎯 APP INITIALIZATION
 // ═══════════════════════════════════
 
-// Setup UI after app loads
+// Setup UI after app loads (called from auth.js)
 window.initializeUI = function () {
   try {
     setupTopbar();
@@ -250,7 +250,7 @@ window.loadNotifications = async function () {
     }
 
     notifList.innerHTML = notifs.map(n => `
-      <div class="notif-item" style="padding:12px;border-bottom:1px solid #f3f4f6;cursor:pointer;" onclick="markNotifRead('${n.id}')">
+      <div class="notif-item" onclick="markNotifRead('${n.id}')">
         <div style="font-weight:600;font-size:13px;">${n.message || 'New notification'}</div>
         <div style="font-size:11px;color:#9ca3af;margin-top:4px;">${formatTime(n.created_at)}</div>
       </div>
@@ -324,10 +324,20 @@ window.setupEventListeners = function () {
       };
     }
 
-    // Login form
+    // Login form submit
+    const loginForm = document.querySelector('.login-form');
+    if (loginForm) {
+      loginForm.onsubmit = async (e) => {
+        e.preventDefault();
+        await doLogin();
+      };
+    }
+
+    // Login button click
     const loginBtn = document.getElementById('login-btn');
     if (loginBtn) {
-      loginBtn.onclick = async () => {
+      loginBtn.onclick = async (e) => {
+        e.preventDefault();
         loginBtn.disabled = true;
         loginBtn.textContent = 'Signing in...';
         await doLogin();
@@ -341,6 +351,7 @@ window.setupEventListeners = function () {
     if (passInput) {
       passInput.addEventListener('keypress', async (e) => {
         if (e.key === 'Enter') {
+          e.preventDefault();
           await doLogin();
         }
       });
@@ -349,6 +360,7 @@ window.setupEventListeners = function () {
     // Modal close buttons
     document.querySelectorAll('.modal-close').forEach(btn => {
       btn.onclick = (e) => {
+        e.preventDefault();
         const modal = e.target.closest('.modal-ov');
         if (modal) modal.classList.remove('show');
       };
@@ -378,16 +390,5 @@ setInterval(() => {
     loadNotifications();
   }
 }, 10000);
-
-// ═══════════════════════════════════
-// 🚀 INITIALIZE ON APP LOAD
-// ═══════════════════════════════════
-
-// Call this from auth.js after showApp()
-document.addEventListener('DOMContentLoaded', () => {
-  // Will be called by showApp() in auth.js
-  // Just ensure functions are available
-  console.log('✅ UI module ready');
-});
 
 console.log('✅ ui.js fully loaded');
