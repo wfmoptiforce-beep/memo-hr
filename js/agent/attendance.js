@@ -1,4 +1,8 @@
 // ═══════════════════════════════════
-// ⏰ ATTENDANCE (handled by status.js aux system)
+// ⏰ ATTENDANCE (handled by status.js)
 // ═══════════════════════════════════
-console.log('attendance.js loaded');
+
+console.log('✅ attendance.js loaded');
+
+// Attendance data managed via status.js aux system
+// No standalone functions needed here

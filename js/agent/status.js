@@ -1,26 +1,204 @@
-// ✅ MAGIC STATUS FILE
-console.log('✅ STATUS.JS LOADED');
+// ═══════════════════════════════════
+// ⏰ AGENT STATUS & AUX SYSTEM
+// ═══════════════════════════════════
 
-window.punchAux = function (aux) {
-  console.log('Punch clicked:', aux);
+console.log('✅ status.js loaded');
 
-  const status = document.getElementById('punch-status');
-  const timer  = document.getElementById('aux-timer');
-
-  if (status) {
-    status.textContent = 'Status: ' + aux.toUpperCase();
-    status.style.color =
-      aux === 'online'   ? 'green'  :
-      aux === 'break'    ? 'orange' :
-      aux === 'meeting'  ? 'orange' :
-      aux === 'training' ? 'blue'   :
-      aux === 'coaching' ? 'purple' :
-      'red';
-  }
-
-  if (timer) {
-    timer.textContent = '00:00:01';
-  }
-
-  alert('✅ Punch works: ' + aux);
+// Global state for current aux session
+window.AuxState = {
+  currentAux: null,
+  startTime: null,
+  timerInterval: null,
+  sessions: [] // all sessions today
 };
+
+// ✅ MAIN PUNCH FUNCTION
+window.punchAux = async function (aux) {
+  try {
+    if (!window.sb || !window.APP?.CU) {
+      console.warn('Auth not ready');
+      return;
+    }
+
+    const userId = APP.CU.id;
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+
+    // Stop current timer if running
+    if (AuxState.timerInterval) {
+      clearInterval(AuxState.timerInterval);
+      AuxState.timerInterval = null;
+    }
+
+    // If same aux clicked again = punch out
+    if (AuxState.currentAux === aux) {
+      const duration = Math.round((now - AuxState.startTime) / 1000); // seconds
+      
+      // Save session to DB
+      await sb.from('aux_sessions').insert({
+        user_id: userId,
+        aux_type: aux,
+        start_time: AuxState.startTime.toISOString(),
+        end_time: now.toISOString(),
+        duration_seconds: duration,
+        date: today
+      });
+
+      AuxState.currentAux = null;
+      AuxState.startTime = null;
+      updatePunchUI();
+      await loadDailySummary();
+      return;
+    }
+
+    // Start new aux
+    AuxState.currentAux = aux;
+    AuxState.startTime = now;
+    updatePunchUI();
+    startTimer();
+
+    // Save to DB
+    await sb.from('aux_logs').insert({
+      user_id: userId,
+      aux_type: aux,
+      action: 'start',
+      timestamp: now.toISOString(),
+      date: today
+    });
+
+  } catch (e) {
+    console.error('punchAux error:', e);
+  }
+};
+
+// ✅ UPDATE UI
+function updatePunchUI() {
+  const status = document.getElementById('punch-status');
+  const buttons = document.querySelectorAll('.aux-btn');
+
+  // Remove all highlights
+  buttons.forEach(b => b.classList.remove('aux-active'));
+
+  if (AuxState.currentAux) {
+    // Highlight active button
+    const activeBtn = document.querySelector(`[data-aux="${AuxState.currentAux}"]`);
+    if (activeBtn) activeBtn.classList.add('aux-active');
+
+    // Update status text
+    if (status) {
+      status.textContent = `🔴 Active: ${AuxState.currentAux.toUpperCase()}`;
+      status.style.color = getAuxColor(AuxState.currentAux);
+    }
+  } else {
+    // Ready state
+    if (status) {
+      status.textContent = '🟢 Ready to punch';
+      status.style.color = '#16a34a';
+    }
+  }
+}
+
+// ✅ TIMER (Updates every second)
+function startTimer() {
+  const timerEl = document.getElementById('aux-timer');
+  if (!timerEl) return;
+
+  if (AuxState.timerInterval) clearInterval(AuxState.timerInterval);
+
+  AuxState.timerInterval = setInterval(() => {
+    if (!AuxState.startTime) {
+      clearInterval(AuxState.timerInterval);
+      return;
+    }
+
+    const elapsed = Math.floor((new Date() - AuxState.startTime) / 1000);
+    const h = Math.floor(elapsed / 3600);
+    const m = Math.floor((elapsed % 3600) / 60);
+    const s = elapsed % 60;
+
+    timerEl.textContent = 
+      `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }, 1000);
+}
+
+// ✅ LOAD DAILY SUMMARY
+window.loadDailySummary = async function () {
+  try {
+    if (!window.sb || !window.APP?.CU) return;
+
+    const userId = APP.CU.id;
+    const today = new Date().toISOString().split('T')[0];
+
+    // Get all sessions for today
+    const { data: sessions } = await sb
+      .from('aux_sessions')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('date', today);
+
+    AuxState.sessions = sessions || [];
+
+    // Calculate totals
+    const totals = {
+      online: 0,
+      break: 0,
+      meeting: 0,
+      training: 0,
+      coaching: 0,
+      offline: 0
+    };
+
+    AuxState.sessions.forEach(s => {
+      const hours = (s.duration_seconds || 0) / 3600;
+      if (totals[s.aux_type] !== undefined) {
+        totals[s.aux_type] += hours;
+      }
+    });
+
+    // Update summary in UI
+    const summaryDiv = document.getElementById('aux-summary');
+    if (summaryDiv) {
+      const loginHours = Object.values(totals).reduce((a, b) => a + b, 0);
+      const missingHours = Math.max(0, 8 - loginHours);
+
+      summaryDiv.innerHTML = `
+        <div class="aux-summary-row"><span>🟢 Online:</span><strong>${totals.online.toFixed(1)}h</strong></div>
+        <div class="aux-summary-row"><span>🟡 Break:</span><strong>${totals.break.toFixed(1)}h</strong> / 1h</div>
+        <div class="aux-summary-row"><span>🟠 Meeting:</span><strong>${totals.meeting.toFixed(1)}h</strong></div>
+        <div class="aux-summary-row"><span>🔵 Training:</span><strong>${totals.training.toFixed(1)}h</strong></div>
+        <div class="aux-summary-row"><span>🟣 Coaching:</span><strong>${totals.coaching.toFixed(1)}h</strong></div>
+        <div class="aux-summary-row total"><span>📊 Login Time:</span><strong>${loginHours.toFixed(1)}h</strong> / 8h</div>
+        <div class="aux-summary-row ${missingHours > 0 ? 'warn' : 'good'}"><span>⏳ Missing:</span><strong>${missingHours.toFixed(1)}h</strong></div>
+      `;
+    }
+
+    // Update stat cards
+    safeText('agent-hours', totals.online.toFixed(1) + 'h');
+    safeText('agent-break', totals.break.toFixed(1) + 'h');
+    safeText('agent-missing', Math.max(0, 8 - Object.values(totals).reduce((a, b) => a + b, 0)).toFixed(1) + 'h');
+    safeText('agent-meeting', (totals.meeting + totals.training + totals.coaching).toFixed(1) + 'h');
+
+  } catch (e) {
+    console.warn('loadDailySummary:', e);
+  }
+};
+
+// ✅ HELPER: Get Aux Color
+function getAuxColor(aux) {
+  const colors = {
+    online: '#16a34a',
+    break: '#eab308',
+    meeting: '#f97316',
+    training: '#3b82f6',
+    coaching: '#8b5cf6',
+    offline: '#dc2626'
+  };
+  return colors[aux] || '#6b7280';
+}
+
+// ✅ AUTO-LOAD SUMMARY ON PAGE INIT
+document.addEventListener('DOMContentLoaded', () => {
+  loadDailySummary();
+  // Refresh every 30 seconds
+  setInterval(loadDailySummary, 30000);
+});
