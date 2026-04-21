@@ -4,6 +4,33 @@
 
 console.log('✅ auth.js loaded');
 
+// ✅ دالة فحص وتجديد الجلسة (التصريح) تلقائياً
+window.checkSession = async function() {
+  try {
+    const { data, error } = await window.sb.auth.getSession();
+    
+    // لو الجلسة مش موجودة أو فيها إيرور، نحاول نجددها
+    if (error || !data.session) {
+      console.log("⏳ Session expired or missing, attempting to refresh...");
+      const { data: refreshData, error: refreshError } = await window.sb.auth.refreshSession();
+      
+      if (refreshError || !refreshData.session) {
+        console.error("❌ Failed to refresh session, please login again.");
+        window.doLogout(); // الخروج إجبارياً لو فشل التجديد تماماً
+        return null;
+      }
+      
+      APP.CU = refreshData.session.user; // تحديث بيانات المستخدم
+      return refreshData.session;
+    }
+    
+    return data.session;
+  } catch(e) {
+    console.error("Session check error:", e);
+    return null;
+  }
+};
+
 // ✅ APP INITIALIZATION
 async function initApp() {
   try {
@@ -18,14 +45,8 @@ async function initApp() {
     const loadingScreen = document.getElementById('loading-screen');
     if (loadingScreen) loadingScreen.style.display = 'flex';
 
-    // Get current session
-    const { data: { session }, error } = await sb.auth.getSession();
-
-    if (error) {
-      console.warn('Session error:', error);
-      if (typeof window.showLogin === 'function') window.showLogin();
-      return;
-    }
+    // Get current session with our new smart checker
+    const session = await window.checkSession();
 
     if (!session) {
       if (typeof window.showLogin === 'function') window.showLogin();
