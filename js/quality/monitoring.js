@@ -139,6 +139,7 @@ window.loadQualityMonitoring = async function () {
     }
 
     // ─── Load Quality Scores ───
+    // تم إضافة معالجة أفضل للأخطاء هنا
     const { data: evals, error: evalsError } = await sb
       .from('quality_scores')
       .select(`
@@ -154,9 +155,10 @@ window.loadQualityMonitoring = async function () {
       .order('created_at', { ascending: false })
       .limit(100);
 
+    // إذا كان هناك خطأ في قاعدة البيانات (مثل الجدول غير موجود)، أوقف التنفيذ بهدوء
     if (evalsError) {
-      console.warn('Load evals error:', evalsError);
-      return;
+      console.warn('⚠️ تنبيه: تعذر تحميل التقييمات. تأكد من وجود جدول quality_scores في Supabase.', evalsError.message);
+      return; 
     }
 
     if (!evals || evals.length === 0) {
@@ -248,15 +250,10 @@ window.loadQualityMonitoring = async function () {
       `;
     }
 
-    console.log('✅ Quality monitoring loaded:', {
-      totalEvals,
-      avgScore,
-      passRate
-    });
+    console.log('✅ Quality monitoring loaded successfully.');
 
   } catch (e) {
     console.error('loadQualityMonitoring error:', e);
-    showToast('❌ Failed to load quality data', 'error');
   }
 };
 
