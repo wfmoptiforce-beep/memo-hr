@@ -143,7 +143,7 @@
             </div>
             <div class="card">
               <div class="card-label">⏳ Missing Hours</div>
-              <div class="card-value" id="agent-missing">0h</div>
+              <div class="card-value" id="agent-missing" style="color:red;">8.0h</div>
             </div>
           </div>
 
@@ -153,18 +153,27 @@
             <div id="aux-timer" class="aux-timer-text">00:00:00</div>
 
             <div class="punch-controls">
-              <select id="aux-selector" class="punch-select" style="border-left: 5px solid #16a34a;" onchange="this.style.borderLeftColor = window.getAuxColor ? window.getAuxColor(this.value) : '#ccc'">
-                <option value="online" style="color: #16a34a; font-weight: bold;">🟢 Online</option>
-                <option value="break" style="color: #eab308; font-weight: bold;">🟡 Break</option>
-                <option value="meeting" style="color: #f97316; font-weight: bold;">🟠 Meeting</option>
-                <option value="training" style="color: #3b82f6; font-weight: bold;">🔵 Training</option>
-                <option value="coaching" style="color: #8b5cf6; font-weight: bold;">🟣 Coaching</option>
+              <select id="aux-selector" class="punch-select">
+                <option value="online">🟢 Online</option>
+                <option value="break">🟡 Break</option>
+                <option value="meeting">🟠 Meeting</option>
+                <option value="training">🔵 Training</option>
+                <option value="coaching">🟣 Coaching</option>
               </select>
               <button class="btn-punch-in" onclick="if(window.startSelectedAux) window.startSelectedAux();">Punch In</button>
               <button class="btn-punch-out" onclick="if(window.punchOut) window.punchOut();" style="background-color: #dc2626;">Punch Out</button>
             </div>
-
             <div id="aux-summary" class="aux-summary-box"></div>
+          </div>
+
+          <div class="section">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h3>🏖️ My Leaves History</h3>
+              <button class="btn-primary btn-sm" onclick="openModal('request-leave')">+ Request Leave</button>
+            </div>
+            <div id="agent-leaves-list" style="margin-top:10px;">
+                <p style="text-align:center; color:gray;">Loading history...</p>
+            </div>
           </div>
 
           <div class="section">
@@ -183,7 +192,7 @@
       <div id="panel-supervisor" class="panel" style="display:none;">
         <div class="panel-header"><h2>👥 Team Management</h2></div>
         <div class="panel-body">
-          <div class="cards-grid">
+          <div id="agent-timeline-live"></div> <div class="cards-grid">
             <div class="card"><div class="card-label">👥 Total Members</div><div class="card-value" id="sup-team-count">0</div></div>
             <div class="card"><div class="card-label">🟢 Online Now</div><div class="card-value" id="sup-online-count">0</div></div>
             <div class="card"><div class="card-label">🟡 On Break</div><div class="card-value" id="sup-break-count">0</div></div>
@@ -218,7 +227,6 @@
             <div class="card"><div class="card-label">✅ Pass Rate</div><div class="card-value" id="qa-pass-rate">—</div></div>
             <div class="card"><div class="card-label">❌ Fail Count</div><div class="card-value" id="qa-fail-count">0</div></div>
           </div>
-          <div class="section"><div id="qa-agent-perf"></div></div>
           <div class="section">
             <h3>Recent Evaluations</h3>
             <div class="table-container">
@@ -233,22 +241,42 @@
 
       <div id="panel-admin" class="panel" style="display:none;">
         <div class="panel-header">
-          <h2>⚙️ Admin Panel</h2>
-          <button class="btn-primary btn-sm" onclick="openModal('add-user');">+ Add User</button>
+          <h2>⚙️ Admin Control Tower</h2>
+          <button class="btn-primary" onclick="openModal('add-user');">+ Add New Person</button>
         </div>
         <div class="panel-body">
+          <div class="section">
+            <h3>📩 Pending Leave Requests</h3>
+            <div class="table-container">
+              <table class="data-table">
+                <thead><tr><th>Agent</th><th>Type</th><th>Dates</th><th>Action</th></tr></thead>
+                <tbody id="admin-leaves-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
           <div class="cards-grid">
             <div class="card"><div class="card-label">👥 Total Users</div><div class="card-value" id="admin-total-users">0</div></div>
             <div class="card"><div class="card-label">🟢 Online</div><div class="card-value" id="admin-online-count">0</div></div>
             <div class="card"><div class="card-label">📊 Attendance</div><div class="card-value" id="admin-att-rate">0%</div></div>
-            <div class="card"><div class="card-label">❌ Absent Today</div><div class="card-value" id="admin-absent-count">0</div></div>
           </div>
+
           <div class="section">
-            <h3>User Management</h3>
+              <h3>📅 Schedule Management</h3>
+              <div style="display:flex; gap:10px; margin-bottom:15px;">
+                  <button class="btn-secondary" onclick="window.downloadScheduleTemplate()">📥 Download Template</button>
+                  <input type="file" id="bulk-upload" style="display:none" onchange="window.handleScheduleUpload(event)">
+                  <button class="btn-primary" onclick="document.getElementById('bulk-upload').click()">📤 Bulk Upload Schedule</button>
+              </div>
+              <div id="upload-status"></div>
+          </div>
+
+          <div class="section">
+            <h3>User Management Database</h3>
             <div class="table-container">
               <table class="data-table">
                 <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Change Role</th></tr></thead>
-                <tbody id="admin-users-tbody"><tr><td colspan="5" class="empty-row">Loading...</td></tr></tbody>
+                <tbody id="admin-users-tbody"></tbody>
               </table>
             </div>
           </div>
@@ -260,6 +288,38 @@
 
 </div>
 
+<div id="modal-request-leave" class="modal-ov" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>✈️ Request New Leave</h2>
+      <button class="modal-close" onclick="closeModal('request-leave');">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Type</label>
+        <select id="leave-type">
+          <option value="Annual">Annual Leave</option>
+          <option value="Sick">Sick Leave</option>
+          <option value="Emergency">Emergency</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Start Date</label>
+        <input type="date" id="leave-start">
+      </div>
+      <div class="form-group">
+        <label>End Date</label>
+        <input type="date" id="leave-end">
+      </div>
+      <div id="leave-msg" class="form-msg"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('request-leave');">Cancel</button>
+      <button class="btn-primary" onclick="window.submitLeaveRequest()">Submit Request</button>
+    </div>
+  </div>
+</div>
+
 <div id="modal-edit-profile" class="modal-ov" style="display:none;">
   <div class="modal-content">
     <div class="modal-header">
@@ -267,18 +327,12 @@
       <button class="modal-close" onclick="closeModal('edit-profile');">✕</button>
     </div>
     <div class="modal-body">
-      <div class="form-group">
-        <label>Full Name</label>
-        <input type="text" id="ep-name" placeholder="Your Name" />
-      </div>
-      <div class="form-group">
-        <label>Profile Picture URL</label>
-        <input type="text" id="ep-avatar" placeholder="https://link-to-your-image.jpg" />
-      </div>
+      <div class="form-group"><label>Full Name</label><input type="text" id="ep-name" /></div>
+      <div class="form-group"><label>Avatar URL</label><input type="text" id="ep-avatar" /></div>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('edit-profile');">Cancel</button>
-      <button class="btn-primary" onclick="if(window.saveProfile) window.saveProfile();">Save Changes</button>
+      <button class="btn-primary" onclick="window.saveProfile();">Save</button>
     </div>
   </div>
 </div>
@@ -290,9 +344,9 @@
       <button class="modal-close" onclick="closeModal('add-user');">✕</button>
     </div>
     <div class="modal-body">
-      <div class="form-group"><label>Full Name</label><input type="text" id="mu-name" placeholder="John Doe" /></div>
-      <div class="form-group"><label>Email</label><input type="email" id="mu-email" placeholder="john@example.com" /></div>
-      <div class="form-group"><label>Password</label><input type="password" id="mu-pass" placeholder="••••••••" /></div>
+      <div class="form-group"><label>Full Name</label><input type="text" id="mu-name" /></div>
+      <div class="form-group"><label>Email</label><input type="email" id="mu-email" /></div>
+      <div class="form-group"><label>Password</label><input type="password" id="mu-pass" /></div>
       <div class="form-group">
         <label>Role</label>
         <select id="mu-role">
@@ -306,50 +360,38 @@
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('add-user');">Cancel</button>
-      <button class="btn-primary" onclick="addUser();">Add User</button>
+      <button class="btn-primary" onclick="window.addUser();">Add User</button>
     </div>
   </div>
 </div>
 
 <div id="modal-new-eval" class="modal-ov" style="display:none;">
   <div class="modal-content">
-    <div class="modal-header">
-      <h2>New Evaluation</h2>
-      <button class="modal-close" onclick="closeModal('new-eval');">✕</button>
-    </div>
+    <div class="modal-header"><h2>New Evaluation</h2><button class="modal-close" onclick="closeModal('new-eval');">✕</button></div>
     <div class="modal-body">
-      <div class="form-group">
-        <label>Agent</label>
-        <select id="eval-agent"><option value="">Select agent...</option></select>
-      </div>
-      <div class="form-group">
-        <label>Score (0-100)</label>
-        <input type="number" id="eval-score" min="0" max="100" placeholder="85" />
-      </div>
-      <div class="form-group">
-        <label>Notes</label>
-        <textarea id="eval-notes" placeholder="Quality feedback..." rows="4"></textarea>
-      </div>
+      <div class="form-group"><label>Agent Email</label><input type="text" id="eval-agent-email" /></div>
+      <div class="form-group"><label>Score (0-100)</label><input type="number" id="eval-score" /></div>
+      <div class="form-group"><label>Notes</label><textarea id="eval-notes"></textarea></div>
       <div id="eval-msg" class="form-msg"></div>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('new-eval');">Cancel</button>
-      <button class="btn-primary" onclick="submitEval();">Submit</button>
+      <button class="btn-primary" onclick="window.submitEvaluation();">Submit</button>
     </div>
   </div>
 </div>
 
-<script src="/js/core/state.js?v=2"></script>
-<script src="/js/core/auth.js?v=2"></script>
-<script src="/js/core/ui.js?v=2"></script>
-<script src="/js/agent/status.js?v=2"></script>
-<script src="/js/agent/attendance.js?v=2"></script>
-<script src="/js/agent/team.js?v=2"></script>
-<script src="/js/agent/leaves.js?v=2"></script>
-<script src="/js/admin/users.js?v=2"></script>
-<script src="/js/admin/schedules.js?v=2"></script>
-<script src="/js/admin/import-export.js?v=2"></script>
-<script src="/js/quality/monitoring.js?v=2"></script>
+<script src="/js/core/state.js?v=4"></script>
+<script src="/js/core/auth.js?v=4"></script>
+<script src="/js/core/ui.js?v=4"></script>
+<script src="/js/agent/status.js?v=4"></script>
+<script src="/js/agent/attendance.js?v=4"></script>
+<script src="/js/agent/team.js?v=4"></script>
+<script src="/js/agent/leaves.js?v=4"></script>
+<script src="/js/admin/users.js?v=4"></script>
+<script src="/js/admin/schedules.js?v=4"></script>
+<script src="/js/admin/import-export.js?v=4"></script>
+<script src="/js/quality/monitoring.js?v=4"></script>
 
 </body>
 </html>
