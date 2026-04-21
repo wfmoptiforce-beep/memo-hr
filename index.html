@@ -1,429 +1,140 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Memo Pro</title>
+console.log('✅ status.js loaded');
 
-  <link rel="stylesheet" href="/css/main.css" />
+window.AuxState = {
+    currentAux: localStorage.getItem('currentAux') || null,
+    startTime: localStorage.getItem('startTime') ? new Date(localStorage.getItem('startTime')) : null,
+    timerInterval: null
+};
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+window.getAuxColor = function(aux) {
+    const colors = { online: '#16a34a', break: '#eab308', meeting: '#f97316', training: '#3b82f6', coaching: '#8b5cf6' };
+    return colors[aux] || '#6b7280';
+};
 
-  <script src="/config.js"></script>
-</head>
+window.startSelectedAux = async function() {
+    const aux = document.getElementById('aux-selector').value;
+    if (window.AuxState.currentAux === aux) return;
+    
+    if (window.AuxState.currentAux) {
+        await window.punchOut(true); 
+    }
 
-<body>
+    const now = new Date();
+    window.AuxState.currentAux = aux;
+    window.AuxState.startTime = now;
+    localStorage.setItem('currentAux', aux);
+    localStorage.setItem('startTime', now.toISOString());
 
-<div class="app">
+    updatePunchUI();
+    startTimer();
 
-  <div id="loading-screen" class="loading-screen">
-    <div style="font-size:60px;margin-bottom:20px;">🎯</div>
-    <div style="font-size:24px;font-weight:700;margin-bottom:10px;">Memo Pro</div>
-    <div style="font-size:13px;color:#9ca3af;margin-bottom:20px;">Loading...</div>
-    <div class="loading-bar-container">
-      <div class="loading-bar"></div>
-    </div>
-  </div>
+    try {
+        await sb.from('aux_logs').insert({
+            user_id: APP.CU.id,
+            aux_type: aux,
+            action: 'start',
+            timestamp: now.toISOString(),
+            date: now.toISOString().split('T')[0]
+        });
+    } catch (e) { console.error(e); }
+};
 
-  <div id="login-screen">
-    <div class="login-split-container">
-      
-      <div class="login-left-panel">
-        <div class="login-logo-area">
-          <div class="logo-icon">🎯</div>
-          <h1>Memo Pro</h1>
-          <p>WORKFORCE TOOL</p>
-        </div>
+window.punchOut = async function(isSwitching = false) {
+    if (!window.AuxState.currentAux) return;
+
+    const now = new Date();
+    const durationSeconds = Math.round((now - window.AuxState.startTime) / 1000);
+
+    try {
+        await sb.from('aux_sessions').insert({
+            user_id: APP.CU.id,
+            aux_type: window.AuxState.currentAux,
+            start_time: window.AuxState.startTime.toISOString(),
+            end_time: now.toISOString(),
+            duration_seconds: durationSeconds,
+            date: now.toISOString().split('T')[0]
+        });
+
+        if (!isSwitching) {
+            window.AuxState.currentAux = null;
+            window.AuxState.startTime = null;
+            localStorage.removeItem('currentAux');
+            localStorage.removeItem('startTime');
+            if (window.AuxState.timerInterval) clearInterval(window.AuxState.timerInterval);
+            document.getElementById('aux-timer').textContent = "00:00:00";
+            updatePunchUI();
+        }
+        await window.loadDailySummary(); 
+
+    } catch (e) { console.error(e); }
+};
+
+window.loadDailySummary = async function () {
+    if (!window.sb || !APP.CU) return;
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const { data: sessions } = await sb.from('aux_sessions').select('*').eq('user_id', APP.CU.id).eq('date', today);
+
+        const totals = { online: 0, break: 0, meeting: 0, training: 0, coaching: 0 };
+        sessions?.forEach(s => {
+            if (totals[s.aux_type] !== undefined) totals[s.aux_type] += (s.duration_seconds || 0);
+        });
+
+        const toHours = (sec) => (sec / 3600);
+        const totalLoginHrs = toHours(totals.online + totals.meeting + totals.training + totals.coaching);
+        const missingHrs = Math.max(0, 8 - totalLoginHrs);
+
+        safeText('agent-hours', toHours(totals.online).toFixed(2) + 'h');
+        safeText('agent-break', toHours(totals.break).toFixed(2) + 'h');
+        safeText('agent-meeting', toHours(totals.meeting + totals.training + totals.coaching).toFixed(2) + 'h');
         
-        <div class="login-features">
-          <div class="feature-item">
-            <span class="feature-icon">📊</span>
-            <div class="feature-text">
-              <h4>Real-Time Reports</h4>
-              <p>Attrition - Absenteeism - Hours</p>
-            </div>
-          </div>
-          <div class="feature-item">
-            <span class="feature-icon">👥</span>
-            <div class="feature-text">
-              <h4>Agent Management</h4>
-              <p>Track status & productivity</p>
-            </div>
-          </div>
-          <div class="feature-item">
-            <span class="feature-icon">⏱️</span>
-            <div class="feature-text">
-              <h4>Live Timeline</h4>
-              <p>Breaks - Meetings - Training</p>
-            </div>
-          </div>
-        </div>
-      </div>
+        const msgEl = document.getElementById('agent-missing');
+        if(msgEl) {
+            msgEl.textContent = missingHrs.toFixed(2) + 'h';
+            msgEl.style.color = missingHrs > 0 ? '#dc2626' : '#16a34a';
+        }
 
-      <div class="login-right-panel">
-        <div class="login-form-container">
-          <div class="login-header-text">
-            <h2>Welcome Back 👋</h2>
-            <p>Sign in to your Memo Pro account</p>
-          </div>
+        const summaryDiv = document.getElementById('aux-summary');
+        if (summaryDiv) {
+            summaryDiv.innerHTML = `
+                <div class="aux-summary-row"><span>🟢 Online:</span><strong>${toHours(totals.online).toFixed(2)}h</strong></div>
+                <div class="aux-summary-row"><span>🟡 Break:</span><strong>${toHours(totals.break).toFixed(2)}h / 1h</strong></div>
+                <div class="aux-summary-row"><span>🟠 Meeting/Coaching:</span><strong>${toHours(totals.meeting + totals.training + totals.coaching).toFixed(2)}h</strong></div>
+                <div class="aux-summary-row total"><span>📊 Total Login Time:</span><strong>${totalLoginHrs.toFixed(2)}h / 8h</strong></div>
+            `;
+        }
+    } catch (e) { console.warn(e); }
+};
 
-          <form class="login-form" onsubmit="event.preventDefault(); doLogin();">
-            <div class="form-group">
-              <label>EMAIL</label>
-              <input type="email" id="login-email" placeholder="your@email.com" required />
-            </div>
+function startTimer() {
+    if (window.AuxState.timerInterval) clearInterval(window.AuxState.timerInterval);
+    const timerEl = document.getElementById('aux-timer');
+    if(!timerEl || !window.AuxState.startTime) return;
+    
+    window.AuxState.timerInterval = setInterval(() => {
+        const elapsed = Math.floor((new Date() - window.AuxState.startTime) / 1000);
+        const h = Math.floor(elapsed / 3600).toString().padStart(2, '0');
+        const m = Math.floor((elapsed % 3600) / 60).toString().padStart(2, '0');
+        const s = (elapsed % 60).toString().padStart(2, '0');
+        timerEl.textContent = `${h}:${m}:${s}`;
+    }, 1000);
+}
 
-            <div class="form-group">
-              <label>PASSWORD</label>
-              <input type="password" id="login-pass" placeholder="••••••••" required />
-              <a href="#" class="forgot-pass" onclick="alert('Please contact your Supervisor or Administrator to reset your password.'); return false;">Forgot Password?</a>
-            </div>
+function updatePunchUI() {
+    const status = document.getElementById('punch-status');
+    if (window.AuxState.currentAux) {
+        status.textContent = '🔴 Active: ' + window.AuxState.currentAux.toUpperCase();
+        status.style.color = window.getAuxColor(window.AuxState.currentAux);
+    } else {
+        status.textContent = '🟢 Ready to punch';
+        status.style.color = '#16a34a';
+    }
+}
 
-            <div id="login-msg" class="login-msg"></div>
-
-            <button type="submit" id="login-btn" class="btn-primary login-submit-btn">
-              Sign In
-            </button>
-          </form>
-
-          <div class="login-footer">
-             <p>Need help? <a href="#" onclick="alert('Admin Email: admin@memopro.com'); return false;">Contact Your Administrator</a></p>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <div id="app" class="app-container">
-
-    <div class="topbar">
-      <div class="topbar-left">
-        <div class="logo">🎯 Memo Pro</div>
-      </div>
-
-      <div class="topbar-center">
-        <nav id="topbar-nav" class="topbar-nav">
-          </nav>
-      </div>
-
-      <div class="topbar-right">
-        <button class="btn-icon" onclick="toggleNotif();">
-          🔔
-          <span class="notif-badge" style="display:none;">0</span>
-        </button>
-
-        <div class="user-menu">
-          <div class="user-avatar" id="user-av">U</div>
-          <div class="user-info">
-            <div class="user-name" id="user-name">User</div>
-            <div class="user-role" id="user-role">agent</div>
-          </div>
-        </div>
-
-        <button class="btn-logout logout-btn" onclick="doLogout();">
-          🚪 Logout
-        </button>
-      </div>
-    </div>
-
-    <div id="notif-panel" class="notif-panel" style="display:none;">
-      <div class="notif-header">Notifications</div>
-      <div id="notif-list" class="notif-list">
-        </div>
-    </div>
-
-    <div class="content">
-
-      <div id="panel-agent" class="panel">
-        <div class="panel-header">
-          <h2 id="welcome-greeting">👋 Welcome, Agent</h2>
-        </div>
-        <div class="panel-body">
-          <div class="cards-grid">
-            <div class="card">
-              <div class="card-label">🟢 Online Hours</div>
-              <div class="card-value" id="agent-hours">0h</div>
-            </div>
-            <div class="card">
-              <div class="card-label">🟡 Break</div>
-              <div class="card-value" id="agent-break">0h</div>
-            </div>
-            <div class="card">
-              <div class="card-label">🟠 Meetings</div>
-              <div class="card-value" id="agent-meeting">0h</div>
-            </div>
-            <div class="card">
-              <div class="card-label">⏳ Missing Hours</div>
-              <div class="card-value" id="agent-missing">0h</div>
-            </div>
-          </div>
-
-          <div class="section">
-            <h3>⏰ Punch Status</h3>
-            <div id="punch-status" class="punch-status-text">🟢 Ready to punch</div>
-            <div id="aux-timer" class="aux-timer-text">00:00:00</div>
-
-            <div class="punch-controls">
-              <select id="aux-selector" class="punch-select" style="border-left: 5px solid #16a34a;" onchange="this.style.borderLeftColor = getAuxColor(this.value)">
-                <option value="online" style="color: #16a34a; font-weight: bold;">🟢 Online</option>
-                <option value="break" style="color: #eab308; font-weight: bold;">🟡 Break</option>
-                <option value="meeting" style="color: #f97316; font-weight: bold;">🟠 Meeting</option>
-                <option value="training" style="color: #3b82f6; font-weight: bold;">🔵 Training</option>
-                <option value="coaching" style="color: #8b5cf6; font-weight: bold;">🟣 Coaching</option>
-              </select>
-              <button class="btn-punch-in" onclick="startSelectedAux()">Punch In</button>
-              <button class="btn-punch-out" onclick="punchOut()" style="background-color: #dc2626;">Punch Out</button>
-            </div>
-
-            <div id="aux-summary" class="aux-summary-box">
-              </div>
-          </div>
-
-          <div class="section">
-            <h3>📅 My Schedule</h3>
-            <div id="my-schedule-container" style="padding: 20px; background: white; border-radius: 8px; text-align: center; color: var(--text-light); border: 1px dashed var(--border);">
-              No schedule uploaded yet.
-            </div>
-          </div>
-
-          <div class="section">
-            <div id="agent-timeline">
-              </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="panel-supervisor" class="panel" style="display:none;">
-        <div class="panel-header">
-          <h2>👥 Team Management</h2>
-        </div>
-        <div class="panel-body">
-          <div class="cards-grid">
-            <div class="card">
-              <div class="card-label">👥 Total Members</div>
-              <div class="card-value" id="sup-team-count">0</div>
-            </div>
-            <div class="card">
-              <div class="card-label">🟢 Online Now</div>
-              <div class="card-value" id="sup-online-count">0</div>
-            </div>
-            <div class="card">
-              <div class="card-label">🟡 On Break</div>
-              <div class="card-value" id="sup-break-count">0</div>
-            </div>
-            <div class="card">
-              <div class="card-label">⚫ Offline</div>
-              <div class="card-value" id="sup-offline-count">0</div>
-            </div>
-          </div>
-
-          <div class="section">
-            <h3>Team Members</h3>
-            <div class="table-container">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Status</th>
-                    <th>Role</th>
-                    <th>Since</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody id="sup-team-tbody">
-                  <tr><td colspan="5" class="empty-row">Loading...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="panel-quality" class="panel" style="display:none;">
-        <div class="panel-header">
-          <h2>⭐ Quality Monitoring</h2>
-          <button class="btn-primary btn-sm" onclick="openModal('new-eval');">+ New Evaluation</button>
-        </div>
-        <div class="panel-body">
-          <div class="cards-grid">
-            <div class="card">
-              <div class="card-label">📊 Total Evals</div>
-              <div class="card-value" id="qa-total-evals">0</div>
-            </div>
-            <div class="card">
-              <div class="card-label">📈 Avg Score</div>
-              <div class="card-value" id="qa-avg-score">—</div>
-            </div>
-            <div class="card">
-              <div class="card-label">✅ Pass Rate</div>
-              <div class="card-value" id="qa-pass-rate">—</div>
-            </div>
-            <div class="card">
-              <div class="card-label">❌ Fail Count</div>
-              <div class="card-value" id="qa-fail-count">0</div>
-            </div>
-          </div>
-
-          <div class="section">
-            <div id="qa-agent-perf"></div>
-          </div>
-
-          <div class="section">
-            <h3>Recent Evaluations</h3>
-            <div class="table-container">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Agent</th>
-                    <th>Date</th>
-                    <th>Score</th>
-                    <th>Status</th>
-                    <th>Monitor ID</th>
-                  </tr>
-                </thead>
-                <tbody id="qa-evals-tbody">
-                  <tr><td colspan="5" class="empty-row">Loading...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="panel-admin" class="panel" style="display:none;">
-        <div class="panel-header">
-          <h2>⚙️ Admin Panel</h2>
-          <button class="btn-primary btn-sm" onclick="openModal('add-user');">+ Add User</button>
-        </div>
-        <div class="panel-body">
-          <div class="cards-grid">
-            <div class="card">
-              <div class="card-label">👥 Total Users</div>
-              <div class="card-value" id="admin-total-users">0</div>
-            </div>
-            <div class="card">
-              <div class="card-label">🟢 Online</div>
-              <div class="card-value" id="admin-online-count">0</div>
-            </div>
-            <div class="card">
-              <div class="card-label">📊 Attendance</div>
-              <div class="card-value" id="admin-att-rate">0%</div>
-            </div>
-            <div class="card">
-              <div class="card-label">❌ Absent Today</div>
-              <div class="card-value" id="admin-absent-count">0</div>
-            </div>
-          </div>
-
-          <div class="section">
-            <h3>User Management</h3>
-            <div class="table-container">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Change Role</th>
-                  </tr>
-                </thead>
-                <tbody id="admin-users-tbody">
-                  <tr><td colspan="5" class="empty-row">Loading...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-</div>
-
-<div id="modal-add-user" class="modal-ov" style="display:none;">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>Add New User</h2>
-      <button class="modal-close" onclick="closeModal('add-user');">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Full Name</label>
-        <input type="text" id="mu-name" placeholder="John Doe" />
-      </div>
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="mu-email" placeholder="john@example.com" />
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="mu-pass" placeholder="••••••••" />
-      </div>
-      <div class="form-group">
-        <label>Role</label>
-        <select id="mu-role">
-          <option value="agent">Agent</option>
-          <option value="supervisor">Supervisor</option>
-          <option value="quality">Quality</option>
-          <option value="admin">Admin</option>
-        </select>
-      </div>
-      <div id="mu-msg" class="form-msg"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('add-user');">Cancel</button>
-      <button class="btn-primary" onclick="addUser();">Add User</button>
-    </div>
-  </div>
-</div>
-
-<div id="modal-new-eval" class="modal-ov" style="display:none;">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>New Evaluation</h2>
-      <button class="modal-close" onclick="closeModal('new-eval');">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Agent</label>
-        <select id="eval-agent">
-          <option value="">Select agent...</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Score (0-100)</label>
-        <input type="number" id="eval-score" min="0" max="100" placeholder="85" />
-      </div>
-      <div class="form-group">
-        <label>Notes</label>
-        <textarea id="eval-notes" placeholder="Quality feedback..." rows="4"></textarea>
-      </div>
-      <div id="eval-msg" class="form-msg"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('new-eval');">Cancel</button>
-      <button class="btn-primary" onclick="submitEval();">Submit</button>
-    </div>
-  </div>
-</div>
-
-<script src="/js/core/state.js"></script>
-<script src="/js/core/auth.js"></script>
-<script src="/js/core/ui.js"></script>
-
-<script src="/js/agent/status.js"></script>
-<script src="/js/agent/attendance.js"></script>
-<script src="/js/agent/team.js"></script>
-<script src="/js/agent/leaves.js"></script>
-
-<script src="/js/admin/users.js"></script>
-<script src="/js/admin/schedules.js"></script>
-<script src="/js/admin/import-export.js"></script>
-
-<script src="/js/quality/monitoring.js"></script>
-
-</body>
-</html>
+// تشغيل العداد لو كان الموظف عامل Punch In وعمل Refresh للصفحة
+document.addEventListener('DOMContentLoaded', () => {
+    if(window.AuxState.currentAux && window.AuxState.startTime) {
+        updatePunchUI();
+        startTimer();
+    }
+});
