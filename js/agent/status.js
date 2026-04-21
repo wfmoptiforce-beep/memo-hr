@@ -1,192 +1,194 @@
-// ═══════════════════════════════════
-// ⏰ AGENT STATUS & AUX SYSTEM
-// ═══════════════════════════════════
-
 console.log('✅ status.js loaded');
 
-// Global state for current aux session
+// تعريف حالة الأوجز والاحتفاظ بيها حتى لو عملت ريفريش للصفحة
 window.AuxState = {
-  currentAux: null,
-  startTime: null,
-  timerInterval: null,
-  sessions: []
+    currentAux: localStorage.getItem('currentAux') || null,
+    startTime: localStorage.getItem('startTime') ? new Date(localStorage.getItem('startTime')) : null,
+    timerInterval: null,
+    sessions: []
 };
 
-// ✅ MAIN PUNCH FUNCTION
-window.punchAux = async function (aux) {
-  try {
+window.getAuxColor = function(aux) {
+    const colors = {
+        online: '#16a34a',
+        break: '#eab308',
+        meeting: '#f97316',
+        training: '#3b82f6',
+        coaching: '#8b5cf6'
+    };
+    return colors[aux] || '#6b7280';
+};
+
+// ✅ الدالة الأساسية للـ Punch In
+window.startSelectedAux = async function() {
+    const auxSelect = document.getElementById('aux-selector');
+    if (!auxSelect) return;
+    const aux = auxSelect.value;
+    
+    if (window.AuxState.currentAux === aux) {
+        alert('You are already on ' + aux.toUpperCase());
+        return;
+    }
+    
+    // لو فيه أوجز شغال دلوقتي، اعمله Punch out الأول
+    if (window.AuxState.currentAux) {
+        await window.punchOut(true); 
+    }
+
+    const now = new Date();
+    window.AuxState.currentAux = aux;
+    window.AuxState.startTime = now;
+    
+    // حفظ في المتصفح عشان لو عمل ريفريش
+    localStorage.setItem('currentAux', aux);
+    localStorage.setItem('startTime', now.toISOString());
+
+    window.updatePunchUI();
+    window.startTimer();
+
     if (!window.sb || !APP.CU) return;
 
-    const userId = APP.CU.id;
+    try {
+        await window.sb.from('aux_logs').insert({
+            user_id: APP.CU.id,
+            aux_type: aux,
+            action: 'start',
+            timestamp: now.toISOString(),
+            date: now.toISOString().split('T')[0]
+        });
+    } catch (e) { 
+        console.error("Log error:", e); 
+    }
+};
+
+// ✅ الدالة الأساسية للـ Punch Out
+window.punchOut = async function(isSwitching = false) {
+    if (!window.AuxState.currentAux) {
+        if (!isSwitching) alert('You are not punched in!');
+        return;
+    }
+
     const now = new Date();
-    const today = now.toISOString().split('T')[0];
+    const durationSeconds = Math.round((now - window.AuxState.startTime) / 1000);
 
-    // Stop current timer if running
-    if (AuxState.timerInterval) {
-      clearInterval(AuxState.timerInterval);
-      AuxState.timerInterval = null;
+    if (window.sb && APP.CU) {
+        try {
+            await window.sb.from('aux_sessions').insert({
+                user_id: APP.CU.id,
+                aux_type: window.AuxState.currentAux,
+                start_time: window.AuxState.startTime.toISOString(),
+                end_time: now.toISOString(),
+                duration_seconds: durationSeconds,
+                date: now.toISOString().split('T')[0]
+            });
+        } catch (e) { 
+            console.error("Session error:", e); 
+        }
     }
 
-    // If same aux clicked again = punch out
-    if (AuxState.currentAux === aux) {
-      const duration = Math.round((now - AuxState.startTime) / 1000);
-
-      await sb.from('aux_sessions').insert({
-        user_id: userId,
-        aux_type: aux,
-        start_time: AuxState.startTime.toISOString(),
-        end_time: now.toISOString(),
-        duration_seconds: duration,
-        date: today
-      });
-
-      AuxState.currentAux = null;
-      AuxState.startTime = null;
-      updatePunchUI();
-      await loadDailySummary();
-      return;
+    if (!isSwitching) {
+        window.AuxState.currentAux = null;
+        window.AuxState.startTime = null;
+        localStorage.removeItem('currentAux');
+        localStorage.removeItem('startTime');
+        
+        if (window.AuxState.timerInterval) clearInterval(window.AuxState.timerInterval);
+        const timerEl = document.getElementById('aux-timer');
+        if (timerEl) timerEl.textContent = "00:00:00";
+        window.updatePunchUI();
     }
-
-    // Start new aux
-    AuxState.currentAux = aux;
-    AuxState.startTime = now;
-    updatePunchUI();
-    startTimer();
-
-    await sb.from('aux_logs').insert({
-      user_id: userId,
-      aux_type: aux,
-      action: 'start',
-      timestamp: now.toISOString(),
-      date: today
-    });
-
-  } catch (e) {
-    console.error('punchAux error:', e);
-  }
+    
+    if (typeof window.loadDailySummary === 'function') {
+        await window.loadDailySummary(); 
+    }
 };
 
-// ✅ UPDATE UI
-function updatePunchUI() {
-  const status = document.getElementById('punch-status');
-  const buttons = document.querySelectorAll('.aux-btn');
-
-  buttons.forEach(b => b.classList.remove('aux-active'));
-
-  if (AuxState.currentAux) {
-    const activeBtn = document.querySelector(`[data-aux="${AuxState.currentAux}"]`);
-    if (activeBtn) activeBtn.classList.add('aux-active');
-
-    if (status) {
-      status.textContent = '🔴 Active: ' + AuxState.currentAux.toUpperCase();
-      status.style.color = getAuxColor(AuxState.currentAux);
-    }
-  } else {
-    if (status) {
-      status.textContent = '🟢 Ready to punch';
-      status.style.color = '#16a34a';
-    }
-  }
-}
-
-// ✅ TIMER
-function startTimer() {
-  const timerEl = document.getElementById('aux-timer');
-  if (!timerEl) return;
-
-  if (AuxState.timerInterval) clearInterval(AuxState.timerInterval);
-
-  AuxState.timerInterval = setInterval(() => {
-    if (!AuxState.startTime) {
-      clearInterval(AuxState.timerInterval);
-      return;
-    }
-
-    const elapsed = Math.floor((new Date() - AuxState.startTime) / 1000);
-    const h = Math.floor(elapsed / 3600);
-    const m = Math.floor((elapsed % 3600) / 60);
-    const s = elapsed % 60;
-
-    timerEl.textContent =
-      String(h).padStart(2, '0') + ':' +
-      String(m).padStart(2, '0') + ':' +
-      String(s).padStart(2, '0');
-  }, 1000);
-}
-
-// ✅ LOAD DAILY SUMMARY
+// ✅ دالة جلب ملخص اليوم والأرقام
 window.loadDailySummary = async function () {
-  if (!window.sb || !APP.CU) return;
+    if (!window.sb || !APP.CU) return;
 
-  try {
-    const userId = APP.CU.id;
-    const today = new Date().toISOString().split('T')[0];
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const { data: sessions } = await window.sb
+            .from('aux_sessions')
+            .select('*')
+            .eq('user_id', APP.CU.id)
+            .eq('date', today);
 
-    const { data: sessions } = await sb
-      .from('aux_sessions')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('date', today);
+        const totals = { online: 0, break: 0, meeting: 0, training: 0, coaching: 0 };
 
-    AuxState.sessions = sessions || [];
+        if (sessions) {
+            sessions.forEach(s => {
+                if (totals[s.aux_type] !== undefined) {
+                    totals[s.aux_type] += (s.duration_seconds || 0);
+                }
+            });
+        }
 
-    const totals = {
-      online: 0,
-      break: 0,
-      meeting: 0,
-      training: 0,
-      coaching: 0,
-      offline: 0
-    };
+        const toHours = (sec) => (sec / 3600);
 
-    AuxState.sessions.forEach(s => {
-      const hours = (s.duration_seconds || 0) / 3600;
-      if (totals[s.aux_type] !== undefined) {
-        totals[s.aux_type] += hours;
-      }
-    });
+        const totalLoginSec = totals.online + totals.meeting + totals.training + totals.coaching;
+        const totalLoginHrs = toHours(totalLoginSec);
+        const missingHrs = Math.max(0, 8 - totalLoginHrs);
 
-    const summaryDiv = document.getElementById('aux-summary');
-    if (summaryDiv) {
-      const loginHours = Object.values(totals).reduce((a, b) => a + b, 0);
-      const missingHours = Math.max(0, 8 - loginHours);
+        if(document.getElementById('agent-hours')) document.getElementById('agent-hours').textContent = toHours(totals.online).toFixed(2) + 'h';
+        if(document.getElementById('agent-break')) document.getElementById('agent-break').textContent = toHours(totals.break).toFixed(2) + 'h';
+        if(document.getElementById('agent-meeting')) document.getElementById('agent-meeting').textContent = toHours(totals.meeting + totals.training + totals.coaching).toFixed(2) + 'h';
+        
+        const msgEl = document.getElementById('agent-missing');
+        if(msgEl) {
+            msgEl.textContent = missingHrs.toFixed(2) + 'h';
+            msgEl.style.color = missingHrs > 0 ? '#dc2626' : '#16a34a';
+        }
 
-      summaryDiv.innerHTML = `
-        <div class="aux-summary-row"><span>🟢 Online:</span><strong>${totals.online.toFixed(1)}h</strong></div>
-        <div class="aux-summary-row"><span>🟡 Break:</span><strong>${totals.break.toFixed(1)}h</strong> / 1h</div>
-        <div class="aux-summary-row"><span>🟠 Meeting:</span><strong>${totals.meeting.toFixed(1)}h</strong></div>
-        <div class="aux-summary-row"><span>🔵 Training:</span><strong>${totals.training.toFixed(1)}h</strong></div>
-        <div class="aux-summary-row"><span>🟣 Coaching:</span><strong>${totals.coaching.toFixed(1)}h</strong></div>
-        <div class="aux-summary-row total"><span>📊 Login Time:</span><strong>${loginHours.toFixed(1)}h</strong> / 8h</div>
-        <div class="aux-summary-row ${missingHours > 0 ? 'warn' : 'good'}"><span>⏳ Missing:</span><strong>${missingHours.toFixed(1)}h</strong></div>
-      `;
+        const summaryDiv = document.getElementById('aux-summary');
+        if (summaryDiv) {
+            summaryDiv.innerHTML = `
+                <div class="aux-summary-row"><span>🟢 Online:</span><strong>${toHours(totals.online).toFixed(2)}h</strong></div>
+                <div class="aux-summary-row"><span>🟡 Break (Target 1h):</span><strong>${toHours(totals.break).toFixed(2)}h</strong></div>
+                <div class="aux-summary-row"><span>🟠 Meeting/Coaching:</span><strong>${toHours(totals.meeting + totals.training + totals.coaching).toFixed(2)}h</strong></div>
+                <div class="aux-summary-row total" style="border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 12px;"><span>📊 Total Login Time:</span><strong>${totalLoginHrs.toFixed(2)}h / 8h</strong></div>
+                <div class="aux-summary-row" style="color: ${missingHrs > 0 ? '#dc2626' : '#16a34a'}; font-weight: bold; margin-top: 8px;">
+                    <span>⏳ Missing Hours:</span><strong>${missingHrs.toFixed(2)}h</strong>
+                </div>
+            `;
+        }
+    } catch (e) { 
+        console.warn('Load summary error:', e); 
     }
-
-    safeText('agent-hours', totals.online.toFixed(1) + 'h');
-    safeText('agent-break', totals.break.toFixed(1) + 'h');
-    safeText('agent-missing', Math.max(0, 8 - Object.values(totals).reduce((a, b) => a + b, 0)).toFixed(1) + 'h');
-    safeText('agent-meeting', (totals.meeting + totals.training + totals.coaching).toFixed(1) + 'h');
-
-  } catch (e) {
-    console.warn('loadDailySummary:', e);
-  }
 };
 
-// ✅ HELPER
-function getAuxColor(aux) {
-  return {
-    online: '#16a34a',
-    break: '#eab308',
-    meeting: '#f97316',
-    training: '#3b82f6',
-    coaching: '#8b5cf6',
-    offline: '#dc2626'
-  }[aux] || '#6b7280';
-}
+window.startTimer = function() {
+    if (window.AuxState.timerInterval) clearInterval(window.AuxState.timerInterval);
+    const timerEl = document.getElementById('aux-timer');
+    if (!timerEl) return;
+    
+    window.AuxState.timerInterval = setInterval(() => {
+        if (!window.AuxState.startTime) return;
+        const elapsed = Math.floor((new Date() - window.AuxState.startTime) / 1000);
+        const h = Math.floor(elapsed / 3600).toString().padStart(2, '0');
+        const m = Math.floor((elapsed % 3600) / 60).toString().padStart(2, '0');
+        const s = (elapsed % 60).toString().padStart(2, '0');
+        timerEl.textContent = `${h}:${m}:${s}`;
+    }, 1000);
+};
 
-// ✅ AUTO REFRESH (SAFE - AFTER LOGIN ONLY)
-setInterval(() => {
-  if (APP.CU?.id) {
-    loadDailySummary();
-  }
-}, 30000);
+window.updatePunchUI = function() {
+    const status = document.getElementById('punch-status');
+    if (!status) return;
+    if (window.AuxState.currentAux) {
+        status.textContent = '🔴 Active: ' + window.AuxState.currentAux.toUpperCase();
+        status.style.color = window.getAuxColor(window.AuxState.currentAux);
+    } else {
+        status.textContent = '🟢 Ready to punch';
+        status.style.color = '#16a34a';
+    }
+};
+
+// الاستعادة لو عملت ريفريش
+document.addEventListener('DOMContentLoaded', () => {
+    if(window.AuxState.currentAux && window.AuxState.startTime) {
+        window.updatePunchUI();
+        window.startTimer();
+    }
+});
