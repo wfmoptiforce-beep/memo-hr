@@ -160,8 +160,8 @@
                 <option value="training" style="color: #3b82f6; font-weight: bold;">🔵 Training</option>
                 <option value="coaching" style="color: #8b5cf6; font-weight: bold;">🟣 Coaching</option>
               </select>
-              <button class="btn-punch-in" onclick="window.startSelectedAux()">Punch In</button>
-              <button class="btn-punch-out" onclick="window.punchOut()" style="background-color: #dc2626;">Punch Out</button>
+              <button class="btn-punch-in" onclick="if(window.startSelectedAux) window.startSelectedAux();">Punch In</button>
+              <button class="btn-punch-out" onclick="if(window.punchOut) window.punchOut();" style="background-color: #dc2626;">Punch Out</button>
             </div>
 
             <div id="aux-summary" class="aux-summary-box"></div>
@@ -339,17 +339,17 @@
   </div>
 </div>
 
-<script src="/js/core/state.js"></script>
-<script src="/js/core/auth.js"></script>
-<script src="/js/core/ui.js"></script>
-<script src="/js/agent/status.js"></script>
-<script src="/js/agent/attendance.js"></script>
-<script src="/js/agent/team.js"></script>
-<script src="/js/agent/leaves.js"></script>
-<script src="/js/admin/users.js"></script>
-<script src="/js/admin/schedules.js"></script>
-<script src="/js/admin/import-export.js"></script>
-<script src="/js/quality/monitoring.js"></script>
+<script src="/js/core/state.js?v=2"></script>
+<script src="/js/core/auth.js?v=2"></script>
+<script src="/js/core/ui.js?v=2"></script>
+<script src="/js/agent/status.js?v=2"></script>
+<script src="/js/agent/attendance.js?v=2"></script>
+<script src="/js/agent/team.js?v=2"></script>
+<script src="/js/agent/leaves.js?v=2"></script>
+<script src="/js/admin/users.js?v=2"></script>
+<script src="/js/admin/schedules.js?v=2"></script>
+<script src="/js/admin/import-export.js?v=2"></script>
+<script src="/js/quality/monitoring.js?v=2"></script>
 
 </body>
 </html>
