@@ -76,7 +76,7 @@
             <div class="form-group">
               <label>PASSWORD</label>
               <input type="password" id="login-pass" placeholder="••••••••" required />
-              <a href="#" class="forgot-pass">Forgot Password?</a>
+              <a href="#" class="forgot-pass" onclick="alert('Please contact your Supervisor or Administrator to reset your password.'); return false;">Forgot Password?</a>
             </div>
 
             <div id="login-msg" class="login-msg"></div>
@@ -87,7 +87,7 @@
           </form>
 
           <div class="login-footer">
-            <p>Need help? <a href="#">Contact Your Administrator</a></p>
+             <p>Need help? <a href="#" onclick="alert('Admin Email: admin@memopro.com'); return false;">Contact Your Administrator</a></p>
           </div>
         </div>
       </div>
@@ -137,7 +137,7 @@
 
       <div id="panel-agent" class="panel">
         <div class="panel-header">
-          <h2>📊 My Dashboard</h2>
+          <h2 id="welcome-greeting">👋 Welcome, Agent</h2>
         </div>
         <div class="panel-body">
           <div class="cards-grid">
@@ -164,16 +164,27 @@
             <div id="punch-status" class="punch-status-text">🟢 Ready to punch</div>
             <div id="aux-timer" class="aux-timer-text">00:00:00</div>
 
-            <div class="aux-buttons">
-              <button class="aux-btn" data-aux="online" onclick="punchAux('online')">🟢 Online</button>
-              <button class="aux-btn" data-aux="break" onclick="punchAux('break')">🟡 Break</button>
-              <button class="aux-btn" data-aux="meeting" onclick="punchAux('meeting')">🟠 Meeting</button>
-              <button class="aux-btn" data-aux="training" onclick="punchAux('training')">🔵 Training</button>
-              <button class="aux-btn" data-aux="coaching" onclick="punchAux('coaching')">🟣 Coaching</button>
+            <div class="punch-controls">
+              <select id="aux-selector" class="punch-select" style="border-left: 5px solid #16a34a;" onchange="this.style.borderLeftColor = getAuxColor(this.value)">
+                <option value="online" style="color: #16a34a; font-weight: bold;">🟢 Online</option>
+                <option value="break" style="color: #eab308; font-weight: bold;">🟡 Break</option>
+                <option value="meeting" style="color: #f97316; font-weight: bold;">🟠 Meeting</option>
+                <option value="training" style="color: #3b82f6; font-weight: bold;">🔵 Training</option>
+                <option value="coaching" style="color: #8b5cf6; font-weight: bold;">🟣 Coaching</option>
+              </select>
+              <button class="btn-punch-in" onclick="startSelectedAux()">Punch In</button>
+              <button class="btn-punch-out" onclick="punchOut()" style="background-color: #dc2626;">Punch Out</button>
             </div>
 
             <div id="aux-summary" class="aux-summary-box">
               </div>
+          </div>
+
+          <div class="section">
+            <h3>📅 My Schedule</h3>
+            <div id="my-schedule-container" style="padding: 20px; background: white; border-radius: 8px; text-align: center; color: var(--text-light); border: 1px dashed var(--border);">
+              No schedule uploaded yet.
+            </div>
           </div>
 
           <div class="section">
