@@ -1,4 +1,4 @@
-console.log('✅ ui.js fully integrated & linked to Sidebar UI');
+console.log('✅ ui.js fully integrated & linked to New Professional Sidebar UI');
 
 window.initializeUI = function () {
     try {
@@ -18,27 +18,34 @@ window.setupTopbar = function () {
     const role = (APP.userRole || 'agent').toLowerCase();
     let tabs = [];
 
-    // نظام الصلاحيات المطور - بناءً على الصور الاحترافية اللي بعتيها
+    // التقسيمة الجديدة بناءً على الصور الاحترافية المطلوبة
     if (role === 'owner' || role === 'admin') {
         tabs = [
-            { id: 'panel-admin', icon: '⚙️', label: 'Admin', data: 'admin' },
-            { id: 'panel-supervisor', icon: '👥', label: 'Team', data: 'supervisor' },
-            { id: 'panel-quality', icon: '⭐', label: 'Quality', data: 'quality' },
-            { id: 'panel-agent', icon: '🏠', label: 'My View', data: 'agent' }
+            { id: 'panel-dashboard', icon: '🏠', label: 'Dashboard', data: 'dashboard' },
+            { id: 'panel-users', icon: '👥', label: 'Users', data: 'users' },
+            { id: 'panel-attendance', icon: '📅', label: 'Attendance', data: 'attendance' },
+            { id: 'panel-schedule', icon: '📋', label: 'Schedule', data: 'schedule' },
+            { id: 'panel-reports', icon: '📈', label: 'Reports', data: 'reports' },
+            { id: 'panel-settings', icon: '⚙️', label: 'Settings', data: 'settings' }
         ];
     } else if (role === 'supervisor') {
         tabs = [
-            { id: 'panel-supervisor', icon: '👥', label: 'Team', data: 'supervisor' },
-            { id: 'panel-quality', icon: '⭐', label: 'Quality', data: 'quality' },
-            { id: 'panel-agent', icon: '🏠', label: 'My View', data: 'agent' }
+            { id: 'panel-dashboard', icon: '🏠', label: 'Dashboard', data: 'dashboard' },
+            { id: 'panel-attendance', icon: '📅', label: 'Attendance', data: 'attendance' },
+            { id: 'panel-schedule', icon: '📋', label: 'Schedule', data: 'schedule' },
+            { id: 'panel-reports', icon: '📈', label: 'Reports', data: 'reports' }
         ];
     } else if (role === 'quality') {
         tabs = [
-            { id: 'panel-quality', icon: '⭐', label: 'Quality', data: 'quality' },
-            { id: 'panel-agent', icon: '🏠', label: 'My View', data: 'agent' }
+            { id: 'panel-dashboard', icon: '🏠', label: 'Dashboard', data: 'dashboard' },
+            { id: 'panel-reports', icon: '📈', label: 'Reports', data: 'reports' } // مخصص للكواليتي
         ];
     } else {
-        tabs = [{ id: 'panel-agent', icon: '🏠', label: 'My View', data: 'agent' }];
+        // الأيجنت العادي
+        tabs = [
+            { id: 'panel-dashboard', icon: '🏠', label: 'Dashboard', data: 'dashboard' },
+            { id: 'panel-schedule', icon: '📋', label: 'My Schedule', data: 'schedule' }
+        ];
     }
 
     nav.innerHTML = '';
@@ -48,7 +55,7 @@ window.setupTopbar = function () {
         // إضافة التميز للزرار النشط
         if (APP.currentPanel === tab.data) btn.classList.add('active');
         
-        btn.innerHTML = `<span>${tab.icon}</span> ${tab.label}`;
+        btn.innerHTML = `<span class="nav-icon">${tab.icon}</span> <span class="nav-label">${tab.label}</span>`;
         btn.dataset.panel = tab.data;
         btn.onclick = () => switchPanel(tab.id, btn);
         nav.appendChild(btn);
@@ -96,7 +103,7 @@ window.switchPanel = function (panelId, btn) {
         target.style.display = 'block';
         APP.currentPanel = panelId.replace('panel-', '');
         
-        // 🚀 الربط الذكي: تحديث البيانات فوراً عند الضغط على الزرار
+        // 🚀 الربط الذكي: تحديث البيانات فوراً عند الضغط على الزرار بناءً على التقسيمة الجديدة
         refreshPanelData(APP.currentPanel);
     }
 
@@ -104,26 +111,28 @@ window.switchPanel = function (panelId, btn) {
     if (btn) btn.classList.add('active');
 };
 
-// دالة وسيطة لتحديث بيانات كل قسم
+// دالة وسيطة لتحديث بيانات كل قسم بناءً على التقسيمة الجديدة
 window.refreshPanelData = function(panel) {
-    if (panel === 'admin') {
-        if (typeof loadAdminPanel === 'function') loadAdminPanel();
-        if (typeof loadPendingLeaves === 'function') loadPendingLeaves();
-    } else if (panel === 'supervisor') {
-        if (typeof loadTeamOnline === 'function') loadTeamOnline();
-    } else if (panel === 'quality') {
-        if (typeof loadQualityDash === 'function') loadQualityDash();
-    } else if (panel === 'agent') {
+    if (panel === 'dashboard') {
         if (typeof loadDailySummary === 'function') loadDailySummary();
         if (typeof loadMyLeaves === 'function') loadMyLeaves();
+    } else if (panel === 'users') {
+        if (typeof loadAdminPanel === 'function') loadAdminPanel(); // لجلب اليوزرات
+    } else if (panel === 'attendance') {
+        if (typeof loadTeamOnline === 'function') loadTeamOnline(); // لعرض الحضور
+    } else if (panel === 'schedule') {
+        if (typeof loadSchedules === 'function') loadSchedules(); // لعرض الإسكادول
+    } else if (panel === 'reports') {
+        if (typeof loadQualityDash === 'function') loadQualityDash();
+        if (typeof loadPendingLeaves === 'function') loadPendingLeaves();
+    } else if (panel === 'settings') {
+        // دوال الإعدادات المستقبلية
     }
 };
 
 window.showDefaultPanel = function () {
-    // لو أدمن يدخله على الأدمن، لو أيجنت يدخله على My View
-    const role = (APP.userRole || 'agent').toLowerCase();
-    if (role === 'owner' || role === 'admin') switchPanel('panel-admin');
-    else switchPanel('panel-agent');
+    // الكل بيدخل على الـ Dashboard كصفحة رئيسية
+    switchPanel('panel-dashboard');
 };
 
 window.toggleNotif = function () {
@@ -138,8 +147,6 @@ window.toggleNotif = function () {
 window.loadAllInitialData = async function () {
     // تحميل البيانات الأساسية في الخلفية
     if (typeof loadDailySummary === 'function') loadDailySummary();
-    if (typeof loadTeamOnline === 'function') loadTeamOnline();
-    // مزامنة الجلسة المفتوحة عشان لو عمل ريفريش
     if (typeof syncActiveSession === 'function') syncActiveSession();
 };
 
