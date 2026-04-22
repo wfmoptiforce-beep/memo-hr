@@ -1,4 +1,4 @@
-console.log('✅ ui.js fully integrated');
+console.log('✅ ui.js fully integrated & linked to Sidebar UI');
 
 window.initializeUI = function () {
     try {
@@ -7,7 +7,7 @@ window.initializeUI = function () {
         setupEventListeners();
         showDefaultPanel();
         
-        // تحضير البيانات الأولية لكل الأقسام
+        // تحضير البيانات الأولية لكل الأقسام فور تسجيل الدخول
         loadAllInitialData();
     } catch (e) { console.error('initializeUI error:', e); }
 };
@@ -18,7 +18,7 @@ window.setupTopbar = function () {
     const role = (APP.userRole || 'agent').toLowerCase();
     let tabs = [];
 
-    // نظام الصلاحيات - الرتب الأعلى بتشوف كل حاجة
+    // نظام الصلاحيات المطور - بناءً على الصور الاحترافية اللي بعتيها
     if (role === 'owner' || role === 'admin') {
         tabs = [
             { id: 'panel-admin', icon: '⚙️', label: 'Admin', data: 'admin' },
@@ -38,15 +38,17 @@ window.setupTopbar = function () {
             { id: 'panel-agent', icon: '🏠', label: 'My View', data: 'agent' }
         ];
     } else {
-        // الأيجنت بيشوف صفحته فقط
         tabs = [{ id: 'panel-agent', icon: '🏠', label: 'My View', data: 'agent' }];
     }
 
     nav.innerHTML = '';
     tabs.forEach((tab, i) => {
         const btn = document.createElement('button');
-        btn.className = 'nav-btn' + (i === 0 ? ' active' : '');
-        btn.innerHTML = tab.icon + ' ' + tab.label;
+        btn.className = 'nav-btn';
+        // إضافة التميز للزرار النشط
+        if (APP.currentPanel === tab.data) btn.classList.add('active');
+        
+        btn.innerHTML = `<span>${tab.icon}</span> ${tab.label}`;
         btn.dataset.panel = tab.data;
         btn.onclick = () => switchPanel(tab.id, btn);
         nav.appendChild(btn);
@@ -62,14 +64,16 @@ window.setupUserInfo = function () {
     
     const av = document.getElementById('user-av');
     if (av) {
-        if(APP.CP?.avatar_url) {
-            av.innerHTML = `<img src="${APP.CP.avatar_url}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+        if(APP.CP?.avatar_url && APP.CP.avatar_url.startsWith('http')) {
+            av.innerHTML = `<img src="${APP.CP.avatar_url}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" onerror="this.src='https://ui-avatars.com/api/?name=${name}'">`;
         } else {
             av.textContent = name.charAt(0).toUpperCase();
+            av.style.display = 'flex';
+            av.style.alignItems = 'center';
+            av.style.justifyContent = 'center';
         }
     }
     
-    // الترحيب الذكي حسب الوقت
     const hour = new Date().getHours();
     let greeting = 'Good Evening';
     if (hour < 12) greeting = 'Good Morning';
@@ -81,44 +85,62 @@ window.setupUserInfo = function () {
 
 window.switchPanel = function (panelId, btn) {
     // إخفاء كل البانلز
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('show'));
+    document.querySelectorAll('.panel').forEach(p => {
+        p.classList.remove('show');
+        p.style.display = 'none';
+    });
     
     const target = document.getElementById(panelId);
     if (target) {
         target.classList.add('show');
+        target.style.display = 'block';
         APP.currentPanel = panelId.replace('panel-', '');
         
-        // ✅ الربط: تحميل بيانات القسم بمجرد فتحه
-        if (APP.currentPanel === 'admin' && typeof loadAdminPanel === 'function') loadAdminPanel();
-        if (APP.currentPanel === 'supervisor' && typeof loadTeamOnline === 'function') loadTeamOnline();
-        if (APP.currentPanel === 'quality' && typeof loadQualityDash === 'function') loadQualityDash();
-        if (APP.currentPanel === 'agent' && typeof loadDailySummary === 'function') loadDailySummary();
+        // 🚀 الربط الذكي: تحديث البيانات فوراً عند الضغط على الزرار
+        refreshPanelData(APP.currentPanel);
     }
 
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
 };
 
+// دالة وسيطة لتحديث بيانات كل قسم
+window.refreshPanelData = function(panel) {
+    if (panel === 'admin') {
+        if (typeof loadAdminPanel === 'function') loadAdminPanel();
+        if (typeof loadPendingLeaves === 'function') loadPendingLeaves();
+    } else if (panel === 'supervisor') {
+        if (typeof loadTeamOnline === 'function') loadTeamOnline();
+    } else if (panel === 'quality') {
+        if (typeof loadQualityDash === 'function') loadQualityDash();
+    } else if (panel === 'agent') {
+        if (typeof loadDailySummary === 'function') loadDailySummary();
+        if (typeof loadMyLeaves === 'function') loadMyLeaves();
+    }
+};
+
 window.showDefaultPanel = function () {
-    // الرجوع لصفحة الأيجنت كديفولت
-    switchPanel('panel-agent');
+    // لو أدمن يدخله على الأدمن، لو أيجنت يدخله على My View
+    const role = (APP.userRole || 'agent').toLowerCase();
+    if (role === 'owner' || role === 'admin') switchPanel('panel-admin');
+    else switchPanel('panel-agent');
 };
 
 window.toggleNotif = function () {
     const panel = document.getElementById('notif-panel');
     if (panel) {
         panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-        // مسح علامة التنبيه لو فتحنا
         const badge = document.querySelector('.notif-badge');
         if (badge) badge.style.display = 'none';
     }
 };
 
 window.loadAllInitialData = async function () {
-    // تشغيل كل الدوال اللي بتجيب داتا من السيرفر
-    if (typeof loadDailySummary === 'function') await loadDailySummary();
-    if (typeof loadTeamOnline === 'function') await loadTeamOnline();
-    if (typeof checkLeavesStatus === 'function') await checkLeavesStatus();
+    // تحميل البيانات الأساسية في الخلفية
+    if (typeof loadDailySummary === 'function') loadDailySummary();
+    if (typeof loadTeamOnline === 'function') loadTeamOnline();
+    // مزامنة الجلسة المفتوحة عشان لو عمل ريفريش
+    if (typeof syncActiveSession === 'function') syncActiveSession();
 };
 
 window.setupEventListeners = function () {
@@ -154,7 +176,6 @@ window.closeModal = function(modalId) {
     }
 };
 
-// ✅ حفظ تعديلات الاسم والصورة
 window.saveProfile = async function() {
     const newName = document.getElementById('ep-name').value;
     const newAv = document.getElementById('ep-avatar').value;
