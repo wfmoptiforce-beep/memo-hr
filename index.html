@@ -123,9 +123,9 @@
 
     <div class="content">
 
-      <div id="panel-agent" class="panel">
+      <div id="panel-dashboard" class="panel">
         <div class="panel-header">
-          <h2 id="welcome-greeting">👋 Welcome, Agent</h2>
+          <h2 id="welcome-greeting">👋 Welcome</h2>
         </div>
         <div class="panel-body">
           <div class="cards-grid">
@@ -175,28 +175,39 @@
                 <p style="text-align:center; color:gray;">Loading history...</p>
             </div>
           </div>
+        </div>
+      </div>
 
+      <div id="panel-users" class="panel" style="display:none;">
+        <div class="panel-header">
+          <h2>👥 Users Management</h2>
+          <button class="btn-primary" onclick="openModal('add-user');">+ Add New Person</button>
+        </div>
+        <div class="panel-body">
           <div class="section">
-            <h3>📅 My Schedule</h3>
-            <div id="my-schedule-container" style="padding: 20px; background: white; border-radius: 8px; text-align: center; color: var(--text-light); border: 1px dashed var(--border);">
-              No schedule uploaded yet.
+            <h3>User Management Database</h3>
+            <div class="table-container">
+              <table class="data-table">
+                <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Change Role</th></tr></thead>
+                <tbody id="admin-users-tbody"></tbody>
+              </table>
             </div>
-          </div>
-
-          <div class="section">
-            <div id="agent-timeline"></div>
           </div>
         </div>
       </div>
 
-      <div id="panel-supervisor" class="panel" style="display:none;">
-        <div class="panel-header"><h2>👥 Team Management</h2></div>
+      <div id="panel-attendance" class="panel" style="display:none;">
+        <div class="panel-header"><h2>📅 Attendance & Team</h2></div>
         <div class="panel-body">
-          <div id="agent-timeline-live"></div> <div class="cards-grid">
+          <div class="cards-grid">
             <div class="card"><div class="card-label">👥 Total Members</div><div class="card-value" id="sup-team-count">0</div></div>
             <div class="card"><div class="card-label">🟢 Online Now</div><div class="card-value" id="sup-online-count">0</div></div>
             <div class="card"><div class="card-label">🟡 On Break</div><div class="card-value" id="sup-break-count">0</div></div>
             <div class="card"><div class="card-label">⚫ Offline</div><div class="card-value" id="sup-offline-count">0</div></div>
+          </div>
+
+          <div class="section">
+            <div id="agent-timeline-live"></div>
           </div>
 
           <div class="section">
@@ -215,54 +226,10 @@
         </div>
       </div>
 
-      <div id="panel-quality" class="panel" style="display:none;">
-        <div class="panel-header">
-          <h2>⭐ Quality Monitoring</h2>
-          <button class="btn-primary btn-sm" onclick="openModal('new-eval');">+ New Evaluation</button>
-        </div>
+      <div id="panel-schedule" class="panel" style="display:none;">
+        <div class="panel-header"><h2>📋 Schedule Management</h2></div>
         <div class="panel-body">
-          <div class="cards-grid">
-            <div class="card"><div class="card-label">📊 Total Evals</div><div class="card-value" id="qa-total-evals">0</div></div>
-            <div class="card"><div class="card-label">📈 Avg Score</div><div class="card-value" id="qa-avg-score">—</div></div>
-            <div class="card"><div class="card-label">✅ Pass Rate</div><div class="card-value" id="qa-pass-rate">—</div></div>
-            <div class="card"><div class="card-label">❌ Fail Count</div><div class="card-value" id="qa-fail-count">0</div></div>
-          </div>
-          <div class="section">
-            <h3>Recent Evaluations</h3>
-            <div class="table-container">
-              <table class="data-table">
-                <thead><tr><th>Agent</th><th>Date</th><th>Score</th><th>Status</th><th>Monitor ID</th></tr></thead>
-                <tbody id="qa-evals-tbody"><tr><td colspan="5" class="empty-row">Loading...</td></tr></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="panel-admin" class="panel" style="display:none;">
-        <div class="panel-header">
-          <h2>⚙️ Admin Control Tower</h2>
-          <button class="btn-primary" onclick="openModal('add-user');">+ Add New Person</button>
-        </div>
-        <div class="panel-body">
-          <div class="section">
-            <h3>📩 Pending Leave Requests</h3>
-            <div class="table-container">
-              <table class="data-table">
-                <thead><tr><th>Agent</th><th>Type</th><th>Dates</th><th>Action</th></tr></thead>
-                <tbody id="admin-leaves-tbody"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="cards-grid">
-            <div class="card"><div class="card-label">👥 Total Users</div><div class="card-value" id="admin-total-users">0</div></div>
-            <div class="card"><div class="card-label">🟢 Online</div><div class="card-value" id="admin-online-count">0</div></div>
-            <div class="card"><div class="card-label">📊 Attendance</div><div class="card-value" id="admin-att-rate">0%</div></div>
-          </div>
-
-          <div class="section">
-              <h3>📅 Schedule Management</h3>
+          <div class="section" id="admin-schedule-tools">
               <div style="display:flex; gap:10px; margin-bottom:15px;">
                   <button class="btn-secondary" onclick="window.downloadScheduleTemplate()">📥 Download Template</button>
                   <input type="file" id="bulk-upload" style="display:none" onchange="window.handleScheduleUpload(event)">
@@ -272,14 +239,53 @@
           </div>
 
           <div class="section">
-            <h3>User Management Database</h3>
+            <h3>My Schedule</h3>
+            <div id="my-schedule-container" style="padding: 20px; background: white; border-radius: 8px; text-align: center; color: var(--text-light); border: 1px dashed var(--border);">
+              No schedule uploaded yet.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="panel-reports" class="panel" style="display:none;">
+        <div class="panel-header">
+          <h2>📈 Reports & Quality</h2>
+          <button class="btn-primary btn-sm" onclick="openModal('new-eval');">+ New Evaluation</button>
+        </div>
+        <div class="panel-body">
+          <div class="cards-grid">
+            <div class="card"><div class="card-label">📊 Total Evals</div><div class="card-value" id="qa-total-evals">0</div></div>
+            <div class="card"><div class="card-label">📈 Avg Score</div><div class="card-value" id="qa-avg-score">—</div></div>
+            <div class="card"><div class="card-label">👥 Total Users (System)</div><div class="card-value" id="admin-total-users">0</div></div>
+            <div class="card"><div class="card-label">📊 Attendance Rate</div><div class="card-value" id="admin-att-rate">0%</div></div>
+          </div>
+          
+          <div class="section">
+            <h3>Recent Evaluations</h3>
             <div class="table-container">
               <table class="data-table">
-                <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Change Role</th></tr></thead>
-                <tbody id="admin-users-tbody"></tbody>
+                <thead><tr><th>Agent</th><th>Date</th><th>Score</th><th>Status</th><th>Monitor ID</th></tr></thead>
+                <tbody id="qa-evals-tbody"><tr><td colspan="5" class="empty-row">Loading...</td></tr></tbody>
               </table>
             </div>
           </div>
+
+          <div class="section">
+            <h3>📩 Pending Leave Requests</h3>
+            <div class="table-container">
+              <table class="data-table">
+                <thead><tr><th>Agent</th><th>Type</th><th>Dates</th><th>Action</th></tr></thead>
+                <tbody id="admin-leaves-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="panel-settings" class="panel" style="display:none;">
+        <div class="panel-header"><h2>⚙️ Settings</h2></div>
+        <div class="panel-body">
+            <p style="color: gray;">System settings and configurations will appear here.</p>
         </div>
       </div>
 
@@ -370,6 +376,7 @@
     <div class="modal-header"><h2>New Evaluation</h2><button class="modal-close" onclick="closeModal('new-eval');">✕</button></div>
     <div class="modal-body">
       <div class="form-group"><label>Agent Email</label><input type="text" id="eval-agent-email" /></div>
+      <div class="form-group"><label>Evaluation Date</label><input type="date" id="eval-date" /></div>
       <div class="form-group"><label>Score (0-100)</label><input type="number" id="eval-score" /></div>
       <div class="form-group"><label>Notes</label><textarea id="eval-notes"></textarea></div>
       <div id="eval-msg" class="form-msg"></div>
