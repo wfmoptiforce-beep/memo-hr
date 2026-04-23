@@ -128,6 +128,16 @@
           <h2 id="welcome-greeting">👋 Welcome</h2>
         </div>
         <div class="panel-body">
+          
+          <div id="admin-kpi-section" class="cards-grid" style="display:none; margin-bottom: 20px; border-bottom: 2px dashed #eee; padding-bottom: 20px;">
+            <div class="card" style="background:#f0fdf4; border-color:#bbf7d0;"><div class="card-label">👥 Total Active FTE</div><div class="card-value" id="kpi-active-fte">0</div></div>
+            <div class="card" style="background:#fef2f2; border-color:#fecaca;"><div class="card-label">🚪 Total Attrition</div><div class="card-value" id="kpi-attrition">0</div></div>
+            <div class="card"><div class="card-label">📉 Attrition %</div><div class="card-value" id="kpi-attrition-rate">0%</div></div>
+            <div class="card"><div class="card-label">✅ Total Attend</div><div class="card-value" id="kpi-attend">0</div></div>
+            <div class="card"><div class="card-label">❌ Total Absent</div><div class="card-value" id="kpi-absent">0</div></div>
+            <div class="card"><div class="card-label">📊 Absenteeism %</div><div class="card-value" id="kpi-absent-rate">0%</div></div>
+          </div>
+
           <div class="cards-grid">
             <div class="card">
               <div class="card-label">🟢 Online Hours</div>
@@ -175,6 +185,13 @@
                 <p style="text-align:center; color:gray;">Loading history...</p>
             </div>
           </div>
+
+          <div class="section">
+            <h3>📅 My Weekly Schedule</h3>
+            <div id="my-schedule-container" style="padding: 20px; background: white; border-radius: 8px; text-align: center; color: var(--text-light); border: 1px dashed var(--border);">
+              No schedule uploaded yet.
+            </div>
+          </div>
         </div>
       </div>
 
@@ -188,7 +205,7 @@
             <h3>User Management Database</h3>
             <div class="table-container">
               <table class="data-table">
-                <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Change Role</th></tr></thead>
+                <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
                 <tbody id="admin-users-tbody"></tbody>
               </table>
             </div>
@@ -205,7 +222,7 @@
             <div class="card"><div class="card-label">🟡 On Break</div><div class="card-value" id="sup-break-count">0</div></div>
             <div class="card"><div class="card-label">⚫ Offline</div><div class="card-value" id="sup-offline-count">0</div></div>
           </div>
-
+          
           <div class="section">
             <div id="agent-timeline-live"></div>
           </div>
@@ -214,12 +231,8 @@
             <h3>Team Members</h3>
             <div class="table-container">
               <table class="data-table">
-                <thead>
-                  <tr><th>Name</th><th>Status</th><th>Role</th><th>Since</th><th>Action</th></tr>
-                </thead>
-                <tbody id="sup-team-tbody">
-                  <tr><td colspan="5" class="empty-row">Loading...</td></tr>
-                </tbody>
+                <thead><tr><th>Name</th><th>Status</th><th>Role</th><th>Since</th><th>Action</th></tr></thead>
+                <tbody id="sup-team-tbody"><tr><td colspan="5" class="empty-row">Loading...</td></tr></tbody>
               </table>
             </div>
           </div>
@@ -227,7 +240,7 @@
       </div>
 
       <div id="panel-schedule" class="panel" style="display:none;">
-        <div class="panel-header"><h2>📋 Schedule Management</h2></div>
+        <div class="panel-header"><h2>📋 Master Schedule Upload</h2></div>
         <div class="panel-body">
           <div class="section" id="admin-schedule-tools">
               <div style="display:flex; gap:10px; margin-bottom:15px;">
@@ -236,13 +249,6 @@
                   <button class="btn-primary" onclick="document.getElementById('bulk-upload').click()">📤 Bulk Upload Schedule</button>
               </div>
               <div id="upload-status"></div>
-          </div>
-
-          <div class="section">
-            <h3>My Schedule</h3>
-            <div id="my-schedule-container" style="padding: 20px; background: white; border-radius: 8px; text-align: center; color: var(--text-light); border: 1px dashed var(--border);">
-              No schedule uploaded yet.
-            </div>
           </div>
         </div>
       </div>
@@ -256,8 +262,8 @@
           <div class="cards-grid">
             <div class="card"><div class="card-label">📊 Total Evals</div><div class="card-value" id="qa-total-evals">0</div></div>
             <div class="card"><div class="card-label">📈 Avg Score</div><div class="card-value" id="qa-avg-score">—</div></div>
-            <div class="card"><div class="card-label">👥 Total Users (System)</div><div class="card-value" id="admin-total-users">0</div></div>
-            <div class="card"><div class="card-label">📊 Attendance Rate</div><div class="card-value" id="admin-att-rate">0%</div></div>
+            <div class="card"><div class="card-label">✅ Pass Rate</div><div class="card-value" id="qa-pass-rate">—</div></div>
+            <div class="card"><div class="card-label">❌ Fail Count</div><div class="card-value" id="qa-fail-count">0</div></div>
           </div>
           
           <div class="section">
@@ -283,9 +289,18 @@
       </div>
 
       <div id="panel-settings" class="panel" style="display:none;">
-        <div class="panel-header"><h2>⚙️ Settings</h2></div>
+        <div class="panel-header"><h2>⚙️ Settings & Manual Import</h2></div>
         <div class="panel-body">
-            <p style="color: gray;">System settings and configurations will appear here.</p>
+            <div class="section">
+              <h3>Import Missing Auxes / Offline Time</h3>
+              <p style="color:gray; margin-bottom:10px;">Use this to upload offline time if agents had system issues.</p>
+              <div style="display:flex; gap:10px;">
+                  <button class="btn-secondary" onclick="window.downloadAuxTemplate()">📥 Download Aux Template</button>
+                  <input type="file" id="aux-upload" style="display:none" onchange="window.handleAuxUpload(event)">
+                  <button class="btn-primary" onclick="document.getElementById('aux-upload').click()">📤 Import Auxes</button>
+              </div>
+              <div id="aux-upload-status" style="margin-top:10px;"></div>
+            </div>
         </div>
       </div>
 
@@ -388,17 +403,52 @@
   </div>
 </div>
 
-<script src="/js/core/state.js?v=4"></script>
-<script src="/js/core/auth.js?v=4"></script>
-<script src="/js/core/ui.js?v=4"></script>
-<script src="/js/agent/status.js?v=4"></script>
-<script src="/js/agent/attendance.js?v=4"></script>
-<script src="/js/agent/team.js?v=4"></script>
-<script src="/js/agent/leaves.js?v=4"></script>
-<script src="/js/admin/users.js?v=4"></script>
-<script src="/js/admin/schedules.js?v=4"></script>
-<script src="/js/admin/import-export.js?v=4"></script>
-<script src="/js/quality/monitoring.js?v=4"></script>
+<div id="modal-edit-user" class="modal-ov" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Edit User Details</h2>
+      <button class="modal-close" onclick="closeModal('edit-user');">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-u-id">
+      <div class="form-group"><label>Name</label><input type="text" id="edit-u-name" readonly style="background:#eee;"></div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="edit-u-role">
+          <option value="agent">Agent</option>
+          <option value="supervisor">Supervisor</option>
+          <option value="quality">Quality</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Account Status (For Attrition)</label>
+        <select id="edit-u-status">
+          <option value="active">Active (FTE)</option>
+          <option value="inactive">Inactive / Resigned</option>
+          <option value="suspended">Suspended</option>
+          <option value="long_leave">Long Leave</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('edit-user');">Cancel</button>
+      <button class="btn-primary" onclick="window.saveUserEdit();">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/core/state.js?v=5"></script>
+<script src="/js/core/auth.js?v=5"></script>
+<script src="/js/core/ui.js?v=5"></script>
+<script src="/js/agent/status.js?v=5"></script>
+<script src="/js/agent/attendance.js?v=5"></script>
+<script src="/js/agent/team.js?v=5"></script>
+<script src="/js/agent/leaves.js?v=5"></script>
+<script src="/js/admin/users.js?v=5"></script>
+<script src="/js/admin/schedules.js?v=5"></script>
+<script src="/js/admin/import-export.js?v=5"></script>
+<script src="/js/quality/monitoring.js?v=5"></script>
 
 </body>
 </html>
