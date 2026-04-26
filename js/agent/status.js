@@ -1,16 +1,15 @@
 // ═══════════════════════════════════
 // ⏰ STATUS & TIMERS (status.js)
 // ═══════════════════════════════════
-console.log('✅ status.js with Dual Timers & Live Calculation loaded');
+console.log('✅ status.js with Auto-Close & Timezone Fix loaded');
 
 window.AuxState = {
     currentAux: null,
     startTime: null,
     timerInterval: null,
-    accumulatedLoginSec: 0 // إجمالي ثواني اللوجن السابقة في اليوم
+    accumulatedLoginSec: 0
 };
 
-// الأوجز التي تحتسب ضمن ساعات العمل الـ 8
 const LOGIN_AUXES = ['online', 'meeting', 'training', 'coaching'];
 
 window.getAuxColor = function(aux) {
@@ -25,7 +24,6 @@ window.getAuxColor = function(aux) {
     return colors[aux] || '#6b7280';
 };
 
-// دالة مساعدة لتنسيق الثواني إلى HH:MM:SS
 function formatTime(seconds) {
     if (isNaN(seconds) || seconds < 0) seconds = 0;
     const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
@@ -34,11 +32,17 @@ function formatTime(seconds) {
     return `${h}:${m}:${s}`;
 }
 
-// ✅ مزامنة الجلسة النشطة عند التحميل وحساب الوقت التراكمي
+// دالة لضبط التاريخ على التوقيت المحلي (يتفادى مشاكل التوقيت بعد منتصف الليل)
+function getTodayLocal() {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().split('T')[0];
+}
+
 window.syncActiveSession = async function() {
     if (!window.sb || !APP.CU) return;
     try {
-        // 1. جلب الجلسة المفتوحة (إن وجدت)
+        const today = getTodayLocal();
         const { data: activeSession } = await window.sb
             .from('aux_sessions')
             .select('*')
@@ -47,13 +51,25 @@ window.syncActiveSession = async function() {
             .maybeSingle();
 
         if (activeSession) {
-            console.log("📌 Found active session, restoring...");
-            window.AuxState.currentAux = activeSession.aux_type;
-            window.AuxState.startTime = new Date(activeSession.start_time);
-            document.getElementById('aux-selector').value = activeSession.aux_type;
+            // لو السيشن مفتوحة من يوم فات (الايجنت نسي يعمل Punch Out)
+            if (activeSession.date !== today) {
+                console.log("📌 Found unclosed session from yesterday. Auto-closing...");
+                await window.sb.from('aux_sessions')
+                    .update({ 
+                        end_time: new Date().toISOString(), 
+                        duration_seconds: 0 // نخليه 0 عشان ميبوظش الأرقام
+                    })
+                    .eq('id', activeSession.id);
+                    
+                await window.sb.from('profiles').update({ status: 'offline' }).eq('id', APP.CU.id);
+            } else {
+                console.log("📌 Found active session, restoring...");
+                window.AuxState.currentAux = activeSession.aux_type;
+                window.AuxState.startTime = new Date(activeSession.start_time);
+                document.getElementById('aux-selector').value = activeSession.aux_type;
+            }
         }
 
-        // 2. تحديث الحسابات لتشغيل العدادات
         await window.loadDailySummary();
         window.updatePunchUI();
         window.startTimer();
@@ -61,13 +77,11 @@ window.syncActiveSession = async function() {
     } catch (e) { console.error("Sync Session Error:", e); }
 };
 
-// ✅ بدء أو تغيير حالة الأوج (Punch In / Change Status)
 window.startSelectedAux = async function() {
     const auxSelect = document.getElementById('aux-selector');
     if (!auxSelect) return;
     const aux = auxSelect.value;
     
-    // لو اختار أوفلاين، نعمل Punch Out كامل
     if (aux === 'offline') {
         window.punchOut();
         return;
@@ -75,7 +89,6 @@ window.startSelectedAux = async function() {
 
     if (window.AuxState.currentAux === aux) return;
     
-    // إغلاق الجلسة السابقة إن وجدت قبل بدء الجديدة
     if (window.AuxState.currentAux) await window.punchOut(true);
 
     const now = new Date();
@@ -86,19 +99,19 @@ window.startSelectedAux = async function() {
     window.startTimer();
 
     try {
+        const today = getTodayLocal();
         await window.sb.from('aux_sessions').insert({
             user_id: APP.CU.id,
             aux_type: aux,
             start_time: now.toISOString(),
-            date: now.toISOString().split('T')[0]
+            date: today
         });
         await window.sb.from('profiles').update({ status: aux }).eq('id', APP.CU.id);
     } catch (e) { console.error("Start Session Error:", e); }
     
-    window.loadDailySummary(); // تحديث فوري للأرقام
+    window.loadDailySummary(); 
 };
 
-// ✅ إنهاء الشيفت بالكامل أو تغيير الحالة
 window.punchOut = async function(isSwitching = false) {
     if (!window.AuxState.currentAux) return;
     const now = new Date();
@@ -114,7 +127,6 @@ window.punchOut = async function(isSwitching = false) {
             .is('end_time', null);
 
         if (!isSwitching) {
-            // End Shift الكامل (Offline)
             await window.sb.from('profiles').update({ status: 'offline' }).eq('id', APP.CU.id);
             window.AuxState.currentAux = null;
             window.AuxState.startTime = null;
@@ -130,11 +142,10 @@ window.punchOut = async function(isSwitching = false) {
     window.loadDailySummary();
 };
 
-// ✅ حساب الخلاصة اليومية (تحسب جميع الأوقات)
 window.loadDailySummary = async function () {
     if (!window.sb || !APP.CU) return;
     try {
-        const today = new Date().toISOString().split('T')[0];
+        const today = getTodayLocal();
         const { data: sessions } = await window.sb
             .from('aux_sessions')
             .select('*')
@@ -148,12 +159,10 @@ window.loadDailySummary = async function () {
         if (sessions) {
             sessions.forEach(s => {
                 let duration = s.duration_seconds || 0;
-                // حساب الجلسات المغلقة فقط للتراكمي (لأن المفتوحة هتتحسب لايف في العداد)
                 if (s.end_time) {
                     if (totals[s.aux_type] !== undefined) totals[s.aux_type] += duration;
                     if (LOGIN_AUXES.includes(s.aux_type)) accumulatedLogin += duration;
                 } else {
-                    // لو مفتوحة، نضيفها للملخص (ولكن ليس للتراكمي بتاع العداد)
                     const start = new Date(s.start_time);
                     let liveDuration = Math.round((now - start) / 1000);
                     if (totals[s.aux_type] !== undefined) totals[s.aux_type] += liveDuration;
@@ -168,7 +177,6 @@ window.loadDailySummary = async function () {
         const loginHrs = toHrs(loginSec);
         const missingHrs = Math.max(0, 8 - loginHrs);
 
-        // تحديث المربعات في واجهة المستخدم
         if(document.getElementById('agent-hours')) document.getElementById('agent-hours').textContent = toHrs(totals.online).toFixed(2) + 'h';
         if(document.getElementById('agent-break')) document.getElementById('agent-break').textContent = toHrs(totals.break).toFixed(2) + 'h';
         if(document.getElementById('agent-meeting')) document.getElementById('agent-meeting').textContent = toHrs(totals.meeting + totals.training + totals.coaching).toFixed(2) + 'h';
@@ -189,7 +197,6 @@ window.loadDailySummary = async function () {
             `;
         }
         
-        // تحديث عداد اللوجن المبدئي لو اليوزر مش واخد Action لسه
         if (!window.AuxState.currentAux && document.getElementById('login-timer')) {
             document.getElementById('login-timer').textContent = formatTime(window.AuxState.accumulatedLoginSec);
         }
@@ -197,7 +204,6 @@ window.loadDailySummary = async function () {
     } catch (e) { console.warn('Load summary error:', e); }
 };
 
-// ✅ العدادات المزدوجة (تحديث كل ثانية)
 window.startTimer = function() {
     if (window.AuxState.timerInterval) clearInterval(window.AuxState.timerInterval);
     const auxTimerEl = document.getElementById('aux-timer');
@@ -209,23 +215,18 @@ window.startTimer = function() {
         const now = new Date();
         const auxElapsedSec = Math.floor((now - window.AuxState.startTime) / 1000);
         
-        // 1. تحديث عداد الأوج الحالي (سواء كان بريك، ميتينج، أونلاين..)
         if (auxTimerEl) auxTimerEl.textContent = formatTime(auxElapsedSec);
         
-        // 2. تحديث عداد اللوجن التراكمي
         let totalLoginNow = window.AuxState.accumulatedLoginSec;
         if (LOGIN_AUXES.includes(window.AuxState.currentAux)) {
-            // لو الحالة الحالية من ضمن حالات العمل، نزود وقتها على الإجمالي
             totalLoginNow += auxElapsedSec;
         }
         if (loginTimerEl) loginTimerEl.textContent = formatTime(totalLoginNow);
         
-        // تحديث الخلاصة كل دقيقة تقريباً لضمان دقة الأرقام في البوكسات
         if (auxElapsedSec > 0 && auxElapsedSec % 60 === 0) window.loadDailySummary(); 
     }, 1000);
 };
 
-// ✅ تحديث الواجهة عند الضغط
 window.updatePunchUI = function() {
     const status = document.getElementById('punch-status');
     if (!status) return;
