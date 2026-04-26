@@ -4,55 +4,45 @@
 
 console.log('✅ monitoring.js loaded');
 
-// ✅ SUBMIT EVALUATION
+// ✅ دالة مساعدة للحصول على تاريخ اليوم بصيغة ISO محلياً
+function todayISO() {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().split('T')[0];
+}
+
+// ✅ SUBMIT EVALUATION (خاص بمستوى الـ Quality/Admin)
 window.submitEval = async function () {
   try {
-    // Permission check
     if (!isQuality()) {
       showToast('❌ You don\'t have permission', 'error');
       return;
     }
 
-    // Get inputs
     const agentId = document.getElementById('eval-agent')?.value?.trim();
     const score = document.getElementById('eval-score')?.value?.trim();
     const notes = document.getElementById('eval-notes')?.value?.trim();
     const msg = document.getElementById('eval-msg');
 
-    // Validate
     if (!agentId || !score) {
-      if (msg) {
-        msg.textContent = '⚠️ Select agent and score';
-        msg.style.color = '#dc2626';
-      }
+      if (msg) { msg.textContent = '⚠️ Select agent and score'; msg.style.color = '#dc2626'; }
       return;
     }
 
     const scoreNum = parseInt(score);
     if (isNaN(scoreNum) || scoreNum < 0 || scoreNum > 100) {
-      if (msg) {
-        msg.textContent = '⚠️ Score must be 0-100';
-        msg.style.color = '#dc2626';
-      }
+      if (msg) { msg.textContent = '⚠️ Score must be 0-100'; msg.style.color = '#dc2626'; }
       return;
     }
 
-    if (!window.sb || !APP.CU) {
-      showToast('❌ Not authenticated', 'error');
-      return;
-    }
+    if (!window.sb || !APP.CU) return;
 
-    // Show loading
-    if (msg) {
-      msg.textContent = '⏳ Submitting...';
-      msg.style.color = '#6b7280';
-    }
+    if (msg) { msg.textContent = '⏳ Submitting...'; msg.style.color = '#6b7280'; }
 
-    // Generate monitor ID
-    const monitorId = 'MON-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5).toUpperCase();
+    // توليد رقم المونيتور تلقائياً
+    const monitorId = 'MON-' + Date.now().toString().slice(-6) + '-' + Math.random().toString(36).substr(2, 4).toUpperCase();
 
-    // Insert quality score
-    const { error: scoreError } = await sb.from('quality_scores').insert({
+    const { error: scoreError } = await window.sb.from('quality_scores').insert({
       agent_id: agentId,
       evaluator_id: APP.CU.id,
       monitor_id: monitorId,
@@ -62,13 +52,11 @@ window.submitEval = async function () {
       created_at: new Date().toISOString()
     });
 
-    if (scoreError) {
-      throw scoreError;
-    }
+    if (scoreError) throw scoreError;
 
-    // Notify agent
+    // إرسال إشعار للأيجنت
     try {
-      await sb.from('notifications').insert({
+      await window.sb.from('notifications').insert({
         user_id: agentId,
         from_id: APP.CU.id,
         from_name: APP.CP?.full_name || 'QA Monitor',
@@ -77,143 +65,71 @@ window.submitEval = async function () {
         read: false,
         created_at: new Date().toISOString()
       });
-    } catch (e) {
-      console.warn('Notification failed:', e);
-    }
+    } catch (e) { console.warn('Notification failed:', e); }
 
-    // Success
-    if (msg) {
-      msg.textContent = '✅ Evaluation submitted! ID: ' + monitorId;
-      msg.style.color = '#16a34a';
-    }
+    if (msg) { msg.textContent = '✅ Evaluation submitted! ID: ' + monitorId; msg.style.color = '#16a34a'; }
 
-    showToast('✅ Quality score recorded', 'success');
+    // تنظيف الفورم
+    if (document.getElementById('eval-agent')) document.getElementById('eval-agent').value = '';
+    if (document.getElementById('eval-score')) document.getElementById('eval-score').value = '';
+    if (document.getElementById('eval-notes')) document.getElementById('eval-notes').value = '';
 
-    // Clear form
-    if (document.getElementById('eval-agent')) {
-      document.getElementById('eval-agent').value = '';
-    }
-    if (document.getElementById('eval-score')) {
-      document.getElementById('eval-score').value = '';
-    }
-    if (document.getElementById('eval-notes')) {
-      document.getElementById('eval-notes').value = '';
-    }
-
-    // Close modal after 1s
     setTimeout(() => {
       closeModal('new-eval');
       loadQualityMonitoring();
-    }, 1000);
+    }, 1500);
 
   } catch (e) {
     const msg = document.getElementById('eval-msg');
-    if (msg) {
-      msg.textContent = '❌ ' + (e.message || 'Submission failed');
-      msg.style.color = '#dc2626';
-    }
-    console.error('submitEval error:', e);
-    showToast('❌ Failed to submit evaluation', 'error');
+    if (msg) { msg.textContent = '❌ ' + (e.message || 'Submission failed'); msg.style.color = '#dc2626'; }
   }
 };
 
-// ✅ LOAD QUALITY MONITORING PANEL
+// ✅ LOAD QUALITY MONITORING PANEL (للوحة تحكم الكواليتي/الأدمن)
 window.loadQualityMonitoring = async function () {
   try {
-    if (!window.sb) {
-      console.warn('Supabase not ready');
-      return;
-    }
+    if (!window.sb) return;
 
-    // ─── Load Agents for Dropdown ───
-    const { data: agents, error: agentsError } = await sb
-      .from('profiles')
-      .select('id, full_name, role')
-      .eq('role', 'agent')
-      .order('full_name');
-
+    const { data: agents } = await window.sb.from('profiles').select('id, full_name').eq('role', 'agent').order('full_name');
     const sel = document.getElementById('eval-agent');
     if (sel && agents && agents.length > 0) {
-      sel.innerHTML = '<option value="">Select agent...</option>' +
-        agents.map(a => `<option value="${a.id}">${a.full_name || a.id}</option>`).join('');
+      sel.innerHTML = '<option value="">Select agent...</option>' + agents.map(a => `<option value="${a.id}">${a.full_name || a.id}</option>`).join('');
     }
 
-    // ─── Load Quality Scores ───
-    // تم إضافة معالجة أفضل للأخطاء هنا
-    const { data: evals, error: evalsError } = await sb
+    const { data: evals, error: evalsError } = await window.sb
       .from('quality_scores')
-      .select(`
-        id,
-        agent_id,
-        score,
-        notes,
-        date,
-        monitor_id,
-        created_at,
-        profiles:agent_id(full_name, email)
-      `)
+      .select(`id, agent_id, score, notes, date, monitor_id, created_at, profiles:agent_id(full_name)`)
       .order('created_at', { ascending: false })
       .limit(100);
 
-    // إذا كان هناك خطأ في قاعدة البيانات (مثل الجدول غير موجود)، أوقف التنفيذ بهدوء
     if (evalsError) {
-      console.warn('⚠️ تنبيه: تعذر تحميل التقييمات. تأكد من وجود جدول quality_scores في Supabase.', evalsError.message);
+      console.warn('⚠️ Table quality_scores may not exist yet.');
       return; 
     }
 
     if (!evals || evals.length === 0) {
-      safeText('qa-total-evals', '0');
-      safeText('qa-avg-score', '—');
-      safeText('qa-pass-rate', '—');
-      safeText('qa-fail-count', '0');
-
+      safeText('qa-total-evals', '0'); safeText('qa-avg-score', '—'); safeText('qa-pass-rate', '—'); safeText('qa-fail-count', '0');
       const tbody = document.getElementById('qa-evals-tbody');
-      if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-row">No evaluations yet</td></tr>';
-      }
+      if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="empty-row">No evaluations yet</td></tr>';
       return;
     }
 
-    // ─── Calculate Stats ───
     const totalEvals = evals.length;
     const avgScore = Math.round(evals.reduce((sum, e) => sum + (e.score || 0), 0) / totalEvals);
     const passCount = evals.filter(e => (e.score || 0) >= 80).length;
     const failCount = totalEvals - passCount;
     const passRate = Math.round((passCount / totalEvals) * 100);
 
-    // ─── Update Stat Cards ───
     safeText('qa-total-evals', String(totalEvals));
     safeText('qa-avg-score', avgScore + '%');
     safeText('qa-pass-rate', passRate + '%');
     safeText('qa-fail-count', String(failCount));
 
-    // ─── Calculate Agent Performance ───
-    const agentScores = {};
-    evals.forEach(e => {
-      if (!agentScores[e.agent_id]) {
-        agentScores[e.agent_id] = {
-          name: e.profiles?.full_name || 'Unknown',
-          scores: [],
-          avg: 0
-        };
-      }
-      agentScores[e.agent_id].scores.push(e.score);
-    });
-
-    // Calculate averages
-    Object.keys(agentScores).forEach(agentId => {
-      const scores = agentScores[agentId].scores;
-      agentScores[agentId].avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
-    });
-
-    // ─── Update Evaluations Table ───
     const tbody = document.getElementById('qa-evals-tbody');
     if (tbody) {
       tbody.innerHTML = evals.map(e => {
         const isPassed = (e.score || 0) >= 80;
-        const statusClass = isPassed ? 'good' : 'warn';
         const statusText = isPassed ? '✅ Pass' : '❌ Fail';
-
         return `
           <tr>
             <td><strong>${e.profiles?.full_name || 'Unknown'}</strong></td>
@@ -225,50 +141,82 @@ window.loadQualityMonitoring = async function () {
         `;
       }).join('');
     }
-
-    // ─── Agent Performance Summary ───
-    const agentPerfDiv = document.getElementById('qa-agent-perf');
-    if (agentPerfDiv) {
-      const sortedAgents = Object.entries(agentScores)
-        .sort((a, b) => b[1].avg - a[1].avg);
-
-      agentPerfDiv.innerHTML = `
-        <h4 style="margin-bottom:12px;">Agent Performance (Avg Scores)</h4>
-        ${sortedAgents.map(([agentId, data]) => {
-          const isPassed = data.avg >= 80;
-          return `
-            <div class="aux-summary-row ${isPassed ? 'good' : 'warn'}" style="margin-bottom:8px;">
-              <div>
-                <strong>${data.name}</strong>
-                <br>
-                <small style="color:#6b7280;">${data.scores.length} evaluation(s)</small>
-              </div>
-              <strong style="font-size:18px;">${data.avg}%</strong>
-            </div>
-          `;
-        }).join('')}
-      `;
-    }
-
-    console.log('✅ Quality monitoring loaded successfully.');
-
-  } catch (e) {
-    console.error('loadQualityMonitoring error:', e);
-  }
+  } catch (e) { console.error('loadQualityMonitoring error:', e); }
 };
 
-// ✅ AUTO-REFRESH
-setInterval(() => {
-  if (APP.CU?.id && isQuality() && typeof loadQualityMonitoring === 'function') {
-    loadQualityMonitoring();
-  }
-}, 60000); // Every 60 seconds
+// ✅ الدالة الجديدة: عرض تقييمات الأيجنت في الداشبورد الخاص به
+window.loadAgentQualityEvaluations = async function() {
+    if (!window.sb || !APP.CU) return;
+    try {
+        const { data: myEvals, error } = await window.sb
+            .from('quality_scores')
+            .select('*')
+            .eq('agent_id', APP.CU.id)
+            .order('created_at', { ascending: false })
+            .limit(5); // يعرض أحدث 5 تقييمات فقط
 
-// ✅ INITIALIZE ON DOM LOAD
-document.addEventListener('DOMContentLoaded', () => {
+        const listDiv = document.getElementById('agent-qa-list');
+        if (!listDiv) return;
+
+        if (error || !myEvals || myEvals.length === 0) {
+            listDiv.innerHTML = '<p style="text-align:center; color:gray;">No recent evaluations found.</p>';
+            return;
+        }
+
+        listDiv.innerHTML = myEvals.map(e => {
+            const isPassed = e.score >= 80;
+            const color = isPassed ? '#16a34a' : '#dc2626';
+            return `
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:8px; margin-bottom:8px;">
+                    <div>
+                        <strong style="display:block; color:#374151;">ID: ${e.monitor_id}</strong>
+                        <span style="font-size:13px; color:#6b7280;">Date: ${e.date}</span>
+                    </div>
+                    <div style="text-align:right;">
+                        <strong style="font-size:18px; color:${color};">${e.score}%</strong>
+                        <br>
+                        <button class="btn-secondary btn-sm" onclick="requestQaMeeting('${e.monitor_id}')" style="margin-top:5px; padding:2px 6px; font-size:11px;">Request Meeting</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+    } catch(e) { console.error("Error loading agent QA:", e); }
+};
+
+// ✅ دالة طلب الميتينج من قبل الأيجنت
+window.requestQaMeeting = async function(monitorId) {
+    if (!confirm(`Are you sure you want to request a meeting for monitor ${monitorId}?`)) return;
+    try {
+        // البحث عن التقييم لمعرفة من المقيّم
+        const { data: evalData } = await window.sb.from('quality_scores').select('evaluator_id').eq('monitor_id', monitorId).single();
+        
+        if (evalData && evalData.evaluator_id) {
+            await window.sb.from('notifications').insert({
+                user_id: evalData.evaluator_id, // نبعت لموظف الجودة
+                from_id: APP.CU.id,
+                from_name: APP.CP?.full_name || 'Agent',
+                type: 'meeting_request',
+                message: `📅 ${APP.CP?.full_name} is requesting a meeting regarding Monitor ID: ${monitorId}`,
+                read: false,
+                created_at: new Date().toISOString()
+            });
+            alert('Meeting request sent successfully to the QA who evaluated you.');
+        } else {
+            alert('Could not find the evaluator. Please contact your supervisor.');
+        }
+    } catch(e) {
+        console.error("Meeting request error:", e);
+        alert('Failed to send request.');
+    }
+};
+
+document.addEventListener('APP_READY', () => {
   if (isQuality()) {
     loadQualityMonitoring();
   }
+  // إذا كان المستخدم أيجنت، نحمّل تقييماته في الداشبورد بتاعه
+  if (APP.CP?.role === 'agent') {
+      loadAgentQualityEvaluations();
+  }
 });
-
-console.log('✅ monitoring.js fully loaded');
