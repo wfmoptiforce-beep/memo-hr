@@ -3,11 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Memo Pro</title>
+  <title>Memo Pro | Ultimate Workforce Tool</title>
 
   <link rel="stylesheet" href="/css/main.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/config.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    /* تنسيقات إضافية للألوان والنكز */
+    .nudge-btn { background: #6366f1; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; }
+    .status-badge-active { background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+    .status-badge-resigned { background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+    .quality-result-card { background: #f9fafb; border: 1px solid #e5e7eb; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  </style>
 </head>
 
 <body>
@@ -101,7 +109,7 @@
       <div class="topbar-right">
         <button class="btn-icon" onclick="toggleNotif();">
           🔔
-          <span class="notif-badge" style="display:none;">0</span>
+          <span id="notif-badge-count" class="notif-badge" style="display:none;">0</span>
         </button>
 
         <div class="user-menu" style="cursor: pointer;" onclick="if(typeof openModal === 'function') openModal('edit-profile');">
@@ -130,12 +138,13 @@
         <div class="panel-body">
           
           <div id="admin-kpi-section" class="cards-grid" style="display:none; margin-bottom: 20px; border-bottom: 2px dashed #eee; padding-bottom: 20px;">
-            <div class="card" style="background:#f0fdf4; border-color:#bbf7d0;"><div class="card-label">👥 Total Active FTE</div><div class="card-value" id="kpi-active-fte">0</div></div>
+            <div class="card" style="background:#f0fdf4; border-color:#bbf7d0;"><div class="card-label">👥 Active FTE</div><div class="card-value" id="kpi-active-fte">0</div></div>
             <div class="card" style="background:#fef2f2; border-color:#fecaca;"><div class="card-label">🚪 Total Attrition</div><div class="card-value" id="kpi-attrition">0</div></div>
             <div class="card"><div class="card-label">📉 Attrition %</div><div class="card-value" id="kpi-attrition-rate">0%</div></div>
             <div class="card"><div class="card-label">✅ Total Attend</div><div class="card-value" id="kpi-attend">0</div></div>
-            <div class="card"><div class="card-label">❌ Total Absent</div><div class="card-value" id="kpi-absent">0</div></div>
+            <div class="card" style="background: #fff7ed;"><div class="card-label">❌ Total Absent</div><div class="card-value" id="kpi-absent" style="color:red;">0</div></div>
             <div class="card"><div class="card-label">📊 Absenteeism %</div><div class="card-value" id="kpi-absent-rate">0%</div></div>
+            <div class="card"><div class="card-label">⚠️ Exceed Break</div><div class="card-value" id="kpi-exceed-break">0</div></div>
           </div>
 
           <div class="cards-grid">
@@ -163,7 +172,7 @@
             <div id="aux-timer" class="aux-timer-text">00:00:00</div>
 
             <div class="punch-controls">
-              <select id="aux-selector" class="punch-select">
+              <select id="aux-selector" class="punch-select" style="font-weight:bold;">
                 <option value="online">🟢 Online</option>
                 <option value="break">🟡 Break</option>
                 <option value="meeting">🟠 Meeting</option>
@@ -174,6 +183,13 @@
               <button class="btn-punch-out" onclick="if(window.punchOut) window.punchOut();" style="background-color: #dc2626;">Punch Out</button>
             </div>
             <div id="aux-summary" class="aux-summary-box"></div>
+          </div>
+
+          <div id="agent-quality-feed" class="section">
+            <h3>🎧 Latest Quality Monitoring</h3>
+            <div id="agent-quality-container">
+              <p style="color:gray; font-size:12px;">No evaluations received yet.</p>
+            </div>
           </div>
 
           <div class="section">
@@ -198,7 +214,10 @@
       <div id="panel-users" class="panel" style="display:none;">
         <div class="panel-header">
           <h2>👥 Users Management</h2>
-          <button class="btn-primary" onclick="openModal('add-user');">+ Add New Person</button>
+          <div style="display:flex; gap:10px;">
+            <button class="btn-secondary" onclick="exportUserDB();">📥 Download DB</button>
+            <button class="btn-primary" onclick="openModal('add-user');">+ Add New Person</button>
+          </div>
         </div>
         <div class="panel-body">
           <div class="section">
@@ -228,7 +247,7 @@
           </div>
 
           <div class="section">
-            <h3>Team Members</h3>
+            <h3>Team Members Floor</h3>
             <div class="table-container">
               <table class="data-table">
                 <thead><tr><th>Name</th><th>Status</th><th>Role</th><th>Since</th><th>Action</th></tr></thead>
@@ -270,7 +289,7 @@
             <h3>Recent Evaluations</h3>
             <div class="table-container">
               <table class="data-table">
-                <thead><tr><th>Agent</th><th>Date</th><th>Score</th><th>Status</th><th>Monitor ID</th></tr></thead>
+                <thead><tr><th>Agent</th><th>Date</th><th>Score</th><th>Monitor ID</th><th>Action</th></tr></thead>
                 <tbody id="qa-evals-tbody"><tr><td colspan="5" class="empty-row">Loading...</td></tr></tbody>
               </table>
             </div>
@@ -321,17 +340,11 @@
         <select id="leave-type">
           <option value="Annual">Annual Leave</option>
           <option value="Sick">Sick Leave</option>
-          <option value="Emergency">Emergency</option>
+          <option value="Emergency">Emergency / Long Leave</option>
         </select>
       </div>
-      <div class="form-group">
-        <label>Start Date</label>
-        <input type="date" id="leave-start">
-      </div>
-      <div class="form-group">
-        <label>End Date</label>
-        <input type="date" id="leave-end">
-      </div>
+      <div class="form-group"><label>Start Date</label><input type="date" id="leave-start"></div>
+      <div class="form-group"><label>End Date</label><input type="date" id="leave-end"></div>
       <div id="leave-msg" class="form-msg"></div>
     </div>
     <div class="modal-footer">
@@ -343,10 +356,7 @@
 
 <div id="modal-edit-profile" class="modal-ov" style="display:none;">
   <div class="modal-content">
-    <div class="modal-header">
-      <h2>Edit Profile</h2>
-      <button class="modal-close" onclick="closeModal('edit-profile');">✕</button>
-    </div>
+    <div class="modal-header"><h2>Edit Profile</h2><button class="modal-close" onclick="closeModal('edit-profile');">✕</button></div>
     <div class="modal-body">
       <div class="form-group"><label>Full Name</label><input type="text" id="ep-name" /></div>
       <div class="form-group"><label>Avatar URL</label><input type="text" id="ep-avatar" /></div>
@@ -360,10 +370,7 @@
 
 <div id="modal-add-user" class="modal-ov" style="display:none;">
   <div class="modal-content">
-    <div class="modal-header">
-      <h2>Add New User</h2>
-      <button class="modal-close" onclick="closeModal('add-user');">✕</button>
-    </div>
+    <div class="modal-header"><h2>Add New User</h2><button class="modal-close" onclick="closeModal('add-user');">✕</button></div>
     <div class="modal-body">
       <div class="form-group"><label>Full Name</label><input type="text" id="mu-name" /></div>
       <div class="form-group"><label>Email</label><input type="email" id="mu-email" /></div>
@@ -372,9 +379,9 @@
         <label>Role</label>
         <select id="mu-role">
           <option value="agent">Agent</option>
-          <option value="supervisor">Supervisor</option>
-          <option value="quality">Quality</option>
-          <option value="admin">Admin</option>
+          <option value="supervisor">Supervisor / TL</option>
+          <option value="quality">Quality Specialist</option>
+          <option value="admin">Administrator</option>
         </select>
       </div>
       <div id="mu-msg" class="form-msg"></div>
@@ -388,32 +395,29 @@
 
 <div id="modal-new-eval" class="modal-ov" style="display:none;">
   <div class="modal-content">
-    <div class="modal-header"><h2>New Evaluation</h2><button class="modal-close" onclick="closeModal('new-eval');">✕</button></div>
+    <div class="modal-header"><h2>🎧 New Quality Monitoring</h2><button class="modal-close" onclick="closeModal('new-eval');">✕</button></div>
     <div class="modal-body">
-      <div class="form-group"><label>Agent Email</label><input type="text" id="eval-agent-email" /></div>
+      <div class="form-group"><label>Agent Email</label><input type="text" id="eval-agent-email" placeholder="agent@email.com" /></div>
       <div class="form-group"><label>Evaluation Date</label><input type="date" id="eval-date" /></div>
       <div class="form-group"><label>Score (0-100)</label><input type="number" id="eval-score" /></div>
-      <div class="form-group"><label>Notes</label><textarea id="eval-notes"></textarea></div>
+      <div class="form-group"><label>Detailed Feedback</label><textarea id="eval-notes" rows="4"></textarea></div>
       <div id="eval-msg" class="form-msg"></div>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('new-eval');">Cancel</button>
-      <button class="btn-primary" onclick="window.submitEvaluation();">Submit</button>
+      <button class="btn-primary" onclick="window.submitEvaluation();">Post Score & Sync</button>
     </div>
   </div>
 </div>
 
 <div id="modal-edit-user" class="modal-ov" style="display:none;">
   <div class="modal-content">
-    <div class="modal-header">
-      <h2>Edit User Details</h2>
-      <button class="modal-close" onclick="closeModal('edit-user');">✕</button>
-    </div>
+    <div class="modal-header"><h2>Manage User & Status</h2><button class="modal-close" onclick="closeModal('edit-user');">✕</button></div>
     <div class="modal-body">
       <input type="hidden" id="edit-u-id">
       <div class="form-group"><label>Name</label><input type="text" id="edit-u-name" readonly style="background:#eee;"></div>
       <div class="form-group">
-        <label>Role</label>
+        <label>Access Level</label>
         <select id="edit-u-role">
           <option value="agent">Agent</option>
           <option value="supervisor">Supervisor</option>
@@ -422,12 +426,12 @@
         </select>
       </div>
       <div class="form-group">
-        <label>Account Status (For Attrition)</label>
+        <label>Operational Status</label>
         <select id="edit-u-status">
           <option value="active">Active (FTE)</option>
-          <option value="inactive">Inactive / Resigned</option>
+          <option value="inactive">Resigned / Inactive</option>
           <option value="suspended">Suspended</option>
-          <option value="long_leave">Long Leave</option>
+          <option value="long_leave">Long Leave (Emergency)</option>
         </select>
       </div>
     </div>
