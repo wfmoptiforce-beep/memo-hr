@@ -302,7 +302,10 @@
   <div class="modal-content">
     <div class="modal-header"><h2>New Quality Evaluation</h2><button class="modal-close" onclick="closeModal('new-eval');">✕</button></div>
     <div class="modal-body">
-      <div class="form-group"><label>Agent Email</label><input type="text" id="eval-agent-email" /></div>
+      <div class="form-group">
+        <label>Select Agent</label>
+        <select id="eval-agent"><option value="">Loading agents...</option></select>
+      </div>
       <div class="form-group"><label>Evaluation Date</label><input type="date" id="eval-date" /></div>
       <div class="form-group"><label>Score (0-100)</label><input type="number" id="eval-score" /></div>
       <div class="form-group"><label>Notes (Generates Monitor ID automatically)</label><textarea id="eval-notes"></textarea></div>
