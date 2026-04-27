@@ -2,17 +2,16 @@
 // ⭐ QUALITY MONITORING & QA SYSTEM
 // ═══════════════════════════════════
 
-console.log('✅ monitoring.js loaded');
+console.log('✅ monitoring.js loaded with fixes');
 
-// ✅ دالة مساعدة للحصول على تاريخ اليوم بصيغة ISO محلياً
 function todayISO() {
     const d = new Date();
     d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
     return d.toISOString().split('T')[0];
 }
 
-// ✅ SUBMIT EVALUATION (خاص بمستوى الـ Quality/Admin)
-window.submitEval = async function () {
+// ✅ تم تصحيح اسم الدالة لتتطابق مع زرار الـ HTML
+window.submitEvaluation = async function () {
   try {
     if (!isQuality()) {
       showToast('❌ You don\'t have permission', 'error');
@@ -20,18 +19,19 @@ window.submitEval = async function () {
     }
 
     const agentId = document.getElementById('eval-agent')?.value?.trim();
+    const selectedDate = document.getElementById('eval-date')?.value;
     const score = document.getElementById('eval-score')?.value?.trim();
     const notes = document.getElementById('eval-notes')?.value?.trim();
     const msg = document.getElementById('eval-msg');
 
     if (!agentId || !score) {
-      if (msg) { msg.textContent = '⚠️ Select agent and score'; msg.style.color = '#dc2626'; }
+      if (msg) { msg.textContent = '⚠️ Please select an agent and enter a score'; msg.style.color = '#dc2626'; }
       return;
     }
 
     const scoreNum = parseInt(score);
     if (isNaN(scoreNum) || scoreNum < 0 || scoreNum > 100) {
-      if (msg) { msg.textContent = '⚠️ Score must be 0-100'; msg.style.color = '#dc2626'; }
+      if (msg) { msg.textContent = '⚠️ Score must be between 0 and 100'; msg.style.color = '#dc2626'; }
       return;
     }
 
@@ -39,8 +39,8 @@ window.submitEval = async function () {
 
     if (msg) { msg.textContent = '⏳ Submitting...'; msg.style.color = '#6b7280'; }
 
-    // توليد رقم المونيتور تلقائياً
     const monitorId = 'MON-' + Date.now().toString().slice(-6) + '-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+    const evalDate = selectedDate ? selectedDate : todayISO(); // يستخدم التاريخ المختار أو تاريخ اليوم
 
     const { error: scoreError } = await window.sb.from('quality_scores').insert({
       agent_id: agentId,
@@ -48,13 +48,12 @@ window.submitEval = async function () {
       monitor_id: monitorId,
       score: scoreNum,
       notes: notes || '',
-      date: todayISO(),
+      date: evalDate,
       created_at: new Date().toISOString()
     });
 
     if (scoreError) throw scoreError;
 
-    // إرسال إشعار للأيجنت
     try {
       await window.sb.from('notifications').insert({
         user_id: agentId,
@@ -69,13 +68,14 @@ window.submitEval = async function () {
 
     if (msg) { msg.textContent = '✅ Evaluation submitted! ID: ' + monitorId; msg.style.color = '#16a34a'; }
 
-    // تنظيف الفورم
     if (document.getElementById('eval-agent')) document.getElementById('eval-agent').value = '';
     if (document.getElementById('eval-score')) document.getElementById('eval-score').value = '';
     if (document.getElementById('eval-notes')) document.getElementById('eval-notes').value = '';
+    if (document.getElementById('eval-date')) document.getElementById('eval-date').value = '';
 
     setTimeout(() => {
       closeModal('new-eval');
+      if (msg) msg.textContent = '';
       loadQualityMonitoring();
     }, 1500);
 
@@ -85,11 +85,11 @@ window.submitEval = async function () {
   }
 };
 
-// ✅ LOAD QUALITY MONITORING PANEL (للوحة تحكم الكواليتي/الأدمن)
 window.loadQualityMonitoring = async function () {
   try {
     if (!window.sb) return;
 
+    // تحميل أسماء الأيجنتس في القائمة المنسدلة
     const { data: agents } = await window.sb.from('profiles').select('id, full_name').eq('role', 'agent').order('full_name');
     const sel = document.getElementById('eval-agent');
     if (sel && agents && agents.length > 0) {
@@ -144,7 +144,6 @@ window.loadQualityMonitoring = async function () {
   } catch (e) { console.error('loadQualityMonitoring error:', e); }
 };
 
-// ✅ الدالة الجديدة: عرض تقييمات الأيجنت في الداشبورد الخاص به
 window.loadAgentQualityEvaluations = async function() {
     if (!window.sb || !APP.CU) return;
     try {
@@ -153,7 +152,7 @@ window.loadAgentQualityEvaluations = async function() {
             .select('*')
             .eq('agent_id', APP.CU.id)
             .order('created_at', { ascending: false })
-            .limit(5); // يعرض أحدث 5 تقييمات فقط
+            .limit(5);
 
         const listDiv = document.getElementById('agent-qa-list');
         if (!listDiv) return;
@@ -184,16 +183,14 @@ window.loadAgentQualityEvaluations = async function() {
     } catch(e) { console.error("Error loading agent QA:", e); }
 };
 
-// ✅ دالة طلب الميتينج من قبل الأيجنت
 window.requestQaMeeting = async function(monitorId) {
     if (!confirm(`Are you sure you want to request a meeting for monitor ${monitorId}?`)) return;
     try {
-        // البحث عن التقييم لمعرفة من المقيّم
         const { data: evalData } = await window.sb.from('quality_scores').select('evaluator_id').eq('monitor_id', monitorId).single();
         
         if (evalData && evalData.evaluator_id) {
             await window.sb.from('notifications').insert({
-                user_id: evalData.evaluator_id, // نبعت لموظف الجودة
+                user_id: evalData.evaluator_id,
                 from_id: APP.CU.id,
                 from_name: APP.CP?.full_name || 'Agent',
                 type: 'meeting_request',
@@ -215,7 +212,6 @@ document.addEventListener('APP_READY', () => {
   if (isQuality()) {
     loadQualityMonitoring();
   }
-  // إذا كان المستخدم أيجنت، نحمّل تقييماته في الداشبورد بتاعه
   if (APP.CP?.role === 'agent') {
       loadAgentQualityEvaluations();
   }
