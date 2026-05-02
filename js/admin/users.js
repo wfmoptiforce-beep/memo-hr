@@ -178,7 +178,7 @@ window.saveUserEdit = async function () {
   }
 
   // منع تعيين دور owner إلا من قبل owner، أو إذا كان المستخدم يحرر دوره الخاص
-  if (role === 'owner' && id !== window.APP?.CU?.id && (!window.APP?.CU || window.APP.CU.role !== 'owner')) {
+  if (role === 'owner' && id !== window.APP?.CU?.id && window.APP?.CU?.role !== 'owner') {
     if (msg) { msg.textContent = '⚠️ Only owners can assign the owner role.'; msg.style.color = '#dc2626'; }
     return;
   }
@@ -246,7 +246,7 @@ window.addUser = async function () {
   }
 
   // منع إضافة مستخدم بدور owner إلا من قبل owner
-  if (role_new === 'owner' && (!window.APP?.CU || window.APP.CU.role !== 'owner')) {
+  if (role_new === 'owner' && window.APP?.CU?.role !== 'owner') {
     if (msg) { msg.textContent = '⚠️ Only owners can add users with owner role.'; msg.style.color = '#dc2626'; }
     return;
   }
@@ -304,7 +304,7 @@ window.addUser = async function () {
 window.changeUserRole = async function (userId, newRole) {
   try {
     // منع تعيين دور owner إلا من قبل owner، أو إذا كان المستخدم يغير دوره الخاص
-    if (newRole === 'owner' && userId !== window.APP?.CU?.id && (!window.APP?.CU || window.APP.CU.role !== 'owner')) {
+    if (newRole === 'owner' && userId !== window.APP?.CU?.id && window.APP?.CU?.role !== 'owner') {
       alert('Only owners can assign the owner role.');
       if (typeof loadAdminPanel === 'function') loadAdminPanel(); // إعادة تحميل لإعادة الدور السابق
       return;
