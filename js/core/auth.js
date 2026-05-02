@@ -4,26 +4,20 @@
 
 console.log('✅ auth.js loaded');
 
-// ✅ دالة فحص وتجديد الجلسة (التصريح) تلقائياً
 window.checkSession = async function() {
   try {
     const { data, error } = await window.sb.auth.getSession();
-    
-    // لو الجلسة مش موجودة أو فيها إيرور، نحاول نجددها
     if (error || !data.session) {
       console.log("⏳ Session expired or missing, attempting to refresh...");
       const { data: refreshData, error: refreshError } = await window.sb.auth.refreshSession();
-      
       if (refreshError || !refreshData.session) {
-        console.error("❌ Failed to refresh session, please login again.");
-        window.doLogout(); // الخروج إجبارياً لو فشل التجديد تماماً
+        console.error("❌ Failed to refresh session.");
+        window.doLogout();
         return null;
       }
-      
-      APP.CU = refreshData.session.user; // تحديث بيانات المستخدم
+      APP.CU = refreshData.session.user;
       return refreshData.session;
     }
-    
     return data.session;
   } catch(e) {
     console.error("Session check error:", e);
@@ -31,21 +25,17 @@ window.checkSession = async function() {
   }
 };
 
-// ✅ APP INITIALIZATION
 async function initApp() {
   try {
-    // Check if Supabase is ready
     if (!window.sb) {
       console.warn('Supabase not initialized yet');
       setTimeout(initApp, 500);
       return;
     }
 
-    // Show loading screen (optional)
     const loadingScreen = document.getElementById('loading-screen');
     if (loadingScreen) loadingScreen.style.display = 'flex';
 
-    // Get current session with our new smart checker
     const session = await window.checkSession();
 
     if (!session) {
@@ -53,29 +43,27 @@ async function initApp() {
       return;
     }
 
-    // User is logged in
     APP.CU = session.user;
     await loadProfile();
 
     if (typeof window.showApp === 'function') window.showApp();
 
+    // ✅ إطلاق APP_READY — ده اللي يخلي status.js و team.js و leaves.js يشتغلوا
+    console.log('📢 Dispatching APP_READY...');
+    document.dispatchEvent(new Event('APP_READY'));
+
   } catch (e) {
     console.error('initApp error:', e);
     if (typeof window.showLogin === 'function') window.showLogin();
   } finally {
-    // Hide loading screen
     const loadingScreen = document.getElementById('loading-screen');
     if (loadingScreen) loadingScreen.style.display = 'none';
   }
 }
 
-// ✅ LOAD USER PROFILE
 async function loadProfile() {
   try {
-    if (!APP.CU?.id) {
-      console.warn('No user ID');
-      return;
-    }
+    if (!APP.CU?.id) return;
 
     const { data, error } = await sb
       .from('profiles')
@@ -106,20 +94,16 @@ async function loadProfile() {
   }
 }
 
-// ✅ LOGIN FUNCTION
 window.doLogin = async function doLogin() {
   try {
     const emailEl = document.getElementById('login-email');
-    const passEl = document.getElementById('login-pass');
-    const msgEl = document.getElementById('login-msg');
+    const passEl  = document.getElementById('login-pass');
+    const msgEl   = document.getElementById('login-msg');
 
-    if (!emailEl || !passEl || !msgEl) {
-      console.error('Login form not found');
-      return;
-    }
+    if (!emailEl || !passEl || !msgEl) return;
 
     const email = emailEl.value?.trim();
-    const pass = passEl.value;
+    const pass  = passEl.value;
 
     if (!email || !pass) {
       msgEl.textContent = '⚠️ Please enter email and password';
@@ -136,15 +120,11 @@ window.doLogin = async function doLogin() {
     msgEl.textContent = '⏳ Signing in...';
     msgEl.style.color = '#6b7280';
 
-    const { error, data } = await sb.auth.signInWithPassword({
-      email,
-      password: pass
-    });
+    const { error, data } = await sb.auth.signInWithPassword({ email, password: pass });
 
     if (error) {
       msgEl.textContent = '❌ ' + (error.message || 'Login failed');
       msgEl.style.color = '#dc2626';
-      console.warn('Login error:', error);
       return;
     }
 
@@ -163,7 +143,11 @@ window.doLogin = async function doLogin() {
     setTimeout(() => {
       if (typeof window.showApp === 'function') window.showApp();
       emailEl.value = '';
-      passEl.value = '';
+      passEl.value  = '';
+
+      // ✅ إطلاق APP_READY بعد اللوجن المباشر
+      console.log('📢 Dispatching APP_READY after login...');
+      document.dispatchEvent(new Event('APP_READY'));
     }, 300);
 
   } catch (e) {
@@ -176,22 +160,27 @@ window.doLogin = async function doLogin() {
   }
 };
 
-// ✅ LOGOUT FUNCTION
 window.doLogout = async function doLogout() {
   try {
-    const { error } = await sb.auth.signOut();
-
-    if (error) {
-      console.warn('Logout error:', error);
-      return;
+    // Auto punch-out قبل الخروج
+    if (typeof window.punchOut === 'function' && window.AuxState?.currentAux) {
+      await window.punchOut(false);
     }
+
+    const { error } = await sb.auth.signOut();
+    if (error) console.warn('Logout error:', error);
 
     APP.CU = null;
     APP.CP = null;
     APP.userRole = 'agent';
 
-    console.log('✅ Logged out');
+    if (window.AuxState) {
+      window.AuxState.currentAux = null;
+      window.AuxState.startTime  = null;
+      if (window.AuxState.timerInterval) clearInterval(window.AuxState.timerInterval);
+    }
 
+    console.log('✅ Logged out');
     if (typeof window.showLogin === 'function') window.showLogin();
 
   } catch (e) {
@@ -199,7 +188,6 @@ window.doLogout = async function doLogout() {
   }
 };
 
-// ✅ INITIALIZE ON DOM READY
 document.addEventListener('DOMContentLoaded', () => {
   console.log('📄 DOM loaded, initializing app...');
   initApp();

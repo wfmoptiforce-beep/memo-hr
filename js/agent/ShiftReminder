@@ -1,0 +1,193 @@
+// ═══════════════════════════════════════════════════════
+// ⏰ SHIFT REMINDER — تنبيه قبل الشيفت بـ 15 دقيقة
+// ═══════════════════════════════════════════════════════
+console.log('✅ shift-reminder.js loaded');
+
+window.ShiftReminder = {
+  checkInterval: null,
+  notifiedToday: false,
+  lastCheckedDate: null
+};
+
+// ─── طلب إذن الإشعارات من المتصفح ───────────────────
+async function requestNotifPermission() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') return false;
+  const result = await Notification.requestPermission();
+  return result === 'granted';
+}
+
+// ─── إشعار المتصفح ───────────────────────────────────
+function sendBrowserNotif(title, body, icon) {
+  if (Notification.permission !== 'granted') return;
+  try {
+    new Notification(title, {
+      body,
+      icon: icon || 'https://ui-avatars.com/api/?name=M&background=2563eb&color=fff',
+      badge: 'https://ui-avatars.com/api/?name=M&background=2563eb&color=fff',
+      tag: 'shift-reminder',
+      renotify: true
+    });
+  } catch(e) {
+    console.warn('Browser notification error:', e);
+  }
+}
+
+// ─── Toast جوه التطبيق ───────────────────────────────
+function sendShiftToast(message, minsLeft) {
+  if (typeof window.showToast === 'function') {
+    window.showToast(message, minsLeft <= 5 ? 'error' : 'warning', 10000);
+  }
+
+  // بانر أكبر وأوضح
+  const existing = document.getElementById('shift-reminder-banner');
+  if (existing) existing.remove();
+
+  const banner = document.createElement('div');
+  banner.id = 'shift-reminder-banner';
+  banner.style.cssText = `
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: ${minsLeft <= 5 ? '#dc2626' : '#d97706'};
+    color: white;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    z-index: 99999;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 320px;
+    justify-content: space-between;
+  `;
+  banner.innerHTML = `
+    <span>${message}</span>
+    <button onclick="document.getElementById('shift-reminder-banner').remove()"
+      style="background:rgba(255,255,255,0.25);border:none;color:white;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px;">
+      ✕
+    </button>
+  `;
+  document.body.appendChild(banner);
+
+  // يختفي تلقائياً بعد 30 ثانية
+  setTimeout(() => {
+    const el = document.getElementById('shift-reminder-banner');
+    if (el) el.remove();
+  }, 30000);
+}
+
+// ─── تسجيل الإشعار في جدول notifications ─────────────
+async function saveNotifToDb(message) {
+  if (!window.sb || !APP.CU) return;
+  try {
+    await window.sb.from('notifications').insert({
+      user_id:   APP.CU.id,
+      from_id:   APP.CU.id,
+      from_name: 'System',
+      type:      'shift_reminder',
+      message,
+      read:      false,
+      created_at: new Date().toISOString()
+    });
+  } catch(e) {
+    console.warn('saveNotifToDb error:', e);
+  }
+}
+
+// ─── الدالة الرئيسية: جلب السكادول والتحقق ───────────
+window.checkShiftReminder = async function() {
+  if (!window.sb || !APP.CU || !APP.CP) return;
+
+  const now     = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+
+  // reset الـ flag لو يوم جديد
+  if (window.ShiftReminder.lastCheckedDate !== todayStr) {
+    window.ShiftReminder.notifiedToday    = false;
+    window.ShiftReminder.lastCheckedDate  = todayStr;
+  }
+
+  try {
+    // جلب سكادول اليوم بالـ email
+    const email = APP.CP.email || APP.CU.email;
+    const { data: sched } = await window.sb
+      .from('schedules')
+      .select('shift_start, off_day1, off_day2')
+      .eq('email', email)
+      .eq('date', todayStr)
+      .maybeSingle();
+
+    if (!sched || !sched.shift_start) return;
+
+    // تحقق من يوم الإجازة
+    const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const todayDay = dayNames[now.getDay()];
+    if (sched.off_day1 === todayDay || sched.off_day2 === todayDay) return;
+
+    // حساب الوقت المتبقي حتى بداية الشيفت (بتوقيت الجهاز)
+    const [sh, sm]     = sched.shift_start.split(':').map(Number);
+    const shiftDate    = new Date(now);
+    shiftDate.setHours(sh, sm, 0, 0);
+
+    const diffMs   = shiftDate - now;
+    const diffMins = Math.floor(diffMs / 60000);
+
+    // تنبيه عند 30 دقيقة
+    if (diffMins <= 30 && diffMins > 25 && !window.ShiftReminder.notifiedToday) {
+      const msg = `⏰ شيفتك هيبدأ خلال 30 دقيقة (${sched.shift_start}) — استعد!`;
+      sendBrowserNotif('⏰ Shift Starting Soon', msg);
+      sendShiftToast(msg, 30);
+      saveNotifToDb(msg);
+      console.log('📢 Shift reminder sent: 30 min');
+    }
+
+    // تنبيه عند 15 دقيقة
+    if (diffMins <= 15 && diffMins > 10 && !window.ShiftReminder.notifiedToday) {
+      const msg = `🔔 شيفتك هيبدأ خلال 15 دقيقة (${sched.shift_start}) — افتح التطبيق وعمل Punch In!`;
+      sendBrowserNotif('🔔 Shift in 15 Minutes!', msg);
+      sendShiftToast(msg, 15);
+      saveNotifToDb(msg);
+      window.ShiftReminder.notifiedToday = true;
+      console.log('📢 Shift reminder sent: 15 min');
+    }
+
+    // تنبيه عند 5 دقائق (urgent)
+    if (diffMins <= 5 && diffMins > 0) {
+      const msg = `🚨 شيفتك بعد ${diffMins} دقيقة! (${sched.shift_start}) — عمل Punch In دلوقتي!`;
+      sendBrowserNotif('🚨 Shift Starting NOW!', msg);
+      sendShiftToast(msg, 5);
+      console.log('📢 Shift reminder sent: 5 min URGENT');
+    }
+
+    // تنبيه لو الشيفت بدأ وما عملش Punch In
+    if (diffMins <= 0 && diffMins >= -10 && !window.AuxState?.currentAux) {
+      const msg = `❗ شيفتك بدأ الساعة ${sched.shift_start} وأنت لسه مش Punch In — سجّل دخولك!`;
+      sendBrowserNotif('❗ You are Late!', msg);
+      sendShiftToast(msg, -1);
+    }
+
+  } catch(e) {
+    console.warn('checkShiftReminder error:', e);
+  }
+};
+
+// ─── تشغيل عند APP_READY ─────────────────────────────
+document.addEventListener('APP_READY', async () => {
+  // طلب إذن الإشعارات
+  const hasPermission = await requestNotifPermission();
+  console.log('🔔 Notification permission:', hasPermission ? 'granted' : 'denied');
+
+  // فحص فوري
+  await window.checkShiftReminder();
+
+  // فحص كل دقيقة
+  if (window.ShiftReminder.checkInterval) clearInterval(window.ShiftReminder.checkInterval);
+  window.ShiftReminder.checkInterval = setInterval(() => {
+    window.checkShiftReminder();
+  }, 60 * 1000);
+});
