@@ -1,0 +1,102 @@
+// ══════════════════════════════════════════════════════
+// 🔌 AUTO-OFFLINE: تحويل الأجنت أوف لاين تلقائياً
+//    لما يقفل التاب أو يقفل الكمبيوتر أو ينقطع النت
+// ══════════════════════════════════════════════════════
+console.log('✅ auto-offline.js loaded');
+
+(function initAutoOffline() {
+
+  let _heartbeatInterval = null;
+  let _visibilityTimeout = null;
+
+  // ─── دالة تعيين الموظف أوف لاين ───────────────────
+  async function setOffline(reason) {
+    try {
+      if (!window.APP?.CU?.id || !window.sb) return;
+
+      console.log('🔴 Auto-offline triggered:', reason);
+
+      await window.sb
+        .from('profiles')
+        .update({
+          status:     'offline',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', APP.CU.id);
+
+      // تسجيل نهاية الجلسة في الـ attendance
+      await window.sb
+        .from('attendance')
+        .insert({
+          user_id:    APP.CU.id,
+          date:       new Date().toISOString().split('T')[0],
+          aux_type:   'offline',
+          status:     'offline',
+          end_time:   new Date().toISOString(),
+          created_at: new Date().toISOString()
+        })
+        .select(); // no-throw even if fails
+
+    } catch (e) {
+      console.warn('auto-offline error:', e);
+    }
+  }
+
+  // ─── 1. لما المستخدم يقفل التاب أو المتصفح ─────────
+  window.addEventListener('beforeunload', () => {
+    // استخدام sendBeacon عشان يشتغل حتى بعد إغلاق المتصفح
+    if (!window.APP?.CU?.id || !window.sb) return;
+
+    const url = window.sb.supabaseUrl + '/rest/v1/profiles?id=eq.' + APP.CU.id;
+    const payload = JSON.stringify({ status: 'offline', updated_at: new Date().toISOString() });
+
+    navigator.sendBeacon && navigator.sendBeacon(url, new Blob([payload], {
+      type: 'application/json'
+    }));
+  });
+
+  // ─── 2. لما الصفحة تتخبي (مثلاً قفل الشاشة أو سويتش تاب) ─
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      // انتظر 5 دقائق قبل التحويل لأوف لاين
+      _visibilityTimeout = setTimeout(() => {
+        setOffline('tab hidden for 5 minutes');
+      }, 5 * 60 * 1000);
+    } else {
+      // رجعت الصفحة — الغي التايمر
+      clearTimeout(_visibilityTimeout);
+    }
+  });
+
+  // ─── 3. Heartbeat — كل دقيقتين يأكد الموظف أونلاين ─
+  //    لو الكمبيوتر نام أو النت انقطع، الـ heartbeat هيوقف
+  //    وبعد 5 دقائق بدون heartbeat في الداتا بيز نعتبره أوف لاين
+  async function sendHeartbeat() {
+    try {
+      if (!window.APP?.CU?.id || !window.sb) return;
+      const currentStatus = APP.CP?.status;
+      if (!currentStatus || currentStatus === 'offline') return;
+
+      await window.sb
+        .from('profiles')
+        .update({ last_seen: new Date().toISOString() })
+        .eq('id', APP.CU.id);
+    } catch (e) {
+      // silent fail
+    }
+  }
+
+  // ─── 4. Online/Offline network events ───────────────
+  window.addEventListener('offline', () => {
+    console.warn('🌐 Network lost — setting offline');
+    setOffline('network disconnected');
+  });
+
+  // ─── تشغيل الـ heartbeat بعد جهوزية التطبيق ────────
+  document.addEventListener('APP_READY', () => {
+    // أضف عمود last_seen لو مش موجود (safe — هيتجاهل لو موجود)
+    _heartbeatInterval = setInterval(sendHeartbeat, 2 * 60 * 1000);
+    sendHeartbeat();
+  });
+
+})();

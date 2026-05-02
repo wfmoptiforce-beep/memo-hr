@@ -95,7 +95,7 @@ window.loadAdminPanel = async function () {
   }
 };
 
-// ✅ فتح مودال التعديل وتعبئة البيانات
+// ✅ فتح مودال التعديل وتعبئة البيانات — آمن مع أي نسخة من المودال
 window.openEditUser = async function (userId) {
   try {
     const { data: u, error } = await window.sb
@@ -106,15 +106,27 @@ window.openEditUser = async function (userId) {
 
     if (error || !u) { alert('Could not load user data.'); return; }
 
-    document.getElementById('edit-u-id').value        = u.id;
-    document.getElementById('edit-u-name').value      = u.full_name || '';
-    document.getElementById('edit-u-email').value     = u.email || '';
-    document.getElementById('edit-u-phone').value     = u.phone || '';
-    document.getElementById('edit-u-position').value  = u.position || 'Agent';
-    document.getElementById('edit-u-role').value      = u.role || 'agent';
-    document.getElementById('edit-u-status').value    = u.account_status || u.status || 'offline';
-    document.getElementById('edit-u-join').value      = u.join_date || '';
-    document.getElementById('edit-u-last').value      = u.last_working_date || '';
+    // استخدام ?. عشان لو أي عنصر مش موجود في المودال ما يكسرش
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+
+    set('edit-u-id',       u.id);
+    set('edit-u-name',     u.full_name || '');
+    set('edit-u-email',    u.email || '');
+    set('edit-u-phone',    u.phone || '');
+    set('edit-u-position', u.position || 'Agent');
+    set('edit-u-role',     u.role || 'agent');
+    set('edit-u-status',   u.account_status || u.status || 'offline');
+    set('edit-u-join',     u.join_date || '');
+    set('edit-u-last',     u.last_working_date || '');
+
+    // تأكد إن المودال عنده الحقول الجديدة — لو لأ بيفتح مودال بديل
+    const hasNewModal = !!document.getElementById('edit-u-phone');
+    if (!hasNewModal) {
+      // المودال القديم: نفتحه بنفس الـ IDs الموجودة
+      const nameEl = document.getElementById('edit-u-name');
+      if (nameEl) nameEl.removeAttribute('readonly');
+      if (nameEl) nameEl.style.cssText = 'border:2px solid #6366f1; background:white; cursor:text;';
+    }
 
     if (window.openModal) window.openModal('edit-user');
 
