@@ -26,9 +26,10 @@ window.setupTopbar = function () {
             { id: 'panel-reports',            icon: '📈', label: 'Reports',      data: 'reports' },
             { id: 'panel-settings',           icon: '⚙️', label: 'Settings',     data: 'settings' }
         ];
-    } else if (role === 'supervisor') {
+    } else if (role === 'supervisor' || role === 'leader') {
         tabs = [
             { id: 'panel-dashboard',          icon: '🏠', label: 'Dashboard',   data: 'dashboard' },
+            { id: 'panel-users',              icon: '👥', label: 'Users',        data: 'users' },
             { id: 'panel-attendance',         icon: '📅', label: 'Attendance',   data: 'attendance' },
             { id: 'panel-attendance-tracker', icon: '📊', label: 'Tracker',      data: 'attendance-tracker' },
             { id: 'panel-schedule',           icon: '📋', label: 'Schedule',     data: 'schedule' },
@@ -37,6 +38,8 @@ window.setupTopbar = function () {
     } else if (role === 'quality') {
         tabs = [
             { id: 'panel-dashboard', icon: '🏠', label: 'Dashboard', data: 'dashboard' },
+            { id: 'panel-users',     icon: '👥', label: 'Users',     data: 'users' },
+            { id: 'panel-schedule',  icon: '📋', label: 'Schedule',  data: 'schedule' },
             { id: 'panel-reports',   icon: '📈', label: 'Reports',   data: 'reports' }
         ];
     } else {
@@ -132,8 +135,77 @@ window.toggleNotif = function () {
     const panel = document.getElementById('notif-panel');
     if (panel) {
         panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        if (panel.style.display === 'block') {
+            loadNotifications();
+        }
         const badge = document.querySelector('.notif-badge');
         if (badge) badge.style.display = 'none';
+    }
+};
+
+window.loadNotifications = async function () {
+    if (!window.sb || !APP.CU) return;
+
+    try {
+        const { data: notifs, error } = await window.sb
+            .from('notifications')
+            .select('*')
+            .eq('user_id', APP.CU.id)
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        if (error) throw error;
+
+        const list = document.getElementById('notif-list');
+        if (!list) return;
+
+        if (!notifs || notifs.length === 0) {
+            list.innerHTML = 'No new notifications';
+            return;
+        }
+
+        const unreadCount = notifs.filter(n => !n.read).length;
+        const badge = document.querySelector('.notif-badge');
+        if (badge && unreadCount > 0) {
+            badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+            badge.style.display = 'inline';
+        }
+
+        list.innerHTML = notifs.map(n => {
+            const time = new Date(n.created_at).toLocaleString('en-US', { 
+                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+            });
+            return `
+                <div class="notif-item" style="padding: 10px; border-bottom: 1px solid #eee; ${!n.read ? 'background: #f0f8ff;' : ''}">
+                    <div style="font-weight: 600; color: #333;">${n.message}</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 4px;">${time}</div>
+                    ${!n.read ? '<button onclick="markAsRead(\'' + n.id + '\')" style="margin-top: 5px; padding: 2px 8px; font-size: 11px;">Mark Read</button>' : ''}
+                </div>
+            `;
+        }).join('');
+
+        // إضافة تحديث فوري للإشعارات
+        if (!window.notificationsSubscription) {
+          window.notificationsSubscription = window.sb
+            .channel('notifications-updates')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${APP.CU.id}` }, () => {
+              loadNotifications();
+            })
+            .subscribe();
+        }
+
+    } catch (e) {
+        console.error('loadNotifications error:', e);
+    }
+};
+
+window.markAsRead = async function (notifId) {
+    if (!window.sb) return;
+    try {
+        await window.sb.from('notifications').update({ read: true }).eq('id', notifId);
+        loadNotifications();
+    } catch (e) {
+        console.error('markAsRead error:', e);
     }
 };
 
@@ -141,6 +213,7 @@ window.loadAllInitialData = async function () {
     if (typeof loadDailySummary  === 'function') loadDailySummary();
     if (typeof syncActiveSession === 'function') syncActiveSession();
     if (typeof loadTeamOnline    === 'function') loadTeamOnline();
+    if (typeof loadNotifications === 'function') loadNotifications();
 };
 
 window.setupEventListeners = function () {

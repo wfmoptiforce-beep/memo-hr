@@ -177,8 +177,8 @@ window.saveUserEdit = async function () {
     return;
   }
 
-  // منع تعيين دور owner إلا من قبل owner
-  if (role === 'owner' && (!window.APP?.CU || window.APP.CU.role !== 'owner')) {
+  // منع تعيين دور owner إلا من قبل owner، أو إذا كان المستخدم يحرر دوره الخاص
+  if (role === 'owner' && id !== window.APP?.CU?.id && (!window.APP?.CU || window.APP.CU.role !== 'owner')) {
     if (msg) { msg.textContent = '⚠️ Only owners can assign the owner role.'; msg.style.color = '#dc2626'; }
     return;
   }
@@ -216,12 +216,21 @@ window.saveUserEdit = async function () {
 };
 
 window.addUser = async function () {
+  const role = (window.APP?.CU?.role || 'agent').toLowerCase();
+  
+  // تحقق من الصلاحيات: فقط Admin, Owner, Supervisor, و Leader يمكنهم إضافة موظفين
+  const allowedRoles = ['admin', 'owner', 'supervisor', 'leader'];
+  if (!allowedRoles.includes(role)) {
+    alert('❌ You do not have permission to add users. Only Admin, Supervisor, and Leaders can add users.');
+    return;
+  }
+
   const name      = document.getElementById('mu-name')?.value?.trim();
   const email     = document.getElementById('mu-email')?.value?.trim();
   const phone     = document.getElementById('mu-phone')?.value?.trim();
   const pass      = document.getElementById('mu-pass')?.value;
   const position  = document.getElementById('mu-position')?.value;
-  const role      = document.getElementById('mu-role')?.value;
+  const role_new  = document.getElementById('mu-role')?.value;
   const status    = document.getElementById('mu-status')?.value;
   const firstDate = document.getElementById('mu-first-date')?.value || null;
   const lastDate  = document.getElementById('mu-last-date')?.value || null;
@@ -237,7 +246,7 @@ window.addUser = async function () {
   }
 
   // منع إضافة مستخدم بدور owner إلا من قبل owner
-  if (role === 'owner' && (!window.APP?.CU || window.APP.CU.role !== 'owner')) {
+  if (role_new === 'owner' && (!window.APP?.CU || window.APP.CU.role !== 'owner')) {
     if (msg) { msg.textContent = '⚠️ Only owners can add users with owner role.'; msg.style.color = '#dc2626'; }
     return;
   }
@@ -262,7 +271,7 @@ window.addUser = async function () {
     await window.sb.from('profiles').upsert({
       id: userId, email, full_name: name,
       phone: phone || null, position: position || null,
-      role: role || 'agent', status: status || 'offline',
+      role: role_new || 'agent', status: status || 'offline',
       join_date: firstDate, last_working_date: lastDate,
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
@@ -271,7 +280,7 @@ window.addUser = async function () {
     await new Promise(r => setTimeout(r, 600));
     await window.sb.from('profiles').update({
       full_name: name, phone: phone || null,
-      position: position || null, role: role || 'agent',
+      position: position || null, role: role_new || 'agent',
       status: status || 'offline', join_date: firstDate,
       last_working_date: lastDate, updated_at: new Date().toISOString()
     }).eq('id', userId);
@@ -294,8 +303,8 @@ window.addUser = async function () {
 
 window.changeUserRole = async function (userId, newRole) {
   try {
-    // منع تعيين دور owner إلا من قبل owner
-    if (newRole === 'owner' && (!window.APP?.CU || window.APP.CU.role !== 'owner')) {
+    // منع تعيين دور owner إلا من قبل owner، أو إذا كان المستخدم يغير دوره الخاص
+    if (newRole === 'owner' && userId !== window.APP?.CU?.id && (!window.APP?.CU || window.APP.CU.role !== 'owner')) {
       alert('Only owners can assign the owner role.');
       if (typeof loadAdminPanel === 'function') loadAdminPanel(); // إعادة تحميل لإعادة الدور السابق
       return;

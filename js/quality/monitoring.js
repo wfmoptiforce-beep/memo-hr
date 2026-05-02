@@ -100,6 +100,27 @@ window.submitEvaluation = async function () {
   }
 };
 
+// ─── طلب ميتينج بعد التقييم ───────────────────────────
+window.requestMeeting = async function (agentId, monitorId) {
+  try {
+    // إرسال إشعار بطلب الميتينج
+    await window.sb.from('notifications').insert({
+      user_id: agentId,
+      from_id: APP.CU.id,
+      from_name: APP.CP?.full_name || 'Quality Team',
+      type: 'meeting_request',
+      message: `📞 Meeting Requested: Your QA Evaluation (ID: ${monitorId}) requires a discussion. Please acknowledge.`,
+      read: false,
+      created_at: new Date().toISOString()
+    });
+    
+    alert('✅ Meeting request sent to the employee!');
+  } catch (e) {
+    console.error('Request meeting error:', e);
+    alert('❌ Failed to send meeting request');
+  }
+};
+
 // ─── تحميل تقارير الجودة في الجدول ─────────────────────
 window.loadQAReports = async function () {
   try {

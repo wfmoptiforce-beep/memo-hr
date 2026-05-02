@@ -124,6 +124,16 @@ window.nudgeUser = async function (userId, name) {
 // تحديث القائمة تلقائياً
 document.addEventListener('APP_READY', () => {
     window.loadTeamOnline();
+
+    // إضافة تحديث فوري للتغييرات في الـ profiles
+    if (!window.teamProfilesSubscription) {
+      window.teamProfilesSubscription = window.sb
+        .channel('team-profiles-updates')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+          loadTeamOnline();
+        })
+        .subscribe();
+    }
 });
 
 setInterval(() => {

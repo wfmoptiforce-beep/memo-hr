@@ -3,7 +3,7 @@
 // ═══════════════════════════════════
 console.log('✅ admin/import-export.js loaded');
 
-// ─── رفع السكادول من CSV ─────────────────────────────────
+// ─── رفع السكادول من CSV ────────────────────────────────
 window.handleScheduleUpload = async function (event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -17,21 +17,54 @@ window.handleScheduleUpload = async function (event) {
       const text = e.target.result;
       const lines = text.split('\n');
       const header = lines[0].toLowerCase();
-
-      // دعم أعمدة: email, shift_start, shift_end, off_day1, off_day2, date (اختياري)
+      
+      // دعم الأعمدة الجديدة: name, email, shift_start, shift_duration_hours, off_day1, off_day2, date, notes
+      const hasNameCol = header.includes('name');
+      const hasDurationCol = header.includes('shift_duration_hours');
+      
       const rows = lines.slice(1);
       const scheduleEntries = [];
 
       rows.forEach(row => {
         const cols = row.split(',').map(c => c.trim().replace(/\r/g, ''));
-        if (cols.length >= 4 && cols[0]) {
+        if (cols.length >= 2 && cols[0]) {
+          let email, shift_start, shift_end, off_day1, off_day2, date;
+          
+          if (hasNameCol && cols[1]) {
+            // التيمبليت الجديد: name, email, shift_start, shift_duration_hours, ...
+            email = cols[1];
+            shift_start = cols[2] || '09:00';
+            
+            // حساب shift_end من shift_start + shift_duration_hours
+            if (hasDurationCol && cols[3]) {
+              const [hours, mins] = shift_start.split(':').map(Number);
+              const duration = parseInt(cols[3]) || 8;
+              const endHours = (hours + duration) % 24;
+              shift_end = `${endHours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+            } else {
+              shift_end = cols[3] || '17:00';
+            }
+            
+            off_day1 = cols[4] || '';
+            off_day2 = cols[5] || '';
+            date = cols[6] || new Date().toISOString().split('T')[0];
+          } else {
+            // التيمبليت القديم: email, shift_start, shift_end, off_day1, off_day2, date
+            email = cols[0];
+            shift_start = cols[1] || '09:00';
+            shift_end = cols[2] || '17:00';
+            off_day1 = cols[3] || '';
+            off_day2 = cols[4] || '';
+            date = cols[5] || new Date().toISOString().split('T')[0];
+          }
+          
           scheduleEntries.push({
-            email:       cols[0],
-            shift_start: cols[1] || '09:00',
-            shift_end:   cols[2] || '17:00',
-            off_day1:    cols[3] || '',
-            off_day2:    cols[4] || '',
-            date:        cols[5] || new Date().toISOString().split('T')[0]
+            email,
+            shift_start,
+            shift_end,
+            off_day1,
+            off_day2,
+            date
           });
         }
       });
@@ -67,12 +100,14 @@ window.handleScheduleUpload = async function (event) {
   event.target.value = '';
 };
 
-// ─── تحميل تمبلت السكادول ────────────────────────────────
+// ─── تحميل تمبلت السكادول الجديد ────────────────────────
 window.downloadScheduleTemplate = function () {
+  // التيمبليت الجديد: الاسم، شيفت ستارت، شيفت اند (محسوب)، التاريخ، أوف ديز
   const csv = [
-    'email,shift_start,shift_end,off_day1,off_day2,date',
-    'agent@example.com,09:00,18:00,Friday,Saturday,2025-01-01',
-    'agent2@example.com,10:00,19:00,Friday,Saturday,2025-01-01'
+    'name,email,shift_start,shift_duration_hours,off_day1,off_day2,date,notes',
+    'Ahmed Ali,ahmed@example.com,09:00,8,Friday,Saturday,2025-01-01,',
+    'Fatima Mohamed,fatima@example.com,10:00,8,Friday,Saturday,2025-01-01,يعمل من المنزل',
+    'Sara Hassan,sara@example.com,11:00,8,Saturday,Sunday,2025-01-01,'
   ].join('\n');
 
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
