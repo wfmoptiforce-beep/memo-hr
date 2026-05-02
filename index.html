@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Memo Pro</title>
+  <title>Memo Pro - WFM</title>
  
   <link rel="stylesheet" href="/css/main.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -17,7 +17,7 @@
   <div id="loading-screen" class="loading-screen">
     <div style="font-size:60px;margin-bottom:20px;">🎯</div>
     <div style="font-size:24px;font-weight:700;margin-bottom:10px;">Memo Pro</div>
-    <div style="font-size:13px;color:#9ca3af;margin-bottom:20px;">Loading...</div>
+    <div style="font-size:13px;color:#9ca3af;margin-bottom:20px;">Loading workspace...</div>
     <div class="loading-bar-container">
       <div class="loading-bar"></div>
     </div>
@@ -29,24 +29,23 @@
         <div class="login-logo-area">
           <div class="logo-icon">🎯</div>
           <h1>Memo Pro</h1>
-          <p>WORKFORCE TOOL</p>
+          <p>WORKFORCE MANAGEMENT</p>
         </div>
         <div class="login-features">
-          <div class="feature-item"><span class="feature-icon">📊</span><div class="feature-text"><h4>Real-Time Reports</h4><p>Attrition - Absenteeism - Hours</p></div></div>
-          <div class="feature-item"><span class="feature-icon">👥</span><div class="feature-text"><h4>Agent Management</h4><p>Track status & productivity</p></div></div>
-          <div class="feature-item"><span class="feature-icon">⏱️</span><div class="feature-text"><h4>Live Timeline</h4><p>Breaks - Meetings - Training</p></div></div>
+          <div class="feature-item"><span class="feature-icon">📊</span><div class="feature-text"><h4>Real-Time Reports</h4><p>Attrition, Absenteeism & Hours</p></div></div>
+          <div class="feature-item"><span class="feature-icon">👥</span><div class="feature-text"><h4>Agent Management</h4><p>Track live status & productivity</p></div></div>
+          <div class="feature-item"><span class="feature-icon">⏱️</span><div class="feature-text"><h4>Live Timeline</h4><p>Breaks, Meetings & Training</p></div></div>
         </div>
       </div>
       <div class="login-right-panel">
         <div class="login-form-container">
           <div class="login-header-text"><h2>Welcome Back 👋</h2><p>Sign in to your Memo Pro account</p></div>
-          <form class="login-form" onsubmit="event.preventDefault(); doLogin();">
+          <form class="login-form" onsubmit="event.preventDefault(); window.doLogin();">
             <div class="form-group"><label>EMAIL</label><input type="email" id="login-email" placeholder="your@email.com" required /></div>
-            <div class="form-group"><label>PASSWORD</label><input type="password" id="login-pass" placeholder="••••••••" required /><a href="#" class="forgot-pass" onclick="alert('Please contact your Supervisor or Administrator to reset your password.'); return false;">Forgot Password?</a></div>
-            <div id="login-msg" class="login-msg"></div>
-            <button type="submit" id="login-btn" class="btn-primary login-submit-btn">Sign In</button>
+            <div class="form-group"><label>PASSWORD</label><input type="password" id="login-pass" placeholder="••••••••" required /><a href="#" class="forgot-pass" onclick="alert('Contact your Supervisor to reset password.'); return false;">Forgot Password?</a></div>
+            <div id="login-msg" class="login-msg" style="margin-bottom: 15px; font-weight: 600;"></div>
+            <button type="submit" id="login-btn" class="login-submit-btn">Sign In</button>
           </form>
-          <div class="login-footer"><p>Need help? <a href="#" onclick="alert('Admin Email: admin@memopro.com'); return false;">Contact Your Administrator</a></p></div>
         </div>
       </div>
     </div>
@@ -58,248 +57,230 @@
       <div class="topbar-left"><div class="logo" style="cursor: pointer;" onclick="if(typeof showDefaultPanel === 'function') showDefaultPanel();">🎯 Memo Pro</div></div>
       <div class="topbar-center"><nav id="topbar-nav" class="topbar-nav"></nav></div>
       <div class="topbar-right">
-        <button class="btn-icon" onclick="toggleNotif();">🔔<span class="notif-badge" style="display:none;">0</span></button>
-        <div class="user-menu" style="cursor: pointer;" onclick="if(typeof openModal === 'function') openModal('edit-profile');">
+        <button class="btn-icon" onclick="window.toggleNotif();">🔔<span class="notif-badge" style="display:none; position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; font-size: 10px; padding: 2px 6px;">0</span></button>
+        <div class="user-menu" style="cursor: pointer;" onclick="window.openModal('edit-profile');">
           <div class="user-avatar" id="user-av">U</div>
           <div class="user-info"><div class="user-name" id="user-name">User</div><div class="user-role" id="user-role">agent</div></div>
         </div>
-        <button class="btn-logout logout-btn" onclick="doLogout();">🚪 Logout</button>
+        <button class="logout-btn" onclick="window.doLogout();">🚪 Logout</button>
       </div>
     </div>
  
-    <div id="notif-panel" class="notif-panel" style="display:none; position:absolute; top:60px; right:20px; background:white; border:1px solid #ccc; padding:10px; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,0.1); z-index:999; width:300px;">
-      <div class="notif-header" style="font-weight:bold; border-bottom:1px solid #eee; padding-bottom:10px; margin-bottom:10px;">Notifications (Nudges & Updates)</div>
-      <div id="notif-list" class="notif-list">No new notifications</div>
+    <div id="notif-panel" class="notif-panel" style="display:none; position:absolute; top:60px; right:20px; z-index:999;">
+      <div class="notif-header">Notifications (Nudges & Updates)</div>
+      <div id="notif-list" style="max-height: 300px; overflow-y: auto;">No new notifications</div>
     </div>
  
     <div class="content">
  
       <div id="panel-dashboard" class="panel">
         <div class="panel-header"><h2 id="welcome-greeting">👋 Welcome</h2></div>
-        <div class="panel-body">
-         
-          <div id="admin-kpi-section" class="cards-grid" style="display:none; margin-bottom: 20px; border-bottom: 2px dashed #eee; padding-bottom: 20px;">
-            <div class="card" style="background:#f0fdf4; border-color:#bbf7d0;"><div class="card-label">👥 Active FTE</div><div class="card-value" id="kpi-active-fte">0</div></div>
-            <div class="card" style="background:#fef2f2; border-color:#fecaca;"><div class="card-label">🚪 Attrition</div><div class="card-value" id="kpi-attrition">0</div></div>
-            <div class="card"><div class="card-label">📉 Attrition %</div><div class="card-value" id="kpi-attrition-rate">0%</div></div>
-            <div class="card"><div class="card-label">✅ Attend</div><div class="card-value" id="kpi-attend">0</div></div>
-            <div class="card"><div class="card-label">❌ Absent</div><div class="card-value" id="kpi-absent">0</div></div>
-            <div class="card"><div class="card-label">📊 Absenteeism %</div><div class="card-value" id="kpi-absent-rate">0%</div></div>
-          </div>
+        
+        <div id="admin-kpi-section" class="cards-grid" style="display:none; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 20px;">
+          <div class="card"><div class="card-label">👥 Active FTE</div><div class="card-value" id="kpi-active-fte">0</div></div>
+          <div class="card"><div class="card-label">🚪 Attrition</div><div class="card-value" id="kpi-attrition">0</div></div>
+          <div class="card"><div class="card-label">📉 Attrition %</div><div class="card-value" id="kpi-attrition-rate">0%</div></div>
+          <div class="card"><div class="card-label">✅ Attend</div><div class="card-value" id="kpi-attend">0</div></div>
+          <div class="card"><div class="card-label">❌ Absent</div><div class="card-value" id="kpi-absent">0</div></div>
+          <div class="card"><div class="card-label">📊 Absenteeism %</div><div class="card-value" id="kpi-absent-rate">0%</div></div>
+        </div>
  
-          <div class="cards-grid">
-            <div class="card"><div class="card-label">🟢 Login Hours (Target 8h)</div><div class="card-value" id="agent-hours">0h</div></div>
-            <div class="card"><div class="card-label">🟡 Break Hours (Max 1h)</div><div class="card-value" id="agent-break">0h</div></div>
-            <div class="card"><div class="card-label">🟠 Meeting & Coaching</div><div class="card-value" id="agent-meeting">0h</div></div>
-            <div class="card"><div class="card-label">⏳ Missing Hours</div><div class="card-value" id="agent-missing" style="color:red;">8.0h</div></div>
-          </div>
+        <div class="cards-grid">
+          <div class="card"><div class="card-label">🟢 Login Hours (Target 8h)</div><div class="card-value" id="agent-hours">0h</div></div>
+          <div class="card"><div class="card-label">🟡 Break Hours (Max 1h)</div><div class="card-value" id="agent-break">0h</div></div>
+          <div class="card"><div class="card-label">🟠 Meeting & Coaching</div><div class="card-value" id="agent-meeting">0h</div></div>
+          <div class="card"><div class="card-label">⏳ Missing Hours</div><div class="card-value" id="agent-missing" style="color:var(--danger);">8.0h</div></div>
+        </div>
  
-          <div class="section">
-            <h3>⏰ Punch Status & Actions</h3>
-            <div style="display:flex; gap: 20px; align-items: center; margin-bottom: 15px;">
-                <div id="punch-status" class="punch-status-text" style="font-weight: bold;">🔴 Offline</div>
-                <div style="background: #f3f4f6; padding: 10px; border-radius: 8px;">Login Timer: <span id="login-timer" class="aux-timer-text">00:00:00</span></div>
-                <div style="background: #fef08a; padding: 10px; border-radius: 8px;">Aux/Break Timer: <span id="aux-timer" class="aux-timer-text">00:00:00</span></div>
-            </div>
- 
-            <div class="punch-controls">
-              <select id="aux-selector" class="punch-select" style="font-size: 16px; padding: 8px;">
-                <option value="online" style="color: green; font-weight: bold;">🟢 Online</option>
-                <option value="offline" style="color: red; font-weight: bold;">🔴 Offline</option>
-                <option value="break" style="color: #eab308; font-weight: bold;">🟡 Break</option>
-                <option value="meeting" style="color: #f97316; font-weight: bold;">🟠 Meeting</option>
-                <option value="training" style="color: #f97316; font-weight: bold;">🟠 Training</option>
-                <option value="coaching" style="color: purple; font-weight: bold;">🟣 Coaching</option>
-              </select>
-              <button class="btn-punch-in" onclick="if(window.startSelectedAux) window.startSelectedAux();">Punch / Change Status</button>
-              <button class="btn-punch-out" onclick="if(window.punchOut) window.punchOut();" style="background-color: #dc2626;">End Shift</button>
-            </div>
-            <div id="aux-summary" class="aux-summary-box"></div>
+        <div class="section">
+          <h3>⏰ Punch Status & Actions</h3>
+          <div style="display:flex; gap: 20px; align-items: center; margin-bottom: 15px;">
+              <div id="punch-status" class="punch-status-text">🔴 Offline</div>
+              <div style="background: var(--gray-100); padding: 10px 20px; border-radius: var(--radius-sm);">Login Timer: <span id="login-timer" class="aux-timer-text" style="font-size: 24px; display: inline;">00:00:00</span></div>
+              <div style="background: var(--warning-50); padding: 10px 20px; border-radius: var(--radius-sm);">Aux Timer: <span id="aux-timer" class="aux-timer-text" style="font-size: 24px; display: inline;">00:00:00</span></div>
           </div>
+          <div class="punch-controls">
+            <select id="aux-selector" class="punch-select">
+              <option value="online">🟢 Online</option>
+              <option value="offline">🔴 Offline</option>
+              <option value="break">🟡 Break</option>
+              <option value="meeting">🟠 Meeting</option>
+              <option value="training">🟠 Training</option>
+              <option value="coaching">🟣 Coaching</option>
+            </select>
+            <button class="btn-punch-in" onclick="if(window.startSelectedAux) window.startSelectedAux();">Punch / Change Status</button>
+            <button class="btn-punch-out" onclick="if(window.punchOut) window.punchOut();">End Shift</button>
+          </div>
+        </div>
 
-          <div class="section" id="agent-online-team-section">
-            <h3>👥 Who is Online?</h3>
-            <button class="btn-secondary btn-sm" onclick="document.getElementById('online-team-list').style.display='block';">Show Online Team</button>
-            <div id="online-team-list" style="display:none; margin-top:10px; border:1px solid #eee; padding:10px; border-radius:8px;">
-                <p style="color:gray;">Loading online members...</p>
-                </div>
+        <div class="section" id="agent-online-team-section">
+          <h3>👥 Who is Online?</h3>
+          <button class="btn-secondary" onclick="document.getElementById('online-team-list').style.display='block';">Show Online Team</button>
+          <div id="online-team-list" style="display:none; margin-top:15px; border:1px solid var(--border); padding:15px; border-radius:var(--radius-md);">
+              <p style="color:var(--text-light);">Loading online members...</p>
           </div>
+        </div>
  
-          <div class="section">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <h3>🏖️ My Leaves Status</h3>
-              <button class="btn-primary btn-sm" onclick="openModal('request-leave')">+ Request Leave</button>
-            </div>
-            <div id="agent-leaves-list" style="margin-top:10px;">
-                <p style="text-align:center; color:gray;">No leaves requested. Status will update here when approved.</p>
-            </div>
+        <div class="section">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+            <h3 style="margin:0; border:none; padding:0;">🏖️ My Leaves Status</h3>
+            <button class="btn-primary" onclick="window.openModal('request-leave')">+ Request Leave</button>
           </div>
+          <div id="agent-leaves-list" style="background: var(--light); padding: 15px; border-radius: var(--radius-sm);">
+              <p style="text-align:center; color:var(--text-light); margin:0;">No leaves requested yet.</p>
+          </div>
+        </div>
 
-          <div class="section">
-            <h3>🎯 My Quality Evaluations</h3>
-            <div id="agent-qa-list" style="margin-top:10px; border:1px dashed #ccc; padding:10px;">
-                <p style="text-align:center; color:gray;">No recent evaluations.</p>
-                </div>
+        <div class="section">
+          <h3>🎯 My Quality Evaluations</h3>
+          <div id="agent-qa-list" style="background: var(--light); padding: 15px; border-radius: var(--radius-sm);">
+              <p style="text-align:center; color:var(--text-light); margin:0;">No recent evaluations.</p>
           </div>
+        </div>
  
-          <div class="section">
-            <h3>📅 My Weekly Schedule</h3>
-            <div id="my-schedule-container" style="padding: 20px; background: white; border-radius: 8px; text-align: center; color: var(--text-light); border: 1px dashed var(--border);">
-              No schedule uploaded yet.
-            </div>
+        <div class="section">
+          <h3>📅 My Weekly Schedule</h3>
+          <div id="my-schedule-container" style="padding: 20px; background: var(--bg); border-radius: var(--radius-md); text-align: center; color: var(--text-light); border: 1px dashed var(--border);">
+            No schedule uploaded yet.
           </div>
         </div>
       </div>
  
-      <div id="panel-users" class="panel" style="display:none;">
+      <div id="panel-users" class="panel">
         <div class="panel-header">
           <h2>👥 Users Database Management</h2>
-          <button class="btn-primary" onclick="openModal('add-user');">+ Add New Person</button>
+          <button class="btn-primary" onclick="window.openModal('add-user');">+ Add New Person</button>
         </div>
-        <div class="panel-body">
-          <div class="section">
-            <h3>System Users (Edit Status for Attrition)</h3>
-            <div class="table-container">
-              <table class="data-table">
-                <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions (Edit)</th></tr></thead>
-                <tbody id="admin-users-tbody"></tbody>
-              </table>
-            </div>
+        <div class="section">
+          <div class="table-container">
+            <table class="data-table">
+              <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="admin-users-tbody"></tbody>
+            </table>
           </div>
         </div>
       </div>
  
-      <div id="panel-attendance" class="panel" style="display:none;">
-        <div class="panel-header"><h2>📅 Attendance & Team</h2></div>
-        <div class="panel-body">
-          <div class="cards-grid">
-            <div class="card"><div class="card-label">👥 Total Members</div><div class="card-value" id="sup-team-count">0</div></div>
-            <div class="card"><div class="card-label">🟢 Online Now</div><div class="card-value" id="sup-online-count">0</div></div>
-            <div class="card"><div class="card-label">🟡 On Break</div><div class="card-value" id="sup-break-count">0</div></div>
-            <div class="card"><div class="card-label">⚫ Offline</div><div class="card-value" id="sup-offline-count">0</div></div>
-          </div>
-          <div class="section"><div id="agent-timeline-live"></div></div>
-          <div class="section">
-            <h3>Team Members</h3>
-            <div class="table-container">
-              <table class="data-table">
-                <thead><tr><th>Name</th><th>Status</th><th>Role</th><th>Since</th><th>Action</th></tr></thead>
-                <tbody id="sup-team-tbody"><tr><td colspan="5" class="empty-row">Loading...</td></tr></tbody>
-              </table>
-            </div>
+      <div id="panel-attendance" class="panel">
+        <div class="panel-header"><h2>📅 Real-Time Attendance</h2></div>
+        <div class="cards-grid">
+          <div class="card"><div class="card-label">👥 Total Members</div><div class="card-value" id="sup-team-count">0</div></div>
+          <div class="card"><div class="card-label">🟢 Online Now</div><div class="card-value" id="sup-online-count">0</div></div>
+          <div class="card"><div class="card-label">🟡 On Break</div><div class="card-value" id="sup-break-count">0</div></div>
+          <div class="card"><div class="card-label">⚫ Offline</div><div class="card-value" id="sup-offline-count">0</div></div>
+        </div>
+        <div class="section">
+          <h3>Team Members Live Status</h3>
+          <div class="table-container">
+            <table class="data-table">
+              <thead><tr><th>Name</th><th>Status</th><th>Role</th><th>Since</th><th>Action</th></tr></thead>
+              <tbody id="sup-team-tbody"><tr><td colspan="5" style="text-align:center;">Loading...</td></tr></tbody>
+            </table>
           </div>
         </div>
       </div>
  
-      <div id="panel-schedule" class="panel" style="display:none;">
-        <div class="panel-header"><h2>📋 Master Schedule Upload & Download</h2></div>
-        <div class="panel-body">
-          <div class="section" id="admin-schedule-tools">
-              <div style="display:flex; gap:10px; margin-bottom:15px;">
-                  <button class="btn-secondary" onclick="window.downloadScheduleTemplate()">📥 Download Template</button>
-                  <button class="btn-secondary" onclick="window.downloadCurrentSchedule()">📥 Download Current DB</button>
-                  <input type="file" id="bulk-upload" style="display:none" onchange="window.handleScheduleUpload(event)">
-                  <button class="btn-primary" onclick="document.getElementById('bulk-upload').click()">📤 Bulk Upload Schedule</button>
-              </div>
-              <div id="upload-status"></div>
-          </div>
+      <div id="panel-schedule" class="panel">
+        <div class="panel-header"><h2>📋 Master Schedule Upload</h2></div>
+        <div class="section" id="admin-schedule-tools">
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <button class="btn-secondary" onclick="window.downloadScheduleTemplate()">📥 Download Template</button>
+                <input type="file" id="bulk-upload" style="display:none" onchange="window.handleScheduleUpload(event)">
+                <button class="btn-primary" onclick="document.getElementById('bulk-upload').click()">📤 Bulk Upload Schedule</button>
+            </div>
+            <div id="upload-status" style="font-weight: 500;"></div>
         </div>
       </div>
  
-      <div id="panel-reports" class="panel" style="display:none;">
-  <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
-    <h2>📈 Quality Monitoring & Reports</h2>
-    <div style="display: flex; gap: 10px;">
-      <button class="btn-primary btn-sm" onclick="openModal('new-eval');">+ New QA Form</button>
-      <button class="btn-primary btn-sm" onclick="window.downloadDailyReport();" style="background-color: #16a34a; border: none;">📥 Download WFM Report</button>
-    </div>
-  </div>
-        <div class="panel-body">
-          <div class="cards-grid">
-            <div class="card"><div class="card-label">📊 Total Evals</div><div class="card-value" id="qa-total-evals">0</div></div>
-            <div class="card"><div class="card-label">📈 Avg Score</div><div class="card-value" id="qa-avg-score">—</div></div>
-            <div class="card"><div class="card-label">✅ Pass Rate</div><div class="card-value" id="qa-pass-rate">—</div></div>
-            <div class="card"><div class="card-label">❌ Fail Count</div><div class="card-value" id="qa-fail-count">0</div></div>
+      <div id="panel-reports" class="panel">
+        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h2>📈 Quality & WFM Reports</h2>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn-primary" onclick="window.openModal('new-eval');">+ New QA Form</button>
+            <button class="btn-primary" onclick="window.downloadDailyReport();" style="background-color: var(--success); border: none;">📥 Download WFM Report</button>
           </div>
-          <div class="section">
-            <h3>Recent Evaluations</h3>
-            <div class="table-container">
-              <table class="data-table">
-                <thead><tr><th>Agent</th><th>Date</th><th>Score</th><th>Status</th><th>Monitor ID</th></tr></thead>
-                <tbody id="qa-evals-tbody"><tr><td colspan="5" class="empty-row">Loading...</td></tr></tbody>
-              </table>
-            </div>
+        </div>
+        <div class="cards-grid">
+          <div class="card"><div class="card-label">📊 Total Evals</div><div class="card-value" id="qa-total-evals">0</div></div>
+          <div class="card"><div class="card-label">📈 Avg Score</div><div class="card-value" id="qa-avg-score">—</div></div>
+          <div class="card"><div class="card-label">✅ Pass Rate</div><div class="card-value" id="qa-pass-rate">—</div></div>
+          <div class="card"><div class="card-label">❌ Fail Count</div><div class="card-value" id="qa-fail-count">0</div></div>
+        </div>
+        <div class="section">
+          <h3>Recent Evaluations</h3>
+          <div class="table-container">
+            <table class="data-table">
+              <thead><tr><th>Agent</th><th>Date</th><th>Score</th><th>Status</th><th>Monitor ID</th></tr></thead>
+              <tbody id="qa-evals-tbody"><tr><td colspan="5" style="text-align:center;">Loading...</td></tr></tbody>
+            </table>
           </div>
-          <div class="section">
-            <h3>📩 Pending Leave Requests</h3>
-            <div class="table-container">
-              <table class="data-table">
-                <thead><tr><th>Agent</th><th>Type</th><th>Dates</th><th>Action (Approve/Reject)</th></tr></thead>
-                <tbody id="admin-leaves-tbody"></tbody>
-              </table>
-            </div>
+        </div>
+        <div class="section">
+          <h3>📩 Pending Leave Requests</h3>
+          <div class="table-container">
+            <table class="data-table">
+              <thead><tr><th>Agent</th><th>Type</th><th>Dates</th><th>Action</th></tr></thead>
+              <tbody id="admin-leaves-tbody"></tbody>
+            </table>
           </div>
         </div>
       </div>
- 
-      <div id="panel-settings" class="panel" style="display:none;">
+
+      <div id="panel-settings" class="panel">
         <div class="panel-header"><h2>⚙️ Settings & Manual Import</h2></div>
-        <div class="panel-body">
-            <div class="section">
-              <h3>Import Missing Auxes / Offline Time</h3>
-              <p style="color:gray; margin-bottom:10px;">Use this to upload offline time if agents had system issues.</p>
-              <div style="display:flex; gap:10px;">
-                  <button class="btn-secondary" onclick="window.downloadAuxTemplate()">📥 Download Aux Template</button>
-                  <input type="file" id="aux-upload" style="display:none" onchange="window.handleAuxUpload(event)">
-                  <button class="btn-primary" onclick="document.getElementById('aux-upload').click()">📤 Import Auxes</button>
-              </div>
-              <div id="aux-upload-status" style="margin-top:10px;"></div>
-            </div>
+        <div class="section">
+          <h3>Import Missing Auxes / Offline Time</h3>
+          <p style="color:var(--text-light); margin-bottom:15px;">Use this to upload offline time if agents had system issues.</p>
+          <div style="display:flex; gap:10px;">
+              <button class="btn-secondary" onclick="window.downloadAuxTemplate()">📥 Download Aux Template</button>
+              <input type="file" id="aux-upload" style="display:none" onchange="window.handleAuxUpload(event)">
+              <button class="btn-primary" onclick="document.getElementById('aux-upload').click()">📤 Import Auxes</button>
+          </div>
+          <div id="aux-upload-status" style="margin-top:10px; font-weight: 500;"></div>
         </div>
       </div>
  
     </div>
   </div>
- 
 </div>
  
-<div id="modal-request-leave" class="modal-ov" style="display:none;">
+<div id="modal-request-leave" class="modal-ov">
   <div class="modal-content">
-    <div class="modal-header"><h2>✈️ Request New Leave</h2><button class="modal-close" onclick="closeModal('request-leave');">✕</button></div>
+    <div class="modal-header"><h2>✈️ Request New Leave</h2><button class="modal-close" onclick="window.closeModal('request-leave');">✕</button></div>
     <div class="modal-body">
       <div class="form-group"><label>Type</label><select id="leave-type"><option value="Annual">Annual Leave</option><option value="Sick">Sick Leave</option><option value="Emergency">Emergency</option></select></div>
       <div class="form-group"><label>Start Date</label><input type="date" id="leave-start"></div>
       <div class="form-group"><label>End Date</label><input type="date" id="leave-end"></div>
       <div id="leave-msg" class="form-msg"></div>
     </div>
-    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('request-leave');">Cancel</button><button class="btn-primary" onclick="window.submitLeaveRequest()">Submit Request</button></div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="window.closeModal('request-leave');">Cancel</button><button class="btn-primary" onclick="window.submitLeaveRequest()">Submit Request</button></div>
   </div>
 </div>
  
-<div id="modal-edit-profile" class="modal-ov" style="display:none;">
+<div id="modal-edit-profile" class="modal-ov">
   <div class="modal-content">
-    <div class="modal-header"><h2>Edit Profile</h2><button class="modal-close" onclick="closeModal('edit-profile');">✕</button></div>
+    <div class="modal-header"><h2>Edit Profile</h2><button class="modal-close" onclick="window.closeModal('edit-profile');">✕</button></div>
     <div class="modal-body">
       <div class="form-group"><label>Full Name</label><input type="text" id="ep-name" /></div>
-      <div class="form-group"><label>Avatar URL</label><input type="text" id="ep-avatar" /></div>
+      <div class="form-group"><label>Avatar URL</label><input type="text" id="ep-avatar" placeholder="https://..." /></div>
     </div>
-    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('edit-profile');">Cancel</button><button class="btn-primary" onclick="window.saveProfile();">Save</button></div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="window.closeModal('edit-profile');">Cancel</button><button class="btn-primary" onclick="window.saveProfile();">Save</button></div>
   </div>
 </div>
  
-<div id="modal-add-user" class="modal-ov" style="display:none;">
+<div id="modal-add-user" class="modal-ov">
   <div class="modal-content" style="max-width: 600px;">
-    <div class="modal-header"><h2>👥 Add New Employee</h2><button class="modal-close" onclick="closeModal('add-user');">✕</button></div>
+    <div class="modal-header"><h2>👥 Add New Employee</h2><button class="modal-close" onclick="window.closeModal('add-user');">✕</button></div>
     <div class="modal-body" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
       
-      <div class="form-group"><label>Agent Name</label><input type="text" id="mu-name" placeholder="Full Name"></div>
-      <div class="form-group"><label>Agent Email</label><input type="email" id="mu-email" placeholder="email@company.com"></div>
-      <div class="form-group"><label>Phone Number</label><input type="text" id="mu-phone" placeholder="01xxxxxxxxx"></div>
-      <div class="form-group"><label>Password (Min 6 chars)</label><input type="password" id="mu-pass" placeholder="••••••"></div>
+      <div class="form-group" style="margin-bottom:0;"><label>Agent Name</label><input type="text" id="mu-name" placeholder="Full Name"></div>
+      <div class="form-group" style="margin-bottom:0;"><label>Agent Email</label><input type="email" id="mu-email" placeholder="email@company.com"></div>
+      <div class="form-group" style="margin-bottom:0;"><label>Phone Number</label><input type="text" id="mu-phone" placeholder="01xxxxxxxxx"></div>
+      <div class="form-group" style="margin-bottom:0;"><label>Password (Min 6 chars)</label><input type="password" id="mu-pass" placeholder="••••••"></div>
       
-      <div class="form-group">
+      <div class="form-group" style="margin-bottom:0;">
         <label>Position (Job Title)</label>
-        <select id="mu-position" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc; width: 100%;">
+        <select id="mu-position">
           <option value="Agent">Agent</option>
           <option value="Team Leader">Team Leader</option>
           <option value="Supervisor">Supervisor</option>
@@ -308,9 +289,9 @@
         </select>
       </div>
 
-      <div class="form-group">
+      <div class="form-group" style="margin-bottom:0;">
         <label>Access Level (System Role)</label>
-        <select id="mu-role" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc; width: 100%;">
+        <select id="mu-role">
           <option value="agent">Agent Access</option>
           <option value="leader">Leader Access</option>
           <option value="supervisor">Supervisor Access</option>
@@ -320,30 +301,30 @@
         </select>
       </div>
 
-      <div class="form-group">
+      <div class="form-group" style="margin-bottom:0;">
         <label>Status</label>
-        <select id="mu-status" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc; width: 100%;">
+        <select id="mu-status">
           <option value="offline">Active (Offline currently)</option>
           <option value="suspended">Suspended</option>
           <option value="inactive">Inactive</option>
         </select>
       </div>
 
-      <div class="form-group"><label>First Working Date</label><input type="date" id="mu-first-date"></div>
-      <div class="form-group"><label>Last Working Date</label><input type="date" id="mu-last-date"></div>
+      <div class="form-group" style="margin-bottom:0;"><label>First Working Date</label><input type="date" id="mu-first-date"></div>
+      <div class="form-group" style="margin-bottom:0;"><label>Last Working Date</label><input type="date" id="mu-last-date"></div>
       
-      <div id="mu-msg" class="form-msg" style="grid-column: 1 / -1;"></div>
+      <div id="mu-msg" class="form-msg" style="grid-column: 1 / -1; font-weight:600;"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('add-user');">Cancel</button>
+      <button class="btn-secondary" onclick="window.closeModal('add-user');">Cancel</button>
       <button class="btn-primary" onclick="window.addUser();">Save Employee</button>
     </div>
   </div>
 </div>
  
-<div id="modal-new-eval" class="modal-ov" style="display:none;">
+<div id="modal-new-eval" class="modal-ov">
   <div class="modal-content">
-    <div class="modal-header"><h2>New Quality Evaluation</h2><button class="modal-close" onclick="closeModal('new-eval');">✕</button></div>
+    <div class="modal-header"><h2>New Quality Evaluation</h2><button class="modal-close" onclick="window.closeModal('new-eval');">✕</button></div>
     <div class="modal-body">
       <div class="form-group">
         <label>Select Agent</label>
@@ -351,19 +332,19 @@
       </div>
       <div class="form-group"><label>Evaluation Date</label><input type="date" id="eval-date" /></div>
       <div class="form-group"><label>Score (0-100)</label><input type="number" id="eval-score" /></div>
-      <div class="form-group"><label>Notes (Generates Monitor ID automatically)</label><textarea id="eval-notes"></textarea></div>
+      <div class="form-group"><label>Notes (Generates Monitor ID automatically)</label><textarea id="eval-notes" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--border);"></textarea></div>
       <div id="eval-msg" class="form-msg"></div>
     </div>
-    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('new-eval');">Cancel</button><button class="btn-primary" onclick="window.submitEvaluation();">Submit & Notify Agent</button></div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="window.closeModal('new-eval');">Cancel</button><button class="btn-primary" onclick="window.submitEvaluation();">Submit & Notify Agent</button></div>
   </div>
 </div>
  
-<div id="modal-edit-user" class="modal-ov" style="display:none;">
+<div id="modal-edit-user" class="modal-ov">
   <div class="modal-content">
-    <div class="modal-header"><h2>Edit User Details & Status</h2><button class="modal-close" onclick="closeModal('edit-user');">✕</button></div>
+    <div class="modal-header"><h2>Edit User Details & Status</h2><button class="modal-close" onclick="window.closeModal('edit-user');">✕</button></div>
     <div class="modal-body">
       <input type="hidden" id="edit-u-id">
-      <div class="form-group"><label>Name</label><input type="text" id="edit-u-name" readonly style="background:#eee;"></div>
+      <div class="form-group"><label>Name</label><input type="text" id="edit-u-name" readonly style="background:var(--gray-100); cursor:not-allowed;"></div>
       <div class="form-group"><label>Role</label><select id="edit-u-role"><option value="agent">Agent</option><option value="supervisor">Supervisor</option><option value="quality">Quality</option><option value="admin">Admin</option></select></div>
       <div class="form-group">
         <label>Account Status (For Attrition)</label>
@@ -375,21 +356,21 @@
         </select>
       </div>
     </div>
-    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('edit-user');">Cancel</button><button class="btn-primary" onclick="window.saveUserEdit();">Save Changes</button></div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="window.closeModal('edit-user');">Cancel</button><button class="btn-primary" onclick="window.saveUserEdit();">Save Changes</button></div>
   </div>
 </div>
  
-<script src="/js/core/state.js?v=6"></script>
-<script src="/js/core/auth.js?v=6"></script>
-<script src="/js/core/ui.js?v=6"></script>
-<script src="/js/agent/status.js?v=6"></script>
-<script src="/js/agent/attendance.js?v=6"></script>
-<script src="/js/agent/team.js?v=6"></script>
-<script src="/js/agent/leaves.js?v=6"></script>
-<script src="/js/admin/users.js?v=6"></script>
-<script src="/js/admin/schedules.js?v=6"></script>
-<script src="/js/admin/import-export.js?v=6"></script>
-<script src="/js/quality/monitoring.js?v=6"></script>
+<script src="/js/core/state.js?v=7"></script>
+<script src="/js/core/auth.js?v=7"></script>
+<script src="/js/core/ui.js?v=7"></script>
+<script src="/js/agent/status.js?v=7"></script>
+<script src="/js/agent/attendance.js?v=7"></script>
+<script src="/js/agent/team.js?v=7"></script>
+<script src="/js/agent/leaves.js?v=7"></script>
+<script src="/js/admin/users.js?v=7"></script>
+<script src="/js/admin/schedules.js?v=7"></script>
+<script src="/js/admin/import-export.js?v=7"></script>
+<script src="/js/quality/monitoring.js?v=7"></script>
  
 </body>
 </html>
