@@ -1,188 +1,344 @@
-// ═══════════════════════════════════════════════════════════
-// 📅 SCHEDULES MANAGEMENT (Upload, Edit, Delete, Agent View)
-// ═══════════════════════════════════════════════════════════
-console.log('✅ schedules.js loaded');
+// ═══════════════════════════════════
+// 📋 SCHEDULES + WFM REPORT
+// ═══════════════════════════════════
+console.log('✅ admin/schedules.js loaded');
 
-let selectedFile = null;
+// ─── تحميل السكادول للموظف نفسه ─────────────────────────
+window.loadMySchedule = async function () {
+  const container = document.getElementById('my-schedule-container');
+  if (!container || !APP.CU) return;
 
-// 1. تحميل التمبلت الجديد
-window.downloadScheduleTemplate = function() {
-    // الترتيب: Name, Email, Leader, Date, Shift
-    const csv = "Name,Email,Leader,Date,Shift\nAsmaa,agent@company.com,Ahmed Leader,2024-05-01,09:00 AM - 05:00 PM";
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "Schedule_Template_New.csv";
-    link.click();
-};
+  try {
+    const { data: schedules, error } = await window.sb
+      .from('schedules')
+      .select('*')
+      .eq('email', APP.CP?.email || '')
+      .order('date', { ascending: true })
+      .limit(7);
 
-// 2. اختيار الملف
-window.selectScheduleFile = function(event) {
-    selectedFile = event.target.files[0];
-    if (selectedFile) {
-        document.getElementById('selected-file-name').innerText = "📄 Selected File: " + selectedFile.name;
+    if (error) throw error;
+
+    if (!schedules || schedules.length === 0) {
+      container.innerHTML = '<p style="text-align:center;color:gray;">No schedule uploaded yet.</p>';
+      return;
     }
+
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    container.innerHTML = `
+      <table class="data-table" style="width:100%;">
+        <thead>
+          <tr>
+            <th>Date</th><th>Day</th><th>Shift Start</th><th>Shift End</th><th>Off Days</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${schedules.map(s => {
+            const d = new Date(s.date);
+            const isOff = s.off_day1 === days[d.getDay()] || s.off_day2 === days[d.getDay()];
+            return `
+              <tr style="${isOff ? 'background:#fef9c3;' : ''}">
+                <td>${s.date}</td>
+                <td>${days[d.getDay()] || '—'}</td>
+                <td>${isOff ? '—' : (s.shift_start || '—')}</td>
+                <td>${isOff ? '—' : (s.shift_end || '—')}</td>
+                <td>${s.off_day1 || ''} ${s.off_day2 ? '/ ' + s.off_day2 : ''}</td>
+              </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+  } catch (e) {
+    console.error('loadMySchedule error:', e);
+    if (container) container.innerHTML = '<p style="color:red;">Error loading schedule.</p>';
+  }
 };
 
-// 3. رفع الملف للداتا بيز
-window.processScheduleFile = function() {
-    if (!selectedFile) return alert("⚠️ Please select a file first.");
+// ─── تحميل السكادول الماستر (للأدمن) ────────────────────
+window.loadMasterSchedule = async function () {
+  const panel = document.getElementById('panel-schedule');
+  if (!panel) return;
 
-    const statusDiv = document.getElementById('upload-status');
-    statusDiv.innerHTML = '⏳ Uploading and processing schedule...'; 
-    statusDiv.style.color = '#0891b2';
+  try {
+    const { data: schedules } = await window.sb
+      .from('schedules')
+      .select('*')
+      .order('date', { ascending: false })
+      .limit(100);
 
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-        const text = e.target.result;
-        const rows = text.split('\n').map(row => row.trim()).filter(row => row);
-        
-        if (rows.length < 2) return alert("File is empty or invalid format.");
+    let tableContainer = document.getElementById('schedule-master-table');
+    if (!tableContainer) {
+      tableContainer = document.createElement('div');
+      tableContainer.id = 'schedule-master-table';
+      tableContainer.className = 'section';
+      panel.appendChild(tableContainer);
+    }
 
-        let successCount = 0;
-        let errors = 0;
+    if (!schedules || schedules.length === 0) {
+      tableContainer.innerHTML = '<p style="text-align:center;color:gray;padding:20px;">No schedules uploaded yet. Use the button above to upload.</p>';
+      return;
+    }
 
-        for (let i = 1; i < rows.length; i++) {
-            const cols = rows[i].split(',');
-            // الترتيب الجديد: Name(0), Email(1), Leader(2), Date(3), Shift(4)
-            if (cols.length >= 5) {
-                const email = cols[1].trim();
-                const date = cols[3].trim();
-                const shift = cols[4].trim();
+    tableContainer.innerHTML = `
+      <h3>📋 Uploaded Schedules (${schedules.length} records)</h3>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr><th>Email</th><th>Date</th><th>Shift Start</th><th>Shift End</th><th>Off Day 1</th><th>Off Day 2</th></tr>
+          </thead>
+          <tbody>
+            ${schedules.map(s => `
+              <tr>
+                <td>${s.email}</td>
+                <td>${s.date}</td>
+                <td>${s.shift_start}</td>
+                <td>${s.shift_end}</td>
+                <td>${s.off_day1 || '—'}</td>
+                <td>${s.off_day2 || '—'}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch (e) {
+    console.error('loadMasterSchedule error:', e);
+  }
+};
 
-                if(email && date && shift) {
-                    try {
-                        const { error } = await window.sb.from('schedules').upsert({
-                            user_email: email,
-                            date: date,
-                            shift_details: shift,
-                            updated_at: new Date().toISOString()
-                        }, { onConflict: 'user_email,date' });
+// ─── تقرير WFM الشامل (📥 Download WFM Report) ──────────
+window.downloadDailyReport = async function () {
+  const btn = document.querySelector('[onclick*="downloadDailyReport"]');
+  if (btn) { btn.textContent = '⏳ Generating...'; btn.disabled = true; }
 
-                        if (!error) successCount++;
-                        else errors++;
-                    } catch(err) { errors++; }
-                }
-            }
-        }
+  try {
+    const today = window.todayISO ? window.todayISO() : new Date().toISOString().split('T')[0];
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const todayDay = days[new Date(today).getDay()];
 
-        statusDiv.innerHTML = `✅ Upload Complete! Success: ${successCount} records. (Errors: ${errors})`;
-        statusDiv.style.color = '#16a34a';
-        selectedFile = null;
-        document.getElementById('bulk-upload').value = '';
-        document.getElementById('selected-file-name').innerText = '';
+    // 1. جلب كل الموظفين النشطين
+    const { data: users } = await window.sb
+      .from('profiles')
+      .select('id, full_name, email, role, status')
+      .not('role', 'in', '("inactive","suspended")');
+
+    if (!users || users.length === 0) {
+      alert('No active employees found.');
+      if (btn) { btn.textContent = '📥 Download WFM Report'; btn.disabled = false; }
+      return;
+    }
+
+    // 2. جلب سجلات الحضور لليوم ده
+    const { data: attendanceRows } = await window.sb
+      .from('attendance')
+      .select('*')
+      .eq('date', today);
+
+    // 3. جلب السكادول لليوم ده
+    const { data: scheduleRows } = await window.sb
+      .from('schedules')
+      .select('*')
+      .eq('date', today);
+
+    // 4. جلب الإجازات المعتمدة اللي بتغطي النهاردة
+    const { data: approvedLeaves } = await window.sb
+      .from('leaves')
+      .select('*')
+      .eq('status', 'Approved')
+      .lte('start_date', today)
+      .gte('end_date', today);
+
+    // 5. بناء خريطة سريعة
+    const attMap = {};
+    (attendanceRows || []).forEach(a => {
+      if (!attMap[a.user_id]) attMap[a.user_id] = [];
+      attMap[a.user_id].push(a);
+    });
+
+    const schedMap = {};
+    (scheduleRows || []).forEach(s => { schedMap[s.email] = s; });
+
+    const onLeaveSet = new Set((approvedLeaves || []).map(l => l.user_id));
+
+    // 6. حساب الساعات لكل موظف
+    const parseTime = (t) => {
+      if (!t) return null;
+      const [h, m, s] = t.split(':').map(Number);
+      return h * 60 + m + (s || 0) / 60;
     };
-    reader.readAsText(selectedFile);
-};
 
-// ═════════ قسم الإدارة (التعديل والمسح) ═════════
+    const fmtMins = (mins) => {
+      if (mins === null || mins === undefined) return '—';
+      const h = Math.floor(Math.abs(mins) / 60);
+      const m = Math.round(Math.abs(mins) % 60);
+      const sign = mins < 0 ? '-' : '';
+      return `${sign}${h}h ${m.toString().padStart(2, '0')}m`;
+    };
 
-window.showManageSchedules = function() {
-    document.getElementById('schedule-upload-view').style.display = 'none';
-    document.getElementById('schedule-manage-view').style.display = 'block';
-    
-    // وضع تاريخ اليوم كافتراضي
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('manage-sch-date').value = today;
-    window.loadManageSchedules();
-};
+    const rows = users.map(u => {
+      const sched = schedMap[u.email];
+      const records = attMap[u.id] || [];
+      const isOnLeave = onLeaveSet.has(u.id);
 
-window.showUploadSchedule = function() {
-    document.getElementById('schedule-manage-view').style.display = 'none';
-    document.getElementById('schedule-upload-view').style.display = 'block';
-};
+      // ─ التحقق من يوم الإجازة الأسبوعية ─
+      const isOffDay = sched && (sched.off_day1 === todayDay || sched.off_day2 === todayDay);
 
-window.loadManageSchedules = async function() {
-    const date = document.getElementById('manage-sch-date').value;
-    if(!date) return;
+      if (isOnLeave) {
+        return {
+          name: u.full_name || u.email,
+          role: u.role,
+          scheduleStart: sched?.shift_start || '—',
+          scheduleEnd: sched?.shift_end || '—',
+          firstLogin: '—',
+          lastLogout: '—',
+          totalHours: '—',
+          breakHours: '—',
+          deficit: '—',
+          overtime: '—',
+          status: '🏖️ On Leave'
+        };
+      }
 
-    const tbody = document.getElementById('manage-sch-tbody');
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading...</td></tr>';
+      if (isOffDay) {
+        return {
+          name: u.full_name || u.email,
+          role: u.role,
+          scheduleStart: '—',
+          scheduleEnd: '—',
+          firstLogin: '—',
+          lastLogout: '—',
+          totalHours: '—',
+          breakHours: '—',
+          deficit: '—',
+          overtime: '—',
+          status: '📴 Day Off'
+        };
+      }
 
-    const { data, error } = await window.sb.from('schedules').select('*').eq('date', date);
+      if (records.length === 0) {
+        return {
+          name: u.full_name || u.email,
+          role: u.role,
+          scheduleStart: sched?.shift_start || '—',
+          scheduleEnd: sched?.shift_end || '—',
+          firstLogin: '—',
+          lastLogout: '—',
+          totalHours: '—',
+          breakHours: '—',
+          deficit: sched ? fmtMins(-(parseTime(sched.shift_end) - parseTime(sched.shift_start)) + 0) : '—',
+          overtime: '—',
+          status: '❌ Absent'
+        };
+      }
 
-    if (error || !data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No schedules found for this date.</td></tr>';
-        return;
-    }
+      // ─ حسابات الحضور ─
+      const onlineLogs = records.filter(r => r.aux_type === 'online' || r.status === 'online');
+      const breakLogs = records.filter(r => r.aux_type === 'break' || r.status === 'break');
 
-    tbody.innerHTML = data.map(s => `
-        <tr>
-            <td><input type="checkbox" class="sch-checkbox" value="${s.id}"></td>
-            <td>${s.user_email}</td>
-            <td>${s.date}</td>
-            <td id="shift-td-${s.id}">${s.shift_details}</td>
-            <td>
-                <button onclick="window.editSingleSchedule('${s.id}', '${s.shift_details}')" style="background:none; border:none; cursor:pointer; font-size:16px;">✏️</button>
-            </td>
-        </tr>
-    `).join('');
-};
+      const allTimes = records
+        .map(r => r.start_time || r.created_at)
+        .filter(Boolean)
+        .map(t => t.includes('T') ? t.split('T')[1].substring(0, 8) : t)
+        .sort();
 
-window.toggleAllSchedules = function(source) {
-    const checkboxes = document.querySelectorAll('.sch-checkbox');
-    checkboxes.forEach(cb => cb.checked = source.checked);
-};
+      const firstLogin = allTimes[0] || '—';
 
-window.deleteSelectedSchedules = async function() {
-    const checkboxes = document.querySelectorAll('.sch-checkbox:checked');
-    if(checkboxes.length === 0) return alert("Select schedules to delete.");
-    
-    if(!confirm(`Are you sure you want to delete ${checkboxes.length} schedules?`)) return;
+      const allEndTimes = records
+        .map(r => r.end_time || r.updated_at)
+        .filter(Boolean)
+        .map(t => t.includes('T') ? t.split('T')[1].substring(0, 8) : t)
+        .sort();
 
-    const idsToDelete = Array.from(checkboxes).map(cb => cb.value);
+      const lastLogout = allEndTimes[allEndTimes.length - 1] || '—';
 
-    try {
-        await window.sb.from('schedules').delete().in('id', idsToDelete);
-        alert("Deleted successfully!");
-        window.loadManageSchedules();
-    } catch(e) {
-        alert("Error deleting schedules.");
-    }
-};
-
-window.editSingleSchedule = async function(id, currentShift) {
-    const newShift = prompt("Edit shift details:", currentShift);
-    if(newShift && newShift !== currentShift) {
-        await window.sb.from('schedules').update({ shift_details: newShift }).eq('id', id);
-        document.getElementById(`shift-td-${id}`).innerText = newShift;
-    }
-};
-
-// ═════════ عرض الجدول للموظف (اسبوع باسبوع) ═════════
-
-window.loadSchedules = async function() {
-    if (!window.sb || !APP.CU) return;
-
-    try {
-        const todayStr = new Date().toISOString().split('T')[0];
-
-        if (APP.userRole === 'agent') {
-            // بيجيب من تاريخ اليوم، ولمدة 7 أيام فقط (اسبوع باسبوع زي ما طلبتي)
-            const { data } = await window.sb.from('schedules')
-                .select('*')
-                .eq('user_email', APP.CU.email)
-                .gte('date', todayStr)
-                .order('date', { ascending: true })
-                .limit(7);
-
-            const container = document.getElementById('my-schedule-container');
-            if (container) {
-                if (!data || data.length === 0) {
-                    container.innerHTML = '<p>No schedule uploaded for you yet.</p>';
-                } else {
-                    container.innerHTML = data.map(s => `
-                        <div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid #eee; text-align:left;">
-                            <strong style="color:var(--dark);">${s.date}</strong>
-                            <span style="color:var(--primary); font-weight:600; background:var(--primary-light); padding:4px 12px; border-radius:20px; font-size:13px;">${s.shift_details}</span>
-                        </div>
-                    `).join('');
-                }
-            }
+      // إجمالي ساعات الشغل
+      let totalLoginMins = 0;
+      records.forEach(r => {
+        if (r.duration_minutes) {
+          totalLoginMins += r.duration_minutes;
+        } else if (r.start_time && r.end_time) {
+          const s = parseTime(r.start_time.includes('T') ? r.start_time.split('T')[1].substring(0, 5) : r.start_time);
+          const e = parseTime(r.end_time.includes('T') ? r.end_time.split('T')[1].substring(0, 5) : r.end_time);
+          if (s !== null && e !== null && e > s) totalLoginMins += (e - s);
         }
-    } catch (e) { console.error(e); }
+      });
+
+      // ساعات البريك
+      let breakMins = 0;
+      breakLogs.forEach(r => {
+        if (r.duration_minutes) breakMins += r.duration_minutes;
+      });
+
+      const netWorkMins = totalLoginMins - breakMins;
+
+      // الشيفت المطلوب من السكادول
+      let requiredMins = 8 * 60; // افتراضي 8 ساعات
+      if (sched?.shift_start && sched?.shift_end) {
+        const s = parseTime(sched.shift_start);
+        const e = parseTime(sched.shift_end);
+        if (s !== null && e !== null) requiredMins = e - s;
+      }
+
+      const diffMins = netWorkMins - requiredMins;
+      const deficit = diffMins < 0 ? fmtMins(diffMins) : '—';
+      const overtime = diffMins > 0 ? fmtMins(diffMins) : '—';
+
+      return {
+        name: u.full_name || u.email,
+        role: u.role,
+        scheduleStart: sched?.shift_start || '—',
+        scheduleEnd: sched?.shift_end || '—',
+        firstLogin,
+        lastLogout,
+        totalHours: fmtMins(netWorkMins),
+        breakHours: fmtMins(breakMins),
+        deficit,
+        overtime,
+        status: '✅ Present'
+      };
+    });
+
+    // 7. توليد CSV
+    const headers = [
+      'Name', 'Role', 'Sched Start', 'Sched End',
+      'First Login', 'Last Logout', 'Net Work Hours',
+      'Break Hours', 'Deficit', 'Overtime', 'Status'
+    ];
+
+    const csvRows = [headers.join(',')];
+    rows.forEach(r => {
+      csvRows.push([
+        `"${r.name}"`, `"${r.role}"`,
+        r.scheduleStart, r.scheduleEnd,
+        r.firstLogin, r.lastLogout,
+        `"${r.totalHours}"`, `"${r.breakHours}"`,
+        `"${r.deficit}"`, `"${r.overtime}"`,
+        `"${r.status}"`
+      ].join(','));
+    });
+
+    const csvContent = '\uFEFF' + csvRows.join('\n'); // BOM for Excel Arabic support
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `WFM_Report_${today}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+  } catch (e) {
+    console.error('downloadDailyReport error:', e);
+    alert('❌ Error generating report: ' + e.message);
+  } finally {
+    if (btn) { btn.textContent = '📥 Download WFM Report'; btn.disabled = false; }
+  }
 };
 
+// ─── تشغيل عند جهوزية التطبيق ───────────────────────────
 document.addEventListener('APP_READY', () => {
-    if (APP.userRole === 'agent') window.loadSchedules();
+  const role = APP.CP?.role;
+  if (role === 'agent') {
+    window.loadMySchedule();
+  }
+  if (['admin', 'supervisor', 'owner'].includes(role)) {
+    window.loadMasterSchedule();
+  }
 });

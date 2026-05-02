@@ -11,7 +11,6 @@ window.loadAdminPanel = async function () {
       return;
     }
 
-    // 1. جلب بيانات الموظفين
     const { data: users } = await sb.from('profiles').select('*');
     if (!users) return;
 
@@ -21,7 +20,6 @@ window.loadAdminPanel = async function () {
     safeText('admin-total-users', String(users.length));
     safeText('admin-online-count', String(online.length));
 
-    // 2. نسبة الحضور (Attendance rate)
     const { data: att } = await sb
       .from('attendance')
       .select('user_id')
@@ -35,7 +33,6 @@ window.loadAdminPanel = async function () {
     safeText('admin-att-rate', attRate + '%');
     safeText('admin-absent-count', String(users.length - attended));
 
-    // 3. جدول الموظفين (User Management)
     const tbody = document.getElementById('admin-users-tbody');
     if (tbody) {
       tbody.innerHTML = users.map(u => {
@@ -66,30 +63,9 @@ window.loadAdminPanel = async function () {
       }).join('');
     }
 
-    // 4. ✅ جديد: جدول طلبات الإجازات المعلقة (Pending Leaves)
-    // ده اللي هيخليكي تشوفي الطلب وتوافقي عليه
-    const { data: pendingLeaves } = await sb
-      .from('leaves')
-      .select('*')
-      .eq('status', 'Pending');
-
-    const leavesTbody = document.getElementById('admin-leaves-tbody');
-    if (leavesTbody) {
-      if (!pendingLeaves || pendingLeaves.length === 0) {
-        leavesTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:gray;">No pending requests</td></tr>';
-      } else {
-        leavesTbody.innerHTML = pendingLeaves.map(l => `
-          <tr>
-            <td><strong>${l.agent_name || 'Agent'}</strong></td>
-            <td>${l.leave_type}</td>
-            <td><small>${l.start_date} to ${l.end_date}</small></td>
-            <td>
-              <button onclick="processLeave('${l.id}', 'Approved')" style="background:#16a34a;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">Approve</button>
-              <button onclick="processLeave('${l.id}', 'Rejected')" style="background:#dc2626;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;margin-left:5px;">Reject</button>
-            </td>
-          </tr>
-        `).join('');
-      }
+    // ✅ تحميل الإجازات المعلقة (بدون تعريف processLeave هنا - موجودة في leaves.js)
+    if (typeof window.loadPendingLeaves === 'function') {
+      window.loadPendingLeaves();
     }
 
   } catch (e) {
@@ -97,17 +73,6 @@ window.loadAdminPanel = async function () {
   }
 };
 
-// ✅ دالة معالجة الإجازة (موافقة أو رفض)
-window.processLeave = async function (leaveId, newStatus) {
-  try {
-    const { error } = await sb.from('leaves').update({ status: newStatus }).eq('id', leaveId);
-    if (error) throw error;
-    alert('Leave ' + newStatus);
-    loadAdminPanel(); // ريفريش للداتا
-  } catch (e) {
-    console.error('processLeave error:', e);
-  }
-};
 window.addUser = async function () {
   const name = document.getElementById('mu-name')?.value?.trim();
   const email = document.getElementById('mu-email')?.value?.trim();
@@ -124,7 +89,7 @@ window.addUser = async function () {
     if (msg) { msg.textContent = '⚠️ Fill Name, Email & Password'; msg.style.color = '#dc2626'; }
     return;
   }
-  
+
   if (pass.length < 6) {
     if (msg) { msg.textContent = '⚠️ Password must be at least 6 characters.'; msg.style.color = '#dc2626'; }
     return;
@@ -133,14 +98,12 @@ window.addUser = async function () {
   if (msg) { msg.textContent = '⏳ Creating account...'; msg.style.color = '#6b7280'; }
 
   try {
-    // 1. إنشاء الحساب
     const { data, error } = await window.sb.auth.signUp({ email, password: pass });
     if (error) {
       if (msg) { msg.textContent = '❌ ' + error.message; msg.style.color = '#dc2626'; }
       return;
     }
 
-    // 2. تسجيل البيانات الشاملة في الداتا بيز
     await window.sb.from('profiles').upsert({
       id: data.user.id,
       email: email,
@@ -159,7 +122,6 @@ window.addUser = async function () {
       msg.style.color = '#16a34a';
     }
 
-    // تنظيف الفورم بعد الإضافة
     document.getElementById('mu-name').value = '';
     document.getElementById('mu-email').value = '';
     document.getElementById('mu-phone').value = '';

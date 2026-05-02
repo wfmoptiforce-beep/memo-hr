@@ -1,218 +1,208 @@
 // ═══════════════════════════════════
-// ⭐ QUALITY MONITORING & QA SYSTEM
+// 🎯 QUALITY MONITORING (monitoring.js)
 // ═══════════════════════════════════
+console.log('✅ quality/monitoring.js loaded');
 
-console.log('✅ monitoring.js loaded with fixes');
+// ─── تحميل الوكلاء في فورم التقييم ───────────────────────
+window.loadAgentsIntoEvalForm = async function () {
+  const sel = document.getElementById('eval-agent');
+  if (!sel) return;
 
-function todayISO() {
-    const d = new Date();
-    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-    return d.toISOString().split('T')[0];
-}
-
-// ✅ تم تصحيح اسم الدالة لتتطابق مع زرار الـ HTML
-window.submitEvaluation = async function () {
   try {
-    if (!isQuality()) {
-      showToast('❌ You don\'t have permission', 'error');
+    const { data: users, error } = await window.sb
+      .from('profiles')
+      .select('id, full_name, role')
+      .in('role', ['agent', 'leader', 'supervisor'])
+      .order('full_name', { ascending: true });
+
+    if (error) throw error;
+
+    if (!users || users.length === 0) {
+      sel.innerHTML = '<option value="">No agents found</option>';
       return;
     }
 
-    const agentId = document.getElementById('eval-agent')?.value?.trim();
-    const selectedDate = document.getElementById('eval-date')?.value;
-    const score = document.getElementById('eval-score')?.value?.trim();
-    const notes = document.getElementById('eval-notes')?.value?.trim();
-    const msg = document.getElementById('eval-msg');
+    sel.innerHTML = '<option value="">— Select Agent —</option>' +
+      users.map(u => `<option value="${u.id}">${u.full_name || u.email} (${u.role})</option>`).join('');
+  } catch (e) {
+    console.error('loadAgentsIntoEvalForm error:', e);
+    sel.innerHTML = '<option value="">Error loading agents</option>';
+  }
+};
 
-    if (!agentId || !score) {
-      if (msg) { msg.textContent = '⚠️ Please select an agent and enter a score'; msg.style.color = '#dc2626'; }
-      return;
-    }
+// ─── إرسال تقييم جديد ───────────────────────────────────
+window.submitEvaluation = async function () {
+  const agentId = document.getElementById('eval-agent')?.value;
+  const date = document.getElementById('eval-date')?.value;
+  const score = parseFloat(document.getElementById('eval-score')?.value);
+  const notes = document.getElementById('eval-notes')?.value?.trim();
+  const msg = document.getElementById('eval-msg');
 
-    const scoreNum = parseInt(score);
-    if (isNaN(scoreNum) || scoreNum < 0 || scoreNum > 100) {
-      if (msg) { msg.textContent = '⚠️ Score must be between 0 and 100'; msg.style.color = '#dc2626'; }
-      return;
-    }
+  if (!agentId || !date || isNaN(score)) {
+    if (msg) { msg.textContent = '⚠️ Please fill Agent, Date and Score'; msg.style.color = '#dc2626'; }
+    return;
+  }
 
-    if (!window.sb || !APP.CU) return;
+  if (score < 0 || score > 100) {
+    if (msg) { msg.textContent = '⚠️ Score must be between 0 and 100'; msg.style.color = '#dc2626'; }
+    return;
+  }
 
-    if (msg) { msg.textContent = '⏳ Submitting...'; msg.style.color = '#6b7280'; }
+  if (msg) { msg.textContent = '⏳ Submitting...'; msg.style.color = '#6b7280'; }
 
-    const monitorId = 'MON-' + Date.now().toString().slice(-6) + '-' + Math.random().toString(36).substr(2, 4).toUpperCase();
-    const evalDate = selectedDate ? selectedDate : todayISO(); // يستخدم التاريخ المختار أو تاريخ اليوم
+  try {
+    const monitorId = 'MON-' + Date.now().toString(36).toUpperCase();
+    const passed = score >= 70;
 
-    const { error: scoreError } = await window.sb.from('quality_scores').insert({
+    const { error } = await window.sb.from('quality_evaluations').insert({
       agent_id: agentId,
       evaluator_id: APP.CU.id,
-      monitor_id: monitorId,
-      score: scoreNum,
+      evaluator_name: APP.CP?.full_name || 'QA',
+      date: date,
+      score: score,
+      passed: passed,
       notes: notes || '',
-      date: evalDate,
+      monitor_id: monitorId,
       created_at: new Date().toISOString()
     });
 
-    if (scoreError) throw scoreError;
+    if (error) throw error;
 
+    // إشعار للموظف
     try {
       await window.sb.from('notifications').insert({
         user_id: agentId,
         from_id: APP.CU.id,
-        from_name: APP.CP?.full_name || 'QA Monitor',
-        type: 'quality',
-        message: `📋 New QA Monitor: ${monitorId} — Score: ${scoreNum}%`,
+        from_name: APP.CP?.full_name || 'Quality Team',
+        type: 'qa_evaluation',
+        message: `🎯 New QA Evaluation: ${score}/100 (${passed ? 'Pass ✅' : 'Fail ❌'}) - ID: ${monitorId}`,
         read: false,
         created_at: new Date().toISOString()
       });
-    } catch (e) { console.warn('Notification failed:', e); }
+    } catch (notifErr) {
+      console.warn('Notification error (non-blocking):', notifErr);
+    }
 
-    if (msg) { msg.textContent = '✅ Evaluation submitted! ID: ' + monitorId; msg.style.color = '#16a34a'; }
-
-    if (document.getElementById('eval-agent')) document.getElementById('eval-agent').value = '';
-    if (document.getElementById('eval-score')) document.getElementById('eval-score').value = '';
-    if (document.getElementById('eval-notes')) document.getElementById('eval-notes').value = '';
-    if (document.getElementById('eval-date')) document.getElementById('eval-date').value = '';
+    if (msg) { msg.textContent = '✅ Evaluation submitted! Monitor ID: ' + monitorId; msg.style.color = '#16a34a'; }
 
     setTimeout(() => {
-      closeModal('new-eval');
+      if (window.closeModal) window.closeModal('new-eval');
       if (msg) msg.textContent = '';
-      loadQualityMonitoring();
-    }, 1500);
+      document.getElementById('eval-agent').value = '';
+      document.getElementById('eval-date').value = '';
+      document.getElementById('eval-score').value = '';
+      document.getElementById('eval-notes').value = '';
+      window.loadQAReports();
+    }, 2000);
 
   } catch (e) {
-    const msg = document.getElementById('eval-msg');
-    if (msg) { msg.textContent = '❌ ' + (e.message || 'Submission failed'); msg.style.color = '#dc2626'; }
+    if (msg) { msg.textContent = '❌ Error: ' + e.message; msg.style.color = '#dc2626'; }
   }
 };
 
-window.loadQualityMonitoring = async function () {
+// ─── تحميل تقارير الجودة في الجدول ─────────────────────
+window.loadQAReports = async function () {
   try {
-    if (!window.sb) return;
-
-    // تحميل أسماء الأيجنتس في القائمة المنسدلة
-    const { data: agents } = await window.sb.from('profiles').select('id, full_name').eq('role', 'agent').order('full_name');
-    const sel = document.getElementById('eval-agent');
-    if (sel && agents && agents.length > 0) {
-      sel.innerHTML = '<option value="">Select agent...</option>' + agents.map(a => `<option value="${a.id}">${a.full_name || a.id}</option>`).join('');
-    }
-
-    const { data: evals, error: evalsError } = await window.sb
-      .from('quality_scores')
-      .select(`id, agent_id, score, notes, date, monitor_id, created_at, profiles:agent_id(full_name)`)
+    const { data: evals, error } = await window.sb
+      .from('quality_evaluations')
+      .select(`
+        *,
+        agent:profiles!agent_id(full_name)
+      `)
       .order('created_at', { ascending: false })
-      .limit(100);
+      .limit(50);
 
-    if (evalsError) {
-      console.warn('⚠️ Table quality_scores may not exist yet.');
-      return; 
-    }
+    if (error) throw error;
+
+    const tbody = document.getElementById('qa-evals-tbody');
 
     if (!evals || evals.length === 0) {
-      safeText('qa-total-evals', '0'); safeText('qa-avg-score', '—'); safeText('qa-pass-rate', '—'); safeText('qa-fail-count', '0');
-      const tbody = document.getElementById('qa-evals-tbody');
-      if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="empty-row">No evaluations yet</td></tr>';
+      if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:gray;">No evaluations yet.</td></tr>';
+      window.safeText?.('qa-total-evals', '0');
+      window.safeText?.('qa-avg-score', '—');
+      window.safeText?.('qa-pass-rate', '—');
+      window.safeText?.('qa-fail-count', '0');
       return;
     }
 
-    const totalEvals = evals.length;
-    const avgScore = Math.round(evals.reduce((sum, e) => sum + (e.score || 0), 0) / totalEvals);
-    const passCount = evals.filter(e => (e.score || 0) >= 80).length;
-    const failCount = totalEvals - passCount;
-    const passRate = Math.round((passCount / totalEvals) * 100);
+    // ─ KPI Cards ─
+    const total = evals.length;
+    const avgScore = (evals.reduce((s, e) => s + (e.score || 0), 0) / total).toFixed(1);
+    const passed = evals.filter(e => e.passed).length;
+    const failed = total - passed;
+    const passRate = ((passed / total) * 100).toFixed(0) + '%';
 
-    safeText('qa-total-evals', String(totalEvals));
-    safeText('qa-avg-score', avgScore + '%');
-    safeText('qa-pass-rate', passRate + '%');
-    safeText('qa-fail-count', String(failCount));
+    window.safeText?.('qa-total-evals', String(total));
+    window.safeText?.('qa-avg-score', avgScore);
+    window.safeText?.('qa-pass-rate', passRate);
+    window.safeText?.('qa-fail-count', String(failed));
 
-    const tbody = document.getElementById('qa-evals-tbody');
+    // ─ Rows ─
     if (tbody) {
       tbody.innerHTML = evals.map(e => {
-        const isPassed = (e.score || 0) >= 80;
-        const statusText = isPassed ? '✅ Pass' : '❌ Fail';
+        const agentName = e.agent?.full_name || 'Unknown';
+        const score = e.score ?? '—';
+        const statusColor = e.passed ? '#16a34a' : '#dc2626';
+        const statusText = e.passed ? '✅ Pass' : '❌ Fail';
+
         return `
           <tr>
-            <td><strong>${e.profiles?.full_name || 'Unknown'}</strong></td>
-            <td>${e.date || '-'}</td>
-            <td><strong style="color:${isPassed ? '#16a34a' : '#dc2626'}">${e.score || 0}%</strong></td>
-            <td><span style="padding:4px 8px;border-radius:6px;background:${isPassed ? '#dcfce7' : '#fef3c7'};color:${isPassed ? '#166534' : '#92400e'};font-size:12px;font-weight:600;">${statusText}</span></td>
-            <td><small style="color:#6b7280;">${e.monitor_id || '-'}</small></td>
-          </tr>
-        `;
+            <td><strong>${agentName}</strong></td>
+            <td>${e.date || '—'}</td>
+            <td><strong style="font-size:16px;">${score}</strong>/100</td>
+            <td><span style="color:${statusColor};font-weight:600;">${statusText}</span></td>
+            <td><code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:12px;">${e.monitor_id || '—'}</code></td>
+          </tr>`;
       }).join('');
     }
-  } catch (e) { console.error('loadQualityMonitoring error:', e); }
-};
 
-window.loadAgentQualityEvaluations = async function() {
-    if (!window.sb || !APP.CU) return;
-    try {
-        const { data: myEvals, error } = await window.sb
-            .from('quality_scores')
-            .select('*')
-            .eq('agent_id', APP.CU.id)
-            .order('created_at', { ascending: false })
-            .limit(5);
-
-        const listDiv = document.getElementById('agent-qa-list');
-        if (!listDiv) return;
-
-        if (error || !myEvals || myEvals.length === 0) {
-            listDiv.innerHTML = '<p style="text-align:center; color:gray;">No recent evaluations found.</p>';
-            return;
-        }
-
-        listDiv.innerHTML = myEvals.map(e => {
-            const isPassed = e.score >= 80;
-            const color = isPassed ? '#16a34a' : '#dc2626';
-            return `
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:8px; margin-bottom:8px;">
-                    <div>
-                        <strong style="display:block; color:#374151;">ID: ${e.monitor_id}</strong>
-                        <span style="font-size:13px; color:#6b7280;">Date: ${e.date}</span>
-                    </div>
-                    <div style="text-align:right;">
-                        <strong style="font-size:18px; color:${color};">${e.score}%</strong>
-                        <br>
-                        <button class="btn-secondary btn-sm" onclick="requestQaMeeting('${e.monitor_id}')" style="margin-top:5px; padding:2px 6px; font-size:11px;">Request Meeting</button>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-    } catch(e) { console.error("Error loading agent QA:", e); }
-};
-
-window.requestQaMeeting = async function(monitorId) {
-    if (!confirm(`Are you sure you want to request a meeting for monitor ${monitorId}?`)) return;
-    try {
-        const { data: evalData } = await window.sb.from('quality_scores').select('evaluator_id').eq('monitor_id', monitorId).single();
-        
-        if (evalData && evalData.evaluator_id) {
-            await window.sb.from('notifications').insert({
-                user_id: evalData.evaluator_id,
-                from_id: APP.CU.id,
-                from_name: APP.CP?.full_name || 'Agent',
-                type: 'meeting_request',
-                message: `📅 ${APP.CP?.full_name} is requesting a meeting regarding Monitor ID: ${monitorId}`,
-                read: false,
-                created_at: new Date().toISOString()
-            });
-            alert('Meeting request sent successfully to the QA who evaluated you.');
+    // ─ تقييمات الموظف نفسه (للداشبورد) ─
+    if (APP.CP?.role === 'agent') {
+      const myEvals = evals.filter(e => e.agent_id === APP.CU?.id);
+      const agentQAList = document.getElementById('agent-qa-list');
+      if (agentQAList) {
+        if (myEvals.length === 0) {
+          agentQAList.innerHTML = '<p style="text-align:center;color:gray;">No recent evaluations.</p>';
         } else {
-            alert('Could not find the evaluator. Please contact your supervisor.');
+          agentQAList.innerHTML = myEvals.slice(0, 5).map(e => {
+            const c = e.passed ? '#16a34a' : '#dc2626';
+            const bg = e.passed ? '#bbf7d0' : '#fecaca';
+            return `
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-left:4px solid ${c};border-radius:6px;margin-bottom:8px;background:var(--bg);">
+                <div>
+                  <strong>${e.date}</strong>
+                  <div style="font-size:12px;color:gray;margin-top:2px;">ID: ${e.monitor_id || '—'}</div>
+                </div>
+                <div style="background:${bg};color:${c};padding:4px 12px;border-radius:20px;font-weight:700;">${e.score}/100</div>
+              </div>`;
+          }).join('');
         }
-    } catch(e) {
-        console.error("Meeting request error:", e);
-        alert('Failed to send request.');
+      }
     }
+
+  } catch (e) {
+    console.error('loadQAReports error:', e);
+    const tbody = document.getElementById('qa-evals-tbody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">Error loading data.</td></tr>';
+  }
 };
 
-document.addEventListener('APP_READY', () => {
-  if (isQuality()) {
-    loadQualityMonitoring();
+// ─── فتح مودال التقييم وتحميل الوكلاء ──────────────────
+const _origOpenModal = window.openModal;
+window.openModal = function (id) {
+  if (typeof _origOpenModal === 'function') _origOpenModal(id);
+  if (id === 'new-eval') {
+    window.loadAgentsIntoEvalForm();
   }
-  if (APP.CP?.role === 'agent') {
-      loadAgentQualityEvaluations();
+};
+
+// ─── تشغيل عند جهوزية التطبيق ───────────────────────────
+document.addEventListener('APP_READY', () => {
+  const role = APP.CP?.role;
+  if (['admin', 'supervisor', 'quality', 'owner'].includes(role)) {
+    window.loadQAReports();
+  }
+  if (role === 'agent') {
+    window.loadQAReports();
   }
 });
