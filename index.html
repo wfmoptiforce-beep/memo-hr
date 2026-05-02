@@ -207,10 +207,13 @@
       </div>
  
       <div id="panel-reports" class="panel" style="display:none;">
-        <div class="panel-header">
-          <h2>📈 Quality Monitoring & Reports</h2>
-          <button class="btn-primary btn-sm" onclick="openModal('new-eval');">+ New QA Form</button>
-        </div>
+  <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <h2>📈 Quality Monitoring & Reports</h2>
+    <div style="display: flex; gap: 10px;">
+      <button class="btn-primary btn-sm" onclick="openModal('new-eval');">+ New QA Form</button>
+      <button class="btn-primary btn-sm" onclick="window.downloadDailyReport();" style="background-color: #16a34a; border: none;">📥 Download WFM Report</button>
+    </div>
+  </div>
         <div class="panel-body">
           <div class="cards-grid">
             <div class="card"><div class="card-label">📊 Total Evals</div><div class="card-value" id="qa-total-evals">0</div></div>
@@ -285,16 +288,56 @@
 </div>
  
 <div id="modal-add-user" class="modal-ov" style="display:none;">
-  <div class="modal-content">
-    <div class="modal-header"><h2>Add New User</h2><button class="modal-close" onclick="closeModal('add-user');">✕</button></div>
-    <div class="modal-body">
-      <div class="form-group"><label>Full Name</label><input type="text" id="mu-name" /></div>
-      <div class="form-group"><label>Email</label><input type="email" id="mu-email" /></div>
-      <div class="form-group"><label>Password</label><input type="password" id="mu-pass" /></div>
-      <div class="form-group"><label>Role</label><select id="mu-role"><option value="agent">Agent</option><option value="supervisor">Supervisor</option><option value="quality">Quality</option><option value="admin">Admin</option></select></div>
-      <div id="mu-msg" class="form-msg"></div>
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header"><h2>👥 Add New Employee</h2><button class="modal-close" onclick="closeModal('add-user');">✕</button></div>
+    <div class="modal-body" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+      
+      <div class="form-group"><label>Agent Name</label><input type="text" id="mu-name" placeholder="Full Name"></div>
+      <div class="form-group"><label>Agent Email</label><input type="email" id="mu-email" placeholder="email@company.com"></div>
+      <div class="form-group"><label>Phone Number</label><input type="text" id="mu-phone" placeholder="01xxxxxxxxx"></div>
+      <div class="form-group"><label>Password (Min 6 chars)</label><input type="password" id="mu-pass" placeholder="••••••"></div>
+      
+      <div class="form-group">
+        <label>Position (Job Title)</label>
+        <select id="mu-position" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc; width: 100%;">
+          <option value="Agent">Agent</option>
+          <option value="Team Leader">Team Leader</option>
+          <option value="Supervisor">Supervisor</option>
+          <option value="Quality">Quality</option>
+          <option value="Account Manager">Account Manager</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Access Level (System Role)</label>
+        <select id="mu-role" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc; width: 100%;">
+          <option value="agent">Agent Access</option>
+          <option value="leader">Leader Access</option>
+          <option value="supervisor">Supervisor Access</option>
+          <option value="quality">Quality Access</option>
+          <option value="upper_management">Upper Management</option>
+          <option value="admin">Admin / Owner Access</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Status</label>
+        <select id="mu-status" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc; width: 100%;">
+          <option value="offline">Active (Offline currently)</option>
+          <option value="suspended">Suspended</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      <div class="form-group"><label>First Working Date</label><input type="date" id="mu-first-date"></div>
+      <div class="form-group"><label>Last Working Date</label><input type="date" id="mu-last-date"></div>
+      
+      <div id="mu-msg" class="form-msg" style="grid-column: 1 / -1;"></div>
     </div>
-    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('add-user');">Cancel</button><button class="btn-primary" onclick="window.addUser();">Add User</button></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('add-user');">Cancel</button>
+      <button class="btn-primary" onclick="window.addUser();">Save Employee</button>
+    </div>
   </div>
 </div>
  

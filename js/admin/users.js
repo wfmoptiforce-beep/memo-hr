@@ -108,53 +108,81 @@ window.processLeave = async function (leaveId, newStatus) {
     console.error('processLeave error:', e);
   }
 };
-
 window.addUser = async function () {
   const name = document.getElementById('mu-name')?.value?.trim();
   const email = document.getElementById('mu-email')?.value?.trim();
-  const role = document.getElementById('mu-role')?.value;
+  const phone = document.getElementById('mu-phone')?.value?.trim();
   const pass = document.getElementById('mu-pass')?.value;
+  const position = document.getElementById('mu-position')?.value;
+  const role = document.getElementById('mu-role')?.value;
+  const status = document.getElementById('mu-status')?.value;
+  const firstDate = document.getElementById('mu-first-date')?.value || null;
+  const lastDate = document.getElementById('mu-last-date')?.value || null;
   const msg = document.getElementById('mu-msg');
 
   if (!name || !email || !pass) {
-    if (msg) msg.textContent = '⚠️ Fill all fields';
+    if (msg) { msg.textContent = '⚠️ Fill Name, Email & Password'; msg.style.color = '#dc2626'; }
+    return;
+  }
+  
+  if (pass.length < 6) {
+    if (msg) { msg.textContent = '⚠️ Password must be at least 6 characters.'; msg.style.color = '#dc2626'; }
     return;
   }
 
+  if (msg) { msg.textContent = '⏳ Creating account...'; msg.style.color = '#6b7280'; }
+
   try {
-    const { data, error } = await sb.auth.signUp({ email, password: pass });
+    // 1. إنشاء الحساب
+    const { data, error } = await window.sb.auth.signUp({ email, password: pass });
     if (error) {
-      if (msg) msg.textContent = '❌ ' + error.message;
+      if (msg) { msg.textContent = '❌ ' + error.message; msg.style.color = '#dc2626'; }
       return;
     }
 
-    await sb.from('profiles').upsert({
+    // 2. تسجيل البيانات الشاملة في الداتا بيز
+    await window.sb.from('profiles').upsert({
       id: data.user.id,
-      email,
+      email: email,
       full_name: name,
-      role,
-      status: 'offline',
+      phone: phone,
+      position: position,
+      role: role,
+      status: status,
+      join_date: firstDate,
+      last_working_date: lastDate,
       created_at: new Date().toISOString()
     });
 
     if (msg) {
-      msg.textContent = '✅ User created!';
+      msg.textContent = '✅ Employee added successfully!';
       msg.style.color = '#16a34a';
     }
 
-    if (window.closeModal) closeModal('add-user');
-    loadAdminPanel();
+    // تنظيف الفورم بعد الإضافة
+    document.getElementById('mu-name').value = '';
+    document.getElementById('mu-email').value = '';
+    document.getElementById('mu-phone').value = '';
+    document.getElementById('mu-pass').value = '';
+    document.getElementById('mu-first-date').value = '';
+    document.getElementById('mu-last-date').value = '';
+
+    setTimeout(() => {
+      if (window.closeModal) closeModal('add-user');
+      if (msg) msg.textContent = '';
+      if (typeof loadAdminPanel === 'function') loadAdminPanel();
+    }, 1500);
 
   } catch (e) {
-    if (msg) msg.textContent = '❌ ' + e.message;
+    if (msg) { msg.textContent = '❌ ' + e.message; msg.style.color = '#dc2626'; }
   }
 };
 
 window.changeUserRole = async function (userId, newRole) {
   try {
-    await sb.from('profiles').update({ role: newRole }).eq('id', userId);
+    await window.sb.from('profiles').update({ role: newRole }).eq('id', userId);
     console.log('✅ Role updated');
-    loadAdminPanel();
+    if (typeof loadAdminPanel === 'function') loadAdminPanel();
   } catch (e) {
     console.warn('changeUserRole:', e);
   }
