@@ -90,6 +90,30 @@ window.loadAdminPanel = async function () {
       window.loadPendingLeaves();
     }
 
+    // إضافة تحديث فوري للتغييرات في الـ profiles
+    if (!window.profilesSubscription) {
+      window.profilesSubscription = window.sb
+        .channel('profiles-updates')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+          loadAdminPanel();
+        })
+        .subscribe();
+    }
+
+    // إضافة تحديث فوري للتغييرات في الـ aux_sessions للتحديث اليومي
+    if (!window.auxSessionsSubscription) {
+      window.auxSessionsSubscription = window.sb
+        .channel('aux-sessions-updates')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'aux_sessions' }, (payload) => {
+          // تحقق إذا كان التغيير لليوم الحالي
+          const today = todayISO();
+          if (payload.new?.date === today || payload.old?.date === today) {
+            loadAdminPanel();
+          }
+        })
+        .subscribe();
+    }
+
   } catch (e) {
     console.warn('loadAdminPanel error:', e);
   }
@@ -153,6 +177,12 @@ window.saveUserEdit = async function () {
     return;
   }
 
+  // منع تعيين دور owner إلا من قبل owner
+  if (role === 'owner' && (!window.APP?.CU || window.APP.CU.role !== 'owner')) {
+    if (msg) { msg.textContent = '⚠️ Only owners can assign the owner role.'; msg.style.color = '#dc2626'; }
+    return;
+  }
+
   if (msg) { msg.textContent = '⏳ Saving...'; msg.style.color = '#6b7280'; }
 
   try {
@@ -203,6 +233,12 @@ window.addUser = async function () {
   }
   if (pass.length < 6) {
     if (msg) { msg.textContent = '⚠️ Password must be at least 6 characters.'; msg.style.color = '#dc2626'; }
+    return;
+  }
+
+  // منع إضافة مستخدم بدور owner إلا من قبل owner
+  if (role === 'owner' && (!window.APP?.CU || window.APP.CU.role !== 'owner')) {
+    if (msg) { msg.textContent = '⚠️ Only owners can add users with owner role.'; msg.style.color = '#dc2626'; }
     return;
   }
 
@@ -258,6 +294,12 @@ window.addUser = async function () {
 
 window.changeUserRole = async function (userId, newRole) {
   try {
+    // منع تعيين دور owner إلا من قبل owner
+    if (newRole === 'owner' && (!window.APP?.CU || window.APP.CU.role !== 'owner')) {
+      alert('Only owners can assign the owner role.');
+      if (typeof loadAdminPanel === 'function') loadAdminPanel(); // إعادة تحميل لإعادة الدور السابق
+      return;
+    }
     await window.sb.from('profiles').update({ role: newRole }).eq('id', userId);
     if (typeof loadAdminPanel === 'function') loadAdminPanel();
   } catch (e) {

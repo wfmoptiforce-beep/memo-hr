@@ -169,6 +169,10 @@ window.loadAttendanceTracker = async function () {
         const activeSess = daySess.filter(s => s.aux_type !== 'offline');
 
         if (activeSess.length === 0) {
+          // لا تعرض غياب للأيام المستقبلية
+          if (new Date(dateStr) > new Date()) {
+            return; // تخطي الأيام المستقبلية
+          }
           rows.push({ name, date: dateStr, day: dayName, firstLogin: '—', lastLogout: '—', loginHours: '—', lateBy: '—', status: '❌ Absent' });
           return;
         }

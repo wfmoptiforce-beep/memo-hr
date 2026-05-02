@@ -74,6 +74,17 @@ window.syncActiveSession = async function() {
         window.updatePunchUI();
         window.startTimer();
 
+        // إضافة تحديث فوري للتغييرات في aux_sessions للمستخدم الحالي
+        if (!window.myAuxSubscription) {
+          window.myAuxSubscription = window.sb
+            .channel('my-aux-updates')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'aux_sessions', filter: `user_id=eq.${APP.CU.id}` }, () => {
+              loadDailySummary();
+              updatePunchUI();
+            })
+            .subscribe();
+        }
+
     } catch (e) { console.error("Sync Session Error:", e); }
 };
 
