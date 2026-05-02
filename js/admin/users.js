@@ -33,29 +33,52 @@ window.loadAdminPanel = async function () {
     safeText('admin-att-rate', attRate + '%');
     safeText('admin-absent-count', String(users.length - attended));
 
+    const thead = document.querySelector('#panel-users thead tr');
+    if (thead) {
+      thead.innerHTML = '<th>Name</th><th>Email</th><th>Position</th><th>Access Level</th><th>Status</th><th>Actions</th>';
+    }
+
     const tbody = document.getElementById('admin-users-tbody');
     if (tbody) {
       tbody.innerHTML = users.map(u => {
         const st = u.status || 'offline';
         const stColor = st === 'offline' ? '#dc2626' : '#16a34a';
+        const displayName = u.full_name || '—';
+        const position = u.position || '—';
 
         return `
           <tr>
-            <td><strong>${u.full_name || '-'}</strong></td>
-            <td>${u.email || '-'}</td>
-            <td>${u.role || 'agent'}</td>
-            <td><span style="color:${stColor};font-weight:600;">● ${st}</span></td>
             <td>
+              <strong>${displayName}</strong>
+              ${!u.full_name ? '<br><small style="color:#f59e0b;">⚠️ Name missing</small>' : ''}
+            </td>
+            <td style="font-size:13px;color:#6b7280;">${u.email || '-'}</td>
+            <td>${position}</td>
+            <td>
+              <span style="background:#f3f4f6;padding:2px 8px;border-radius:10px;font-size:12px;">
+                ${u.role || 'agent'}
+              </span>
+            </td>
+            <td><span style="color:${stColor};font-weight:600;">● ${st}</span></td>
+            <td style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button
+                onclick="window.openEditUser('${u.id}')"
+                style="padding:4px 10px;border-radius:6px;border:1px solid #6366f1;background:#eef2ff;color:#6366f1;cursor:pointer;font-size:12px;font-weight:600;">
+                ✏️ Edit
+              </button>
               <select
-                onchange="changeUserRole('${u.id}', this.value)"
-                style="padding:4px 8px;border-radius:6px;border:1px solid #d1d5db;">
-                <option value="agent" ${u.role === 'agent' ? 'selected' : ''}>Agent</option>
-                <option value="supervisor" ${u.role === 'supervisor' ? 'selected' : ''}>Supervisor</option>
-                <option value="quality" ${u.role === 'quality' ? 'selected' : ''}>Quality</option>
-                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
-                <option value="suspended" ${u.role === 'suspended' ? 'selected' : ''}>⛔ Suspended</option>
-                <option value="inactive" ${u.role === 'inactive' ? 'selected' : ''}>🔒 Inactive</option>
-                <option value="long_leave" ${u.role === 'long_leave' ? 'selected' : ''}>🏖️ Long Leave</option>
+                onchange="window.changeUserRole('${u.id}', this.value)"
+                style="padding:4px 8px;border-radius:6px;border:1px solid #d1d5db;font-size:12px;">
+                <option value="agent"            ${u.role === 'agent'            ? 'selected' : ''}>Agent</option>
+                <option value="leader"           ${u.role === 'leader'           ? 'selected' : ''}>Leader</option>
+                <option value="supervisor"       ${u.role === 'supervisor'       ? 'selected' : ''}>Supervisor</option>
+                <option value="quality"          ${u.role === 'quality'          ? 'selected' : ''}>Quality</option>
+                <option value="upper_management" ${u.role === 'upper_management' ? 'selected' : ''}>Upper Mgmt</option>
+                <option value="admin"            ${u.role === 'admin'            ? 'selected' : ''}>Admin</option>
+                <option value="owner"            ${u.role === 'owner'            ? 'selected' : ''}>Owner</option>
+                <option value="suspended"        ${u.role === 'suspended'        ? 'selected' : ''}>⛔ Suspended</option>
+                <option value="inactive"         ${u.role === 'inactive'         ? 'selected' : ''}>🔒 Inactive</option>
+                <option value="long_leave"       ${u.role === 'long_leave'       ? 'selected' : ''}>🏖️ Long Leave</option>
               </select>
             </td>
           </tr>
@@ -63,7 +86,6 @@ window.loadAdminPanel = async function () {
       }).join('');
     }
 
-    // ✅ تحميل الإجازات المعلقة (بدون تعريف processLeave هنا - موجودة في leaves.js)
     if (typeof window.loadPendingLeaves === 'function') {
       window.loadPendingLeaves();
     }
@@ -73,23 +95,100 @@ window.loadAdminPanel = async function () {
   }
 };
 
+// ✅ فتح مودال التعديل وتعبئة البيانات
+window.openEditUser = async function (userId) {
+  try {
+    const { data: u, error } = await window.sb
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error || !u) { alert('Could not load user data.'); return; }
+
+    document.getElementById('edit-u-id').value        = u.id;
+    document.getElementById('edit-u-name').value      = u.full_name || '';
+    document.getElementById('edit-u-email').value     = u.email || '';
+    document.getElementById('edit-u-phone').value     = u.phone || '';
+    document.getElementById('edit-u-position').value  = u.position || 'Agent';
+    document.getElementById('edit-u-role').value      = u.role || 'agent';
+    document.getElementById('edit-u-status').value    = u.account_status || u.status || 'offline';
+    document.getElementById('edit-u-join').value      = u.join_date || '';
+    document.getElementById('edit-u-last').value      = u.last_working_date || '';
+
+    if (window.openModal) window.openModal('edit-user');
+
+  } catch (e) {
+    alert('Error loading user: ' + e.message);
+  }
+};
+
+// ✅ حفظ التعديلات
+window.saveUserEdit = async function () {
+  const id       = document.getElementById('edit-u-id')?.value;
+  const name     = document.getElementById('edit-u-name')?.value?.trim();
+  const phone    = document.getElementById('edit-u-phone')?.value?.trim();
+  const position = document.getElementById('edit-u-position')?.value;
+  const role     = document.getElementById('edit-u-role')?.value;
+  const accStatus = document.getElementById('edit-u-status')?.value;
+  const joinDate = document.getElementById('edit-u-join')?.value || null;
+  const lastDate = document.getElementById('edit-u-last')?.value || null;
+  const msg      = document.getElementById('edit-u-msg');
+
+  if (!id) { alert('No user selected.'); return; }
+  if (!name) {
+    if (msg) { msg.textContent = '⚠️ Name is required.'; msg.style.color = '#dc2626'; }
+    return;
+  }
+
+  if (msg) { msg.textContent = '⏳ Saving...'; msg.style.color = '#6b7280'; }
+
+  try {
+    const { error } = await window.sb
+      .from('profiles')
+      .update({
+        full_name:         name,
+        phone:             phone || null,
+        position:          position || null,
+        role:              role,
+        account_status:    accStatus,
+        join_date:         joinDate,
+        last_working_date: lastDate,
+        updated_at:        new Date().toISOString()
+      })
+      .eq('id', id);
+
+    if (error) throw error;
+
+    if (msg) { msg.textContent = '✅ Saved successfully!'; msg.style.color = '#16a34a'; }
+
+    setTimeout(() => {
+      if (window.closeModal) window.closeModal('edit-user');
+      if (msg) msg.textContent = '';
+      if (typeof loadAdminPanel === 'function') loadAdminPanel();
+    }, 1200);
+
+  } catch (e) {
+    if (msg) { msg.textContent = '❌ ' + e.message; msg.style.color = '#dc2626'; }
+  }
+};
+
 window.addUser = async function () {
-  const name = document.getElementById('mu-name')?.value?.trim();
-  const email = document.getElementById('mu-email')?.value?.trim();
-  const phone = document.getElementById('mu-phone')?.value?.trim();
-  const pass = document.getElementById('mu-pass')?.value;
-  const position = document.getElementById('mu-position')?.value;
-  const role = document.getElementById('mu-role')?.value;
-  const status = document.getElementById('mu-status')?.value;
+  const name      = document.getElementById('mu-name')?.value?.trim();
+  const email     = document.getElementById('mu-email')?.value?.trim();
+  const phone     = document.getElementById('mu-phone')?.value?.trim();
+  const pass      = document.getElementById('mu-pass')?.value;
+  const position  = document.getElementById('mu-position')?.value;
+  const role      = document.getElementById('mu-role')?.value;
+  const status    = document.getElementById('mu-status')?.value;
   const firstDate = document.getElementById('mu-first-date')?.value || null;
-  const lastDate = document.getElementById('mu-last-date')?.value || null;
-  const msg = document.getElementById('mu-msg');
+  const lastDate  = document.getElementById('mu-last-date')?.value || null;
+  const msg       = document.getElementById('mu-msg');
 
   if (!name || !email || !pass) {
     if (msg) { msg.textContent = '⚠️ Fill Name, Email & Password'; msg.style.color = '#dc2626'; }
     return;
   }
-
   if (pass.length < 6) {
     if (msg) { msg.textContent = '⚠️ Password must be at least 6 characters.'; msg.style.color = '#dc2626'; }
     return;
@@ -104,30 +203,35 @@ window.addUser = async function () {
       return;
     }
 
-    await window.sb.from('profiles').upsert({
-      id: data.user.id,
-      email: email,
-      full_name: name,
-      phone: phone,
-      position: position,
-      role: role,
-      status: status,
-      join_date: firstDate,
-      last_working_date: lastDate,
-      created_at: new Date().toISOString()
-    });
-
-    if (msg) {
-      msg.textContent = '✅ Employee added successfully!';
-      msg.style.color = '#16a34a';
+    const userId = data?.user?.id;
+    if (!userId) {
+      if (msg) { msg.textContent = '❌ Could not get user ID.'; msg.style.color = '#dc2626'; }
+      return;
     }
 
-    document.getElementById('mu-name').value = '';
-    document.getElementById('mu-email').value = '';
-    document.getElementById('mu-phone').value = '';
-    document.getElementById('mu-pass').value = '';
-    document.getElementById('mu-first-date').value = '';
-    document.getElementById('mu-last-date').value = '';
+    if (msg) { msg.textContent = '⏳ Saving profile...'; msg.style.color = '#6b7280'; }
+
+    await window.sb.from('profiles').upsert({
+      id: userId, email, full_name: name,
+      phone: phone || null, position: position || null,
+      role: role || 'agent', status: status || 'offline',
+      join_date: firstDate, last_working_date: lastDate,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'id' });
+
+    // ضمان حفظ الاسم لو الـ trigger كتب عليه
+    await new Promise(r => setTimeout(r, 600));
+    await window.sb.from('profiles').update({
+      full_name: name, phone: phone || null,
+      position: position || null, role: role || 'agent',
+      status: status || 'offline', join_date: firstDate,
+      last_working_date: lastDate, updated_at: new Date().toISOString()
+    }).eq('id', userId);
+
+    if (msg) { msg.textContent = '✅ Employee added successfully!'; msg.style.color = '#16a34a'; }
+
+    ['mu-name','mu-email','mu-phone','mu-pass','mu-first-date','mu-last-date']
+      .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
 
     setTimeout(() => {
       if (window.closeModal) closeModal('add-user');
@@ -143,7 +247,6 @@ window.addUser = async function () {
 window.changeUserRole = async function (userId, newRole) {
   try {
     await window.sb.from('profiles').update({ role: newRole }).eq('id', userId);
-    console.log('✅ Role updated');
     if (typeof loadAdminPanel === 'function') loadAdminPanel();
   } catch (e) {
     console.warn('changeUserRole:', e);
