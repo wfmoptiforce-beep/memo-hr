@@ -77,23 +77,37 @@ window.loadMasterSchedule = async function () {
       return;
     }
 
+    const { data: profiles } = await window.sb.from('profiles').select('email,full_name');
+    const profileMap = {};
+    (profiles || []).forEach(p => {
+      if (p?.email) {
+        profileMap[p.email.toLowerCase()] = p.full_name || p.email;
+      }
+    });
+
     tableContainer.innerHTML = `
       <h3>📋 Uploaded Schedules (${schedules.length} records)</h3>
       <div class="table-container">
         <table class="data-table">
           <thead>
-            <tr><th>Email</th><th>Date</th><th>Shift Start</th><th>Shift End</th><th>Off Day 1</th><th>Off Day 2</th></tr>
+            <tr><th>Name</th><th>Shift</th><th>Start</th><th>End</th><th>Date</th><th>Off Day 1</th><th>Off Day 2</th></tr>
           </thead>
           <tbody>
-            ${schedules.map(s => `
+            ${schedules.map(s => {
+              const emailKey = (s.email || '').toLowerCase();
+              const displayName = profileMap[emailKey] || s.email || '—';
+              const shiftLabel = s.shift || (s.shift_start && s.shift_end ? `${s.shift_start} - ${s.shift_end}` : '—');
+              return `
               <tr>
-                <td>${s.email}</td>
-                <td>${s.date}</td>
-                <td>${s.shift_start}</td>
-                <td>${s.shift_end}</td>
+                <td>${displayName}</td>
+                <td>${shiftLabel}</td>
+                <td>${s.shift_start || '—'}</td>
+                <td>${s.shift_end || '—'}</td>
+                <td>${s.date || '—'}</td>
                 <td>${s.off_day1 || '—'}</td>
                 <td>${s.off_day2 || '—'}</td>
-              </tr>`).join('')}
+              </tr>`;
+            }).join('')}
           </tbody>
         </table>
       </div>`;

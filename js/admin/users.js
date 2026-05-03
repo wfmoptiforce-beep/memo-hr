@@ -178,7 +178,7 @@ window.saveUserEdit = async function () {
   }
 
   // منع تعيين دور owner إلا من قبل owner، أو إذا كان المستخدم يحرر دوره الخاص
-  if (role === 'owner' && id !== window.APP?.CU?.id && window.APP?.CU?.role !== 'owner') {
+  if (role === 'owner' && id !== window.APP?.CU?.id && window.APP?.userRole !== 'owner') {
     if (msg) { msg.textContent = '⚠️ Only owners can assign the owner role.'; msg.style.color = '#dc2626'; }
     return;
   }
@@ -215,8 +215,148 @@ window.saveUserEdit = async function () {
   }
 };
 
+// ✅ التحقق من صيغة الايميل
+window.isValidEmail = function(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+// ✅ إرسال ايميل مباشرة عبر Resend API
+window.sendWelcomeEmailDirect = async function(email, password, fullName) {
+  try {
+    console.log('📧 Sending welcome email via Resend...');
+    
+    // 🔑 احصل على الـ API Key من localStorage (آمن)
+    let RESEND_API_KEY = localStorage.getItem('RESEND_API_KEY');
+    
+    // إذا ما موجود، استخدم الـ default
+    if (!RESEND_API_KEY) {
+      RESEND_API_KEY = 're_WgJNvXvt_FKuK6aZcnZ9qHMHZRh9hSgKG';
+      // احفظه في localStorage للمستقبل
+      localStorage.setItem('RESEND_API_KEY', RESEND_API_KEY);
+    }
+    
+    if (!RESEND_API_KEY) {
+      console.warn('⚠️ Resend API Key not configured');
+      return false;
+    }
+
+    const emailHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8" />
+          <style>
+            body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+            .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 20px; text-align: center; }
+            .header h1 { margin: 0; font-size: 28px; }
+            .content { padding: 30px; line-height: 1.6; }
+            .credentials-box { background: #f8f8f8; border-left: 4px solid #667eea; padding: 20px; margin: 20px 0; border-radius: 4px; font-size: 16px; }
+            .credential-item { margin: 12px 0; }
+            .credential-label { color: #666; font-size: 14px; font-weight: bold; margin-bottom: 4px; }
+            .credential-value { color: #333; font-family: monospace; font-size: 16px; background: white; padding: 10px; border-radius: 4px; }
+            .cta-button { display: inline-block; background: #667eea; color: white; padding: 14px 40px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: bold; font-size: 16px; }
+            .footer { background: #f8f8f8; padding: 20px; text-align: center; color: #999; font-size: 12px; border-top: 1px solid #ddd; }
+            .security-note { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px; color: #856404; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <div style="font-size: 40px; margin-bottom: 10px;">🎯</div>
+              <h1>Memo Pro</h1>
+              <p>WORKFORCE MANAGEMENT SYSTEM</p>
+            </div>
+
+            <div class="content">
+              <p style="font-size: 18px; font-weight: bold; margin-bottom: 5px;">Hello Dear,</p>
+              
+              <p style="font-size: 16px; margin: 15px 0;">Welcome to your MemoPro account</p>
+              
+              <p style="font-size: 16px; margin: 15px 0;">To log in please click the link below:</p>
+
+              <div style="text-align: center;">
+                <a href="https://memo-hr.vercel.app/" class="cta-button">🔐 Login to MemoPro</a>
+              </div>
+
+              <p style="font-size: 16px; margin: 15px 0;">Please use your username and password to log in:</p>
+
+              <div class="credentials-box">
+                <div class="credential-item">
+                  <div class="credential-label">User:</div>
+                  <div class="credential-value">${email}</div>
+                </div>
+                <div class="credential-item">
+                  <div class="credential-label">Password:</div>
+                  <div class="credential-value">${password}</div>
+                </div>
+              </div>
+
+              <div class="security-note">
+                <strong>⚠️ Important:</strong> Keep your password safe and never share it with anyone. Please change your password after first login for security.
+              </div>
+
+              <p style="font-size: 14px; color: #666; margin-top: 20px;">If you have any questions, please contact your supervisor or administrator.</p>
+            </div>
+
+            <div class="footer">
+              <p>&copy; 2026 Memo Pro - Workforce Management System. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // إرسال عبر Resend API
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: 'onboarding@resend.dev', // Resend default - غيّر لبريدك بعدين
+        to: email,
+        subject: `🎯 Welcome to Memo Pro - Your Account Details`,
+        html: emailHtml
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Resend error:', data);
+      return false;
+    }
+
+    console.log('✅ Email sent successfully via Resend!', data.id);
+    return true;
+
+  } catch(e) {
+    console.error('Email error:', e);
+    return false;
+  }
+};
+
+// ✅ دالة تغيير الـ API Key بأمان
+window.setResendApiKey = function(newKey) {
+  if (!newKey || !newKey.startsWith('re_')) {
+    console.error('❌ Invalid Resend API Key format');
+    return false;
+  }
+  localStorage.setItem('RESEND_API_KEY', newKey);
+  console.log('✅ Resend API Key updated successfully');
+  return true;
+};
+
+// ✅ دالة للحصول على الـ API Key (للمسؤولين فقط)
+window.getResendApiKey = function() {
+  return localStorage.getItem('RESEND_API_KEY') || 're_WgJNvXvt_FKuK6aZcnZ9qHMHZRh9hSgKG';
+};
+
 window.addUser = async function () {
-  const role = (window.APP?.CU?.role || 'agent').toLowerCase();
+  const role = (window.APP?.userRole || 'agent').toLowerCase();
   
   // تحقق من الصلاحيات: فقط Admin, Owner, Supervisor, و Leader يمكنهم إضافة موظفين
   const allowedRoles = ['admin', 'owner', 'supervisor', 'leader'];
@@ -240,13 +380,20 @@ window.addUser = async function () {
     if (msg) { msg.textContent = '⚠️ Fill Name, Email & Password'; msg.style.color = '#dc2626'; }
     return;
   }
+
+  // ✅ التحقق من صيغة الايميل قبل الإرسال
+  if (!window.isValidEmail(email)) {
+    if (msg) { msg.textContent = '⚠️ Invalid email format. Example: user@example.com'; msg.style.color = '#dc2626'; }
+    return;
+  }
+
   if (pass.length < 6) {
     if (msg) { msg.textContent = '⚠️ Password must be at least 6 characters.'; msg.style.color = '#dc2626'; }
     return;
   }
 
   // منع إضافة مستخدم بدور owner إلا من قبل owner
-  if (role_new === 'owner' && window.APP?.CU?.role !== 'owner') {
+  if (role_new === 'owner' && window.APP?.userRole !== 'owner') {
     if (msg) { msg.textContent = '⚠️ Only owners can add users with owner role.'; msg.style.color = '#dc2626'; }
     return;
   }
@@ -254,38 +401,65 @@ window.addUser = async function () {
   if (msg) { msg.textContent = '⏳ Creating account...'; msg.style.color = '#6b7280'; }
 
   try {
-    const { data, error } = await window.sb.auth.signUp({ email, password: pass });
-    if (error) {
-      if (msg) { msg.textContent = '❌ ' + error.message; msg.style.color = '#dc2626'; }
+    // ✅ استخدام signUp مع تعطيل التأكيد الآلي
+    const { data: authData, error: authError } = await window.sb.auth.signUp({ 
+      email, 
+      password: pass,
+      options: {
+        emailRedirectTo: window.location.origin, // رابط التأكيد
+        data: {
+          full_name: name,
+          position: position,
+          phone: phone
+        }
+      }
+    });
+
+    if (authError) {
+      if (msg) { msg.textContent = '❌ ' + (authError.message || 'Sign up failed'); msg.style.color = '#dc2626'; }
+      console.error('Auth error:', authError);
       return;
     }
 
-    const userId = data?.user?.id;
+    const userId = authData?.user?.id || authData?.session?.user?.id;
     if (!userId) {
-      if (msg) { msg.textContent = '❌ Could not get user ID.'; msg.style.color = '#dc2626'; }
+      if (msg) { msg.textContent = '❌ Could not get user ID. Please check Supabase auth settings.'; msg.style.color = '#dc2626'; }
       return;
     }
 
     if (msg) { msg.textContent = '⏳ Saving profile...'; msg.style.color = '#6b7280'; }
 
-    await window.sb.from('profiles').upsert({
-      id: userId, email, full_name: name,
-      phone: phone || null, position: position || null,
-      role: role_new || 'agent', status: status || 'offline',
-      join_date: firstDate, last_working_date: lastDate,
+    const profileData = {
+      id: userId,
+      email,
+      full_name: name,
+      phone: phone || null,
+      position: position || null,
+      role: role_new || 'agent',
+      status: status || 'offline',
+      join_date: firstDate,
+      last_working_date: lastDate,
       updated_at: new Date().toISOString()
-    }, { onConflict: 'id' });
+    };
 
-    // ضمان حفظ الاسم لو الـ trigger كتب عليه
-    await new Promise(r => setTimeout(r, 600));
-    await window.sb.from('profiles').update({
-      full_name: name, phone: phone || null,
-      position: position || null, role: role_new || 'agent',
-      status: status || 'offline', join_date: firstDate,
-      last_working_date: lastDate, updated_at: new Date().toISOString()
-    }).eq('id', userId);
+    const { error: profileError } = await window.sb.from('profiles').upsert(profileData, { onConflict: 'id' });
+    if (profileError) throw profileError;
 
     if (msg) { msg.textContent = '✅ Employee added successfully!'; msg.style.color = '#16a34a'; }
+
+    // ✅ إرسال ايميل ترحيب مباشرة
+    setTimeout(async () => {
+      const emailSent = await window.sendWelcomeEmailDirect(email, pass, name);
+      if (emailSent) {
+        if (msg) { 
+          msg.innerHTML = `✅ Employee added successfully!<br><small style="font-size:12px; margin-top:8px; display:block; color:#059669;">📧 Welcome email sent to: ${email}</small>`;
+        }
+      } else {
+        if (msg) { 
+          msg.innerHTML = `✅ Employee added successfully!<br><small style="font-size:12px; margin-top:8px; display:block; color:#f97316;">⚠️ Email could not be sent</small>`;
+        }
+      }
+    }, 600);
 
     ['mu-name','mu-email','mu-phone','mu-pass','mu-first-date','mu-last-date']
       .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
@@ -294,17 +468,18 @@ window.addUser = async function () {
       if (window.closeModal) closeModal('add-user');
       if (msg) msg.textContent = '';
       if (typeof loadAdminPanel === 'function') loadAdminPanel();
-    }, 1500);
+    }, 2500);
 
   } catch (e) {
-    if (msg) { msg.textContent = '❌ ' + e.message; msg.style.color = '#dc2626'; }
+    if (msg) { msg.textContent = '❌ ' + (e.message || 'Error adding user'); msg.style.color = '#dc2626'; }
+    console.error('addUser error:', e);
   }
 };
 
 window.changeUserRole = async function (userId, newRole) {
   try {
     // منع تعيين دور owner إلا من قبل owner، أو إذا كان المستخدم يغير دوره الخاص
-    if (newRole === 'owner' && userId !== window.APP?.CU?.id && window.APP?.CU?.role !== 'owner') {
+    if (newRole === 'owner' && userId !== window.APP?.CU?.id && window.APP?.userRole !== 'owner') {
       alert('Only owners can assign the owner role.');
       if (typeof loadAdminPanel === 'function') loadAdminPanel(); // إعادة تحميل لإعادة الدور السابق
       return;

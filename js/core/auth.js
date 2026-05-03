@@ -188,7 +188,54 @@ window.doLogout = async function doLogout() {
   }
 };
 
+// ═══════════════════════════════════
+// 🔒 AUTO LOGOUT ON DEVICE LOCK/CLOSE
+// ═══════════════════════════════════
+window.setupAutoLogout = function() {
+  // 1️⃣ عند إغلاق التاب أو الكمبيوتر
+  window.addEventListener('beforeunload', async () => {
+    if (APP?.CU) {
+      console.log('🔒 Page closing - Auto logout triggered');
+      // We can't await here, just notify backend
+      navigator.sendBeacon('/api/logout-event', JSON.stringify({
+        userId: APP.CU.id,
+        timestamp: new Date().toISOString()
+      }));
+    }
+  });
+
+  // 2️⃣ عند إغلاق النافذة أو التاب (احتياطي)
+  window.addEventListener('pagehide', async () => {
+    if (APP?.CU) {
+      console.log('🔒 Page hidden - Auto logout triggered');
+      navigator.sendBeacon('/api/logout-event', JSON.stringify({
+        userId: APP.CU.id,
+        timestamp: new Date().toISOString()
+      }));
+    }
+  });
+
+  // 3️⃣ عند قفل الجهاز أو إغلاق اللاب توب (تقليل الظهور)
+  document.addEventListener('visibilitychange', async () => {
+    if (document.hidden && APP?.CU) {
+      console.log('🔒 Device may be locked or tab hidden');
+      
+      // لو ظل مخفي أكتر من 30 ثانية، اخرج المستخدم
+      setTimeout(() => {
+        if (document.hidden && APP?.CU) {
+          console.log('🔒 Device still hidden after 30s - Logging out');
+          window.doLogout();
+        }
+      }, 30000);
+    }
+  });
+
+  console.log('✅ Auto logout monitoring activated');
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   console.log('📄 DOM loaded, initializing app...');
   initApp();
+  // فعّل المراقبة التلقائية للخروج
+  window.setupAutoLogout();
 });

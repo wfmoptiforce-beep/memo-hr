@@ -15,58 +15,69 @@ window.handleScheduleUpload = async function (event) {
   reader.onload = async (e) => {
     try {
       const text = e.target.result;
-      const lines = text.split('\n');
-      const header = lines[0].toLowerCase();
-      
-      // دعم الأعمدة الجديدة: name, email, shift_start, shift_duration_hours, off_day1, off_day2, date, notes
-      const hasNameCol = header.includes('name');
-      const hasDurationCol = header.includes('shift_duration_hours');
-      
-      const rows = lines.slice(1);
+      const lines = text.split('\n').filter(line => line.trim());
+      if (lines.length < 2) {
+        if (statusEl) { statusEl.textContent = '⚠️ The file is empty or missing rows.'; statusEl.style.color = 'orange'; }
+        return;
+      }
+
+      const headerParts = lines[0].split(',').map(c => c.trim().toLowerCase());
+      const idx = {
+        name: headerParts.indexOf('name'),
+        email: headerParts.indexOf('email'),
+        shiftLabel: headerParts.indexOf('shift') !== -1 ? headerParts.indexOf('shift') : headerParts.indexOf('shift_label'),
+        shiftStart: headerParts.indexOf('shift_start'),
+        shiftEnd: headerParts.indexOf('shift_end'),
+        shiftDuration: headerParts.indexOf('shift_duration_hours'),
+        date: headerParts.indexOf('date'),
+        offDay1: headerParts.indexOf('off_day1'),
+        offDay2: headerParts.indexOf('off_day2')
+      };
+
+      let nameToEmail = {};
+      if (idx.email === -1 && idx.name !== -1) {
+        const { data: profiles } = await window.sb.from('profiles').select('email,full_name');
+        (profiles || []).forEach(p => {
+          if (p?.email && p?.full_name) {
+            nameToEmail[p.full_name.trim().toLowerCase()] = p.email;
+          }
+        });
+      }
+
       const scheduleEntries = [];
+      const rows = lines.slice(1);
 
       rows.forEach(row => {
         const cols = row.split(',').map(c => c.trim().replace(/\r/g, ''));
-        if (cols.length >= 2 && cols[0]) {
-          let email, shift_start, shift_end, off_day1, off_day2, date;
-          
-          if (hasNameCol && cols[1]) {
-            // التيمبليت الجديد: name, email, shift_start, shift_duration_hours, ...
-            email = cols[1];
-            shift_start = cols[2] || '09:00';
-            
-            // حساب shift_end من shift_start + shift_duration_hours
-            if (hasDurationCol && cols[3]) {
-              const [hours, mins] = shift_start.split(':').map(Number);
-              const duration = parseInt(cols[3]) || 8;
-              const endHours = (hours + duration) % 24;
-              shift_end = `${endHours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-            } else {
-              shift_end = cols[3] || '17:00';
-            }
-            
-            off_day1 = cols[4] || '';
-            off_day2 = cols[5] || '';
-            date = cols[6] || new Date().toISOString().split('T')[0];
-          } else {
-            // التيمبليت القديم: email, shift_start, shift_end, off_day1, off_day2, date
-            email = cols[0];
-            shift_start = cols[1] || '09:00';
-            shift_end = cols[2] || '17:00';
-            off_day1 = cols[3] || '';
-            off_day2 = cols[4] || '';
-            date = cols[5] || new Date().toISOString().split('T')[0];
-          }
-          
-          scheduleEntries.push({
-            email,
-            shift_start,
-            shift_end,
-            off_day1,
-            off_day2,
-            date
-          });
+        if (cols.length === 0 || !cols.some(col => col)) return;
+
+        const name = idx.name !== -1 ? cols[idx.name] || '' : '';
+        const email = idx.email !== -1 ? cols[idx.email] : (name ? nameToEmail[name.trim().toLowerCase()] : '');
+        const shift_start = cols[idx.shiftStart] || '';
+        const shift_end = cols[idx.shiftEnd] || '';
+        const shift_duration = cols[idx.shiftDuration] || '';
+        const off_day1 = cols[idx.offDay1] || '';
+        const off_day2 = cols[idx.offDay2] || '';
+        const date = cols[idx.date] || new Date().toISOString().split('T')[0];
+
+        if (!email) return;
+
+        let finalShiftEnd = shift_end;
+        if (!finalShiftEnd && shift_start && shift_duration) {
+          const [hours, mins] = shift_start.split(':').map(Number);
+          const duration = parseInt(shift_duration, 10) || 8;
+          const endHours = (hours + duration) % 24;
+          finalShiftEnd = `${endHours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
         }
+
+        scheduleEntries.push({
+          email,
+          shift_start: shift_start || '09:00',
+          shift_end: finalShiftEnd || '17:00',
+          off_day1,
+          off_day2,
+          date
+        });
       });
 
       if (scheduleEntries.length === 0) {
@@ -74,7 +85,6 @@ window.handleScheduleUpload = async function (event) {
         return;
       }
 
-      // رفع للداتا بيز
       const { error } = await window.sb.from('schedules').insert(scheduleEntries);
       if (error) throw error;
 
@@ -83,11 +93,9 @@ window.handleScheduleUpload = async function (event) {
         statusEl.style.color = 'green';
       }
 
-      // ريفريش جدول السكادول
       if (typeof window.loadMasterSchedule === 'function') {
         setTimeout(() => window.loadMasterSchedule(), 500);
       }
-
     } catch (err) {
       console.error('Schedule upload error:', err);
       if (statusEl) { statusEl.textContent = '❌ Error: ' + err.message; statusEl.style.color = 'red'; }
@@ -95,19 +103,16 @@ window.handleScheduleUpload = async function (event) {
   };
 
   reader.readAsText(file);
-
-  // reset input عشان تقدري ترفعي نفس الملف تاني مرة
   event.target.value = '';
 };
 
 // ─── تحميل تمبلت السكادول الجديد ────────────────────────
 window.downloadScheduleTemplate = function () {
-  // التيمبليت الجديد: الاسم، شيفت ستارت، شيفت اند (محسوب)، التاريخ، أوف ديز
   const csv = [
-    'name,email,shift_start,shift_duration_hours,off_day1,off_day2,date,notes',
-    'Ahmed Ali,ahmed@example.com,09:00,8,Friday,Saturday,2025-01-01,',
-    'Fatima Mohamed,fatima@example.com,10:00,8,Friday,Saturday,2025-01-01,يعمل من المنزل',
-    'Sara Hassan,sara@example.com,11:00,8,Saturday,Sunday,2025-01-01,'
+    'name,email,shift,shift_start,shift_end,date,off_day1,off_day2',
+    'Ahmed Ali,ahmed@example.com,Morning,09:00,17:00,2025-01-01,Friday,Saturday',
+    'Fatima Mohamed,fatima@example.com,Evening,14:00,22:00,2025-01-01,Friday,Saturday',
+    'Sara Hassan,sara@example.com,Night,22:00,06:00,2025-01-01,Saturday,Sunday'
   ].join('\n');
 
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
