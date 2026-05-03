@@ -358,10 +358,10 @@ window.getResendApiKey = function() {
 window.addUser = async function () {
   const role = (window.APP?.userRole || 'agent').toLowerCase();
   
-  // تحقق من الصلاحيات: فقط Admin, Owner, Supervisor, و Leader يمكنهم إضافة موظفين
+  // تحقق من الصلاحيات: فقط admin, owner, supervisor, و leader يمكنهم إضافة موظفين
   const allowedRoles = ['admin', 'owner', 'supervisor', 'leader'];
   if (!allowedRoles.includes(role)) {
-    alert('❌ You do not have permission to add users. Only Admin, Supervisor, and Leaders can add users.');
+    alert('❌ You do not have permission to add users. Only owner, admin, supervisor, and leaders can add users.');
     return;
   }
 
